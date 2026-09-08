@@ -3,7 +3,7 @@
  * Fetches Live Data from Flask REST API Engine
  */
 
-const API_BASE_URL = "http://127.0.0.1:5000/api";
+const API_BASE_URL = "https://jeevansetu-ai-7e5y.onrender.com/api";
 
 document.addEventListener('DOMContentLoaded', () => {
   let hospitals = [];

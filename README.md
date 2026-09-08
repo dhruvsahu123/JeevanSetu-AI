@@ -22,7 +22,7 @@ In critical trauma and acute cardiac emergencies, every minute lost in triage am
                  ▼                                ▼
        ┌──────────────────────────────────────────────────┐
        │             Flask REST API Backend               │
-       │               ([http://127.0.0.1:5000](http://127.0.0.1:5000))            │
+       │               ([https://jeevansetu-ai-7e5y.onrender.com](https://jeevansetu-ai-7e5y.onrender.com))            │
        └──────────────┬───────────────────┬───────────────┘
                       │                   │
                       ▼                   ▼

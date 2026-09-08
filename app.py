@@ -254,5 +254,5 @@ def get_emergencies():
     return jsonify(results), 200
 if __name__ == '__main__':
     init_db()
-    print("🚀 JeevanSetu AI Server running on http://127.0.0.1:5000")
+    print("🚀 JeevanSetu AI Server running on https://jeevansetu-ai-7e5y.onrender.com")
     app.run(debug=True, port=5000)
