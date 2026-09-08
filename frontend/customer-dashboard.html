@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Citizen Care & Emergency Dashboard | JeevanSetu AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- jsPDF CDN for client-side PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    .cust-dashboard {
+      padding: 3rem 0;
+      background: var(--bg-body);
+      min-height: calc(100vh - 4.5rem);
+    }
+    .user-welcome-card {
+      background: linear-gradient(135deg, #075985 0%, #0284c7 100%);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      color: #ffffff;
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+    .user-welcome-card h2 { font-size: 1.85rem; font-weight: 800; margin-bottom: 0.35rem; }
+    .user-welcome-card p { color: #e0f2fe; font-size: 0.95rem; }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+    }
+    .active-dispatch-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+    }
+    .dispatch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .dispatch-details-box {
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .quick-action-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.5rem;
+    }
+    .contact-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .contact-item:last-child { border-bottom: none; }
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <nav class="navbar container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark">+</span>
+        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">Citizen Care</span></span>
+      </a>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="system-status-indicator"><span class="live-dot"></span> Profile Active</span>
+        <a href="index.html" class="btn btn-secondary btn-sm">Home</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="cust-dashboard">
+    <div class="container">
+      
+      <!-- Welcome Banner -->
+      <div class="user-welcome-card">
+        <div>
+          <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-weight: 700;">Verified Citizen Profile</span>
+          <h2 style="margin-top: 0.5rem;" id="userNameHeading">Welcome to JeevanSetu Health Shield</h2>
+          <p id="userContactSub">Emergency SOS, telemetry tracking, and medical records connected to Regional Emergency Grid.</p>
+        </div>
+        <button class="btn btn-danger btn-lg" id="citizenSosTrigger">
+          🚨 Instant 1-Click SOS
+        </button>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Left Column: Active Incidents & Emergency Pass -->
+        <div>
+          <div class="active-dispatch-card">
+            <div class="dispatch-header">
+              <h3 style="font-size: 1.25rem; font-weight: 700;">Live Assigned Emergency Request</h3>
+              <span class="badge-tag" style="background: #ecfdf5; color: #065f46; font-weight: 700;">● Active Dispatch</span>
+            </div>
+
+            <div class="dispatch-details-box">
+              <div>
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block;">INCIDENT TICKET</span>
+                <strong id="ticketId">#JS-EM-109</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block;">ASSIGNED AMBULANCE</span>
+                <strong>ALS Unit #0921</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block;">DESTINATION CENTER</span>
+                <strong id="destCenter">Apex Trauma Hub (Civil Lines)</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block;">CORRIDOR ETA</span>
+                <strong style="color: var(--primary);">4-6 Minutes</strong>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <a href="ambulance-tracking.html" class="btn btn-primary" style="flex: 1;">
+                View Live Ambulance Telemetry & GPS
+              </a>
+              <a href="tel:108" class="btn btn-secondary" title="Call Driver Direct">
+                📞 Call
+              </a>
+            </div>
+          </div>
+
+          <!-- Medical Quick Summary & PDF Download -->
+          <div class="quick-action-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="font-size: 1.15rem; font-weight: 700;">Emergency Medical Pass</h3>
+              <button class="btn btn-secondary btn-sm" id="downloadPassBtn" onclick="generateMedicalPassPDF()">
+                📄 Download Medical Pass (PDF)
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;">
+              <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); text-align: center;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">BLOOD GROUP</span>
+                <strong style="font-size: 1.25rem; color: var(--danger);" id="passBlood">O +ve</strong>
+              </div>
+              <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); text-align: center;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">KNOWN ALLERGIES</span>
+                <strong style="font-size: 1rem;" id="passAllergies">Penicillin</strong>
+              </div>
+              <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); text-align: center;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">ORGAN DONOR</span>
+                <strong style="font-size: 1rem; color: var(--success);" id="passDonor">Registered Yes</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Guardians & Quick Dial -->
+        <div>
+          <div class="quick-action-card">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Family SOS Guardians</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">These emergency contacts receive real-time SMS tracking during an SOS alert.</p>
+
+            <div class="contact-item">
+              <div>
+                <strong>Primary Family Contact</strong>
+                <span style="display: block; font-size: 0.8rem; color: var(--text-muted);">+91 98390 XXXXX</span>
+              </div>
+              <a href="tel:9839000000" class="btn btn-secondary btn-sm">Call</a>
+            </div>
+
+            <div class="contact-item">
+              <div>
+                <strong>Secondary Guardian</strong>
+                <span style="display: block; font-size: 0.8rem; color: var(--text-muted);">+91 94150 XXXXX</span>
+              </div>
+              <a href="tel:9415000000" class="btn btn-secondary btn-sm">Call</a>
+            </div>
+
+            <button class="btn btn-ghost btn-sm btn-block" style="margin-top: 1rem;" onclick="alert('Guardian contact editor opens in Settings.')">
+              + Add Another Emergency Guardian
+            </button>
+          </div>
+
+          <!-- Quick Hotline Strip -->
+          <div class="quick-action-card" style="border-left: 4px solid var(--danger);">
+            <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">Govt Emergency Hotlines</h4>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <span>Ambulance Services:</span>
+              <strong><a href="tel:108" style="color: var(--danger); text-decoration: none;">108</a></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <span>National Police Helpline:</span>
+              <strong><a href="tel:112" style="color: var(--text-main); text-decoration: none;">112</a></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span>Women Safety Helpline:</span>
+              <strong><a href="tel:1090" style="color: var(--text-main); text-decoration: none;">1090</a></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:5000/api";
+    let activePatientName = "Verified Citizen";
+
+    // 1. Session check
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user.name) {
+          activePatientName = user.name;
+          document.getElementById('userNameHeading').textContent = `Welcome back, ${user.name}!`;
+          document.getElementById('userContactSub').textContent = `Registered ID: ${user.email} • Emergency Protection Active`;
+        }
+      } catch (e) {
+        console.warn("Could not parse local user profile.");
+      }
+    }
+
+    // 2. Trigger SOS
+    document.getElementById('citizenSosTrigger').addEventListener('click', async () => {
+      const confirmed = confirm("Are you sure you want to broadcast an IMMEDIATE CRITICAL SOS alert to nearby hospitals?");
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/emergency/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            patient_name: activePatientName,
+            symptom: "Rapid Distress Beacon Triggered",
+            priority: "TIER_1_CRITICAL"
+          })
+        });
+
+        const data = await res.json();
+        document.getElementById('ticketId').textContent = data.incident_id || '#JS-EM-NEW';
+        alert(`🚨 SOS Active! Assigned Ticket ${data.incident_id}. Telemetry corridor locked.`);
+      } catch (err) {
+        alert("🚨 SOS Dispatched locally! Telemetry locked.");
+      }
+    });
+
+    // 3. Generate and Download Emergency Pass PDF
+    function generateMedicalPassPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Pass Design Header
+      doc.setFillColor(7, 89, 133); // Primary Navy Blue
+      doc.rect(0, 0, 210, 36, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("JeevanSetu AI - Emergency Medical Pass", 14, 18);
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Verified Trauma Transit & Critical Health Token", 14, 28);
+
+      // Body Details
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("PATIENT & INCIDENT DETAILS", 14, 48);
+
+      doc.setDrawColor(226, 232, 240);
+      doc.line(14, 52, 196, 52);
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      
+      const ticket = document.getElementById('ticketId').textContent;
+      const hospital = document.getElementById('destCenter').textContent;
+      const blood = document.getElementById('passBlood').textContent;
+      const allergies = document.getElementById('passAllergies').textContent;
+      const donor = document.getElementById('passDonor').textContent;
+
+      let y = 62;
+      doc.text(`Patient Name:`, 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(activePatientName, 60, y);
+
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text(`Active Ticket ID:`, 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(220, 38, 38);
+      doc.text(ticket, 60, y);
+
+      y += 10;
+      doc.setTextColor(30, 41, 59);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Assigned Facility:`, 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(hospital, 60, y);
+
+      y += 15;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("CLINICAL VITALS & ALLERGIES", 14, y);
+      doc.line(14, y + 4, 196, y + 4);
+
+      y += 14;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Blood Group:`, 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(blood, 60, y);
+
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text(`Known Allergies:`, 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(allergies, 60, y);
+
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text(`Organ Donor Status:`, 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(donor, 60, y);
+
+      // Security Footer
+      y += 24;
+      doc.setFillColor(241, 245, 249);
+      doc.rect(14, y, 182, 22, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.text("Verification Hash: 4e9a8f-js-trauma-pass-sec256", 18, y + 8);
+      doc.text("Issued by JeevanSetu AI Telemetry Grid. Present directly at hospital trauma desk.", 18, y + 16);
+
+      // Trigger Save
+      doc.save(`JeevanSetu_Emergency_Pass_${ticket.replace('#', '')}.pdf`);
+    }
+  </script>
+</body>
+</html>

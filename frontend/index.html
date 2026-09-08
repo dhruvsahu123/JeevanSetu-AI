@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JeevanSetu AI | Smart Emergency & Healthcare Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <aside class="emergency-ribbon" role="alert">
+    <div class="ribbon-container">
+      <span class="pulse-indicator"></span>
+      <p>Critical Emergency Hotline: <strong>108 / 112</strong> | JeevanSetu Instant Dispatch: <strong>1800-JEEVAN-AI</strong></p>
+      <button class="ribbon-btn" id="quickEmergencyTrigger">SOS Dispatch</button>
+    </div>
+  </aside>
+
+  <header class="site-header">
+    <nav class="navbar container">
+      <a href="#hero" class="logo">
+        <span class="logo-mark">+</span>
+        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI</span></span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle Navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="nav-menu" id="navMenu">
+        <ul class="nav-links">
+          <li><a href="#hospitals">Find Hospitals</a></li>
+          <li><a href="#triage">AI Triage</a></li>
+          <li><a href="#ambulance">Ambulance</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-ghost">Hospital Login</a>
+          <a href="#hospitals" class="btn btn-primary">Find Care Now</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="status-chip">
+            <span class="live-dot"></span> Live Tele-Triage & Bed Tracking Active
+          </div>
+          <h1>Seconds Save Lives. Find Verified ICU Beds & Ambulances Fast.</h1>
+          <p>
+            India's unified, AI-orchestrated critical care network connecting emergency patients to real-time hospital beds, oxygen availability, and GPS-dispatched cardiac ambulances.
+          </p>
+          <div class="hero-cta-group">
+            <button class="btn btn-danger btn-lg" id="heroSosBtn">
+              <span class="btn-icon">&#x26A0;</span> Request SOS Ambulance
+            </button>
+            <a href="#triage" class="btn btn-secondary btn-lg">
+              Start AI Symptom Check &rarr;
+            </a>
+          </div>
+          <div class="trust-metrics">
+            <div class="metric-item">
+              <span class="metric-val">120+</span>
+              <span class="metric-lbl">Partner Hospitals</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val">&lt; 8 min</span>
+              <span class="metric-lbl">Avg. Ambulance Dispatch</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val">99.4%</span>
+              <span class="metric-lbl">Bed Verification Accuracy</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-card-wrapper">
+          <div class="triage-card" id="triage">
+            <div class="card-header">
+              <span class="card-tag">AI Intake Assistant</span>
+              <h3>Instant Triage Evaluation</h3>
+              <p>Assess urgency level and auto-match suitable emergency departments.</p>
+            </div>
+            <form id="triageQuickForm" class="triage-form">
+              <div class="form-group">
+                <label for="primarySymptom">Primary Concern / Symptom</label>
+                <select id="primarySymptom" required>
+                  <option value="" disabled selected>Select emergency condition</option>
+                  <option value="chest_pain">Severe Chest Pain / Shortness of Breath</option>
+                  <option value="head_injury">Severe Head Trauma / Unconsciousness</option>
+                  <option value="high_fever">High Persistent Fever with Delirium</option>
+                  <option value="fracture">Severe Fracture / Acute Physical Trauma</option>
+                  <option value="stroke">Sudden Facial Droop / Slurred Speech (FAST)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="patientAge">Patient Age</label>
+                  <input type="number" id="patientAge" placeholder="e.g. 48" min="1" max="115" required />
+                </div>
+                <div class="form-group">
+                  <label for="mobilityStatus">Mobility</label>
+                  <select id="mobilityStatus">
+                    <option value="bedridden">Stretcher Required</option>
+                    <option value="wheelchair">Wheelchair Required</option>
+                    <option value="walking">Ambulatory (Can Walk)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block">Analyze Urgency & Find Nearest Center</button>
+            </form>
+
+            <div id="triageResultBox" class="triage-result hidden">
+              <div class="result-badge" id="resultBadge">Critical Priority (Tier 1)</div>
+              <h4 id="resultTitle">Immediate Resuscitation Required</h4>
+              <p id="resultAdvice">Dispatched nearest Cardiac ICU equipped hospital. Avoid movement.</p>
+              <button class="btn btn-danger btn-sm" id="triageConfirmAction">Lock ICU Bed & Ambulance</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hospitals-section" id="hospitals">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Real-Time Verification</span>
+          <h2>Verified Hospital Facilities & Bed Matrix</h2>
+          <p>Real-time capacity verified within the last 5 minutes across major verified medical hubs.</p>
+        </div>
+
+        <div class="filter-controls">
+          <div class="search-input-group">
+            <input type="text" id="hospitalSearchInput" placeholder="Search by hospital name, locality, or specialty..." />
+          </div>
+          <div class="filter-pills" id="filterPills">
+            <button class="filter-pill active" data-filter="all">All Facilities</button>
+            <button class="filter-pill" data-filter="icu">ICU Beds Available</button>
+            <button class="filter-pill" data-filter="oxygen">Oxygen Ready</button>
+            <button class="filter-pill" data-filter="trauma">Level 1 Trauma</button>
+          </div>
+        </div>
+
+        <div class="hospitals-grid" id="hospitalsContainer">
+          </div>
+      </div>
+    </section>
+
+    <section class="section how-it-works" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Intelligent Coordination</span>
+          <h2>How JeevanSetu AI Bridges Critical Gaps</h2>
+          <p>Eliminating delays in emergency care delivery through automated real-time workflows.</p>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-num">01</div>
+            <h3>Symptom & GPS Intake</h3>
+            <p>One-tap emergency call or instant questionnaire extracts symptoms, geo-coordinates, and basic patient vitals.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">02</div>
+            <h3>Predictive Hospital Matching</h3>
+            <p>Algorithms cross-examine real-time ventilator counts, cath lab availability, specialist duty rosters, and traffic ETA.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">03</div>
+            <h3>Direct Resource Reservation</h3>
+            <p>The selected hospital receives patient telemetry and pre-books the ICU or ER bay before patient arrival.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">04</div>
+            <h3>Coordinated Ambulance Hand-off</h3>
+            <p>Ambulance crew communicates vitals directly to attending doctors via continuous digital telemetry.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section ambulance-section" id="ambulance">
+      <div class="container ambulance-card-banner">
+        <div class="ambulance-content">
+          <span class="section-subtitle light">24/7 Rapid Transit</span>
+          <h2>Need Emergency Transport Right Now?</h2>
+          <p>Select your required vehicle type. Verified ALS (Advanced Life Support) and BLS fleets ready to deploy.</p>
+          
+          <div class="fleet-options">
+            <div class="fleet-chip">
+              <strong>ALS Ambulance</strong>
+              <span>Ventilator & Paramedic Onboard</span>
+            </div>
+            <div class="fleet-chip">
+              <strong>BLS Ambulance</strong>
+              <span>Oxygen Support & Basic Vitals</span>
+            </div>
+            <div class="fleet-chip">
+              <strong>Neonatal Transport</strong>
+              <span>Incubator & Pediatric Specialist</span>
+            </div>
+          </div>
+
+          <div class="ambulance-actions">
+            <button class="btn btn-danger btn-lg" id="ambulanceDispatchBtn">Deploy Nearest Fleet Unit</button>
+            <span class="eta-note">Current network median arrival: <strong>7.8 mins</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section features-section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">System Capabilities</span>
+          <h2>Engineered for High-Stakes Reliability</h2>
+          <p>Built to handle crisis situations where fragmented communication costs precious moments.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F6A8;</div>
+            <h3>Unified Emergency Pipeline</h3>
+            <p>Zero wait time routing directly to triage nurses, bypassing redundant call center transfer delays.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F916;</div>
+            <h3>Clinical Triage Logic</h3>
+            <p>Standardized algorithmic risk scoring prioritizes heart attack, trauma, and stroke protocols automatically.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4BE;</div>
+            <h3>Zero-Retention Privacy</h3>
+            <p>Compliant with health data privacy guidelines. Personal identity remains confidential and encrypted.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4CB;</div>
+            <h3>Digital Pre-Admission</h3>
+            <p>Hospital registration forms are generated in transit, saving 20 to 30 minutes at the reception desk.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4CD;</div>
+            <h3>Live Telemetry Sharing</h3>
+            <p>On-route ambulance monitors transmit ECG and SpO2 readings directly to waiting emergency physicians.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F514;</div>
+            <h3>Family Guardian Alerts</h3>
+            <p>Automated SMS and WhatsApp dispatch notifications sent to family emergency contacts with live tracking links.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section faq-section" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Common Questions</span>
+          <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-accordion" id="faqAccordion">
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is JeevanSetu AI a hospital or an aggregator?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>JeevanSetu AI is an integrated technology platform that connects verified public and private hospitals, ambulance fleets, and patients onto a synchronized emergency coordination network.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>How are bed counts and ICU capacities verified?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>Registered partner hospitals interface with JeevanSetu via automated hospital management system (HMS) integration and dedicated hospital operations staff who provide regular verification audits.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>What should I do in an immediate life-threatening emergency?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>Immediately tap the red "SOS Dispatch" button on the platform or call national emergency numbers (108/112). Our system can simultaneously request an emergency responder while displaying your closest open trauma unit.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is my medical information kept secure?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. Data entered during triage is strictly utilized to match emergency care and is encrypted in transit and at rest in accordance with standard medical data handling practices.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="emergencyModal">
+    <div class="modal-card">
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+      <div class="modal-alert-icon">&#x26A0;</div>
+      <h3>Emergency Response Triggered</h3>
+      <p>Initiating automated triage & locating nearest available Advanced Life Support unit.</p>
+      
+      <div class="modal-status-box">
+        <div class="status-row">
+          <span>GPS Location:</span>
+          <strong id="userLocationDisplay">Fetching live coordinates...</strong>
+        </div>
+        <div class="status-row">
+          <span>Nearest Trauma Center:</span>
+          <strong>Apex Emergency Hospital (1.8 km)</strong>
+        </div>
+        <div class="status-row">
+          <span>Estimated Response Time:</span>
+          <strong class="text-danger">6 - 8 Minutes</strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-danger btn-block" id="callHotlineBtn">Call 108 Emergency Control</button>
+        <button class="btn btn-ghost btn-block" id="cancelSosBtn">Cancel Trigger</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-col brand-col">
+        <a href="#hero" class="logo">
+          <span class="logo-mark">+</span>
+          <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI</span></span>
+        </a>
+        <p>Intelligent emergency healthcare coordination. Connecting citizens, hospitals, and emergency fleets when every second counts.</p>
+        <div class="compliance-badge">&#x1F6E1; Healthcare Data Security Compliant</div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Critical Portals</h4>
+        <ul>
+          <li><a href="#hospitals">Hospital Directory</a></li>
+          <li><a href="#ambulance">Ambulance Network</a></li>
+          <li><a href="#triage">AI Urgency Triage</a></li>
+          <li><a href="login.html">Hospital HMS Login</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Emergency Numbers</h4>
+        <ul class="emergency-numbers">
+          <li><strong>National Emergency:</strong> 112</li>
+          <li><strong>Ambulance:</strong> 108 / 102</li>
+          <li><strong>Disaster Management:</strong> 1078</li>
+          <li><strong>JeevanSetu Central Desk:</strong> 1800-JEEVAN-AI</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Platform Status</h4>
+        <div class="system-status-indicator">
+          <span class="live-dot"></span> All Systems Operational
+        </div>
+        <p class="status-subtext">Network monitoring across verified regional health districts.</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container bottom-content">
+        <p>&copy; 2026 JeevanSetu AI Platform. Dedicated to emergency preparedness and patient advocacy.</p>
+        <div class="footer-legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Care</a>
+          <a href="#">Emergency Protocol</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

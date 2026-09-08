@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | JeevanSetu AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .auth-wrapper {
+      min-height: calc(100vh - 4.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+      background: var(--bg-body);
+    }
+    .auth-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-md);
+    }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h2 { font-size: 1.6rem; font-weight: 800; }
+    .auth-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+    .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-muted); }
+    .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark">+</span>
+        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI Grid</span></span>
+      </a>
+      <div><a href="login.html" class="btn btn-secondary btn-sm">Sign In</a></div>
+    </nav>
+  </header>
+
+  <main class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h2>Register with JeevanSetu</h2>
+        <p>Access emergency care, real-time bed sync, and live tracking</p>
+      </div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" placeholder="e.g. Amit Sharma" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="name@example.com" required />
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+91 98765 43210" required />
+        </div>
+        <div class="form-group">
+          <label for="role">Register As</label>
+          <select id="role">
+            <option value="PATIENT">Citizen / Patient</option>
+            <option value="HOSPITAL">Hospital Staff / Administrator</option>
+            <option value="AMBULANCE">Ambulance Fleet Driver</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Create a password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">Create Account</button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="login.html">Sign In here</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:5000/api";
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const full_name = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const role = document.getElementById('role').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, phone, role, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Account created successfully! Please sign in.');
+          window.location.href = 'login.html';
+        } else {
+          alert(data.error || 'Registration failed.');
+        }
+      } catch (err) {
+        alert('Server unreachable. Ensure "python app.py" is running.');
+      }
+    });
+  </script>
+</body>
+</html>
