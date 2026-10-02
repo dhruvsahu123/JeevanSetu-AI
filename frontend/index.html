@@ -4,9 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JeevanSetu AI | Smart Emergency & Healthcare Network</title>
+  <meta name="description" content="JeevanSetu AI provides real-time emergency healthcare, ambulance tracking, and hospital bed availability." />
+  <meta name="keywords" content="JeevanSetu, Jeevan Setu AI, emergency ambulance tracking, hospital beds, healthcare AI" />
+  <meta name="author" content="Dhruv Sahu" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet Map CSS for Live GPS Tracking -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -135,12 +142,13 @@
       </div>
     </section>
 
+    <!-- HOSPITALS & LIVE GPS MAP SECTION -->
     <section class="section hospitals-section" id="hospitals">
       <div class="container">
         <div class="section-header">
           <span class="section-subtitle">Real-Time Verification</span>
           <h2>Verified Hospital Facilities & Bed Matrix</h2>
-          <p>Real-time capacity verified within the last 5 minutes across major verified medical hubs.</p>
+          <p>Real-time capacity verified across major medical hubs in Kanpur & Rooma corridor.</p>
         </div>
 
         <div class="filter-controls">
@@ -155,8 +163,19 @@
           </div>
         </div>
 
+        <!-- Live GPS Tracker Status Bar -->
+        <div class="gps-banner" style="background:#e0f2fe; padding:0.75rem 1.25rem; border-radius:8px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; border:1px solid #bae6fd;">
+          <span id="gpsStatus" style="font-size:0.9rem; color:#0369a1;">📍 <strong>GPS Tracker:</strong> Fetching your live coordinates...</span>
+          <button id="recenterBtn" type="button" style="background:#0284c7; color:#fff; border:none; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600;">Locate Me</button>
+        </div>
+
+        <!-- Interactive Leaflet Live Map -->
+        <div id="hospitalMap" style="height: 380px; width: 100%; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #cbd5e1; z-index: 1;"></div>
+
+        <!-- Dynamic Hospital Cards Grid -->
         <div class="hospitals-grid" id="hospitalsContainer">
-          </div>
+          <!-- Loaded dynamically from API via script.js -->
+        </div>
       </div>
     </section>
 
@@ -332,7 +351,7 @@
         </div>
         <div class="status-row">
           <span>Nearest Trauma Center:</span>
-          <strong>Apex Emergency Hospital (1.8 km)</strong>
+          <strong id="nearestHospitalModal">Locating nearest center...</strong>
         </div>
         <div class="status-row">
           <span>Estimated Response Time:</span>
@@ -399,11 +418,8 @@
     </div>
   </footer>
 
+  <!-- Leaflet Map JS Library & Core Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>
-<title><meta name="google-site-verification" content="w2TxQIJ4x4fPjlk5t-zZPXOhkEbCi2LLUuXFJH4Cu7k" />  
-    JeevanSetu AI - Smart Healthcare & Emergency Network</title>
-<meta name="description" content="JeevanSetu AI provides real-time emergency healthcare, ambulance tracking, and hospital bed availability." />
-<meta name="keywords" content="JeevanSetu, Jeevan Setu AI, emergency ambulance tracking, hospital beds, healthcare AI" />
-<meta name="author" content="Dhruv Sahu" />
