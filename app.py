@@ -3,13 +3,14 @@ import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from database import get_db_connection, init_db
+from medical_knowledge import get_first_aid
 from google import genai
 
 app = Flask(__name__)
-# Enable CORS for all incoming client origins
+# Enable Cross-Origin Resource Sharing (CORS) for all client endpoints
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# 1. Gemini Client Setup
+# 1. Initialize Gemini API Client
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
@@ -89,7 +90,7 @@ def login_user():
     return jsonify({"error": "Invalid email or password"}), 401
 
 # -------------------------------------------------------------
-# 3. HOSPITALS & BED MANAGEMENT
+# 3. HOSPITALS & REAL-TIME BED MANAGEMENT
 # -------------------------------------------------------------
 @app.route('/api/hospitals', methods=['GET'])
 def get_hospitals():
@@ -238,7 +239,7 @@ def get_blood_banks():
     return jsonify(blood_banks), 200
 
 # -------------------------------------------------------------
-# 6. GEMINI AI CLINICAL TRIAGE
+# 6. UNIVERSAL CLINICAL TRIAGE & FIRST-AID ADVISORY (DOs & DONTs)
 # -------------------------------------------------------------
 @app.route('/api/ai/triage', methods=['POST'])
 def ai_triage():
@@ -250,49 +251,53 @@ def ai_triage():
     if not symptoms:
         return jsonify({"error": "Symptoms are required"}), 400
 
+    # 1. Match from the 500-Taxonomy Knowledge Base
+    fa = get_first_aid(symptoms)
+
+    # 2. Offline / Direct Fallback if Gemini Client isn't configured
     if not client:
         return jsonify({
-            "priority": "CRITICAL PRIORITY (TIER 1)",
-            "headline": "Immediate Medical Attention Advised",
-            "advice": "High risk detected. Proceed directly to nearest emergency trauma unit.",
-            "ambulance_needed": True,
-            "required_facility": "Cardiac / Level 1 Trauma ICU"
+            "priority": fa["priority"],
+            "headline": fa["headline"],
+            "advice": "Ambulance deploy ho rahi hai. Ye life-saving kadam turant uthayein:",
+            "dos": fa["dos"],
+            "donts": fa["donts"],
+            "voice_speech": fa["voice"],
+            "ambulance_needed": True
         }), 200
 
+    # 3. Dynamic Real-Time Gemini Prompting
     triage_prompt = f"""
-    You are the clinical emergency triage AI for 'JeevanSetu AI'.
-    Evaluate this emergency scenario:
-    - Symptoms: {symptoms}
-    - Patient Age: {age}
-    - Mobility State: {mobility}
-
-    Respond STRICTLY with a valid JSON object matching this structure:
+    You are an emergency emergency triage doctor for JeevanSetu AI.
+    Patient: Condition '{symptoms}', Age {age}, Mobility {mobility}.
+    Reference Protocol: {fa['headline']}.
+    Provide life-saving PRE-ARRIVAL FIRST-AID (DOs and DONTs) while the ambulance is 6-8 minutes away.
+    Respond strictly in raw JSON without any markdown formatting:
     {{
-      "priority": "CRITICAL PRIORITY (TIER 1)",
-      "headline": "Short 4-6 word clinical summary",
-      "advice": "Two sentences of direct, life-saving advice for the patient/bystander while waiting.",
-      "ambulance_needed": true,
-      "required_facility": "e.g., Cath Lab / Neuro ICU / General Emergency"
+      "priority": "{fa['priority']}",
+      "headline": "{fa['headline']}",
+      "advice": "1 concise sentence reassuring the family.",
+      "dos": {json.dumps(fa['dos'])},
+      "donts": {json.dumps(fa['donts'])},
+      "voice_speech": "{fa['voice']}"
     }}
-    Do not include markdown blocks or extra text, only raw JSON.
     """
-
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=triage_prompt
         )
-        cleaned_text = response.text.replace('```json', '').replace('```', '').strip()
-        result_json = json.loads(cleaned_text)
-        return jsonify(result_json), 200
+        cleaned = response.text.replace('```json', '').replace('```', '').strip()
+        return jsonify(json.loads(cleaned)), 200
     except Exception as e:
-        print(f"Gemini API Error: {e}")
+        print(f"Gemini API Exception: {e}")
         return jsonify({
-            "priority": "URGENT EVALUATION (TIER 2)",
-            "headline": "Rapid Emergency Assessment",
-            "advice": "Keep patient calm and seated. Dispatching ambulance for emergency monitoring.",
-            "ambulance_needed": True,
-            "required_facility": "Emergency Casualty Bay"
+            "priority": fa["priority"],
+            "headline": fa["headline"],
+            "advice": "Ambulance deploy ho rahi hai. Turant ye karein:",
+            "dos": fa["dos"],
+            "donts": fa["donts"],
+            "voice_speech": fa["voice"]
         }), 200
 
 def auto_seed_if_empty():
@@ -316,93 +321,3 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 JeevanSetu AI Server running on port {port}")
     app.run(host="0.0.0.0", port=port, debug=False)
-    # -------------------------------------------------------------
-# 6. GEMINI AI CLINICAL TRIAGE WITH FIRST-AID ADVISORY (DOs & DONTs)
-# -------------------------------------------------------------
-@app.route('/api/ai/triage', methods=['POST'])
-def ai_triage():
-    data = request.get_json() or {}
-    symptoms = data.get('symptoms', '')
-    age = data.get('age', 'Unknown')
-    mobility = data.get('mobility', 'Ambulatory')
-
-    if not symptoms:
-        return jsonify({"error": "Symptoms are required"}), 400
-
-    # Offline / Instant Rules Database (Agar network issue ya lag ho)
-    symptom_lower = symptoms.lower()
-    fallback_dos = ["Patient ko shaant aur sthir rakhein.", "Tight kapde dheele karein aur emergency hotline 108 par call karein."]
-    fallback_donts = ["Ghabrahat me mariz ko daudayein ya chalayein nahi.", "Bina doctori salah ke koi dawai na dein."]
-
-    if "snake" in symptom_lower or "saap" in symptom_lower:
-        fallback_dos = [
-            "Kaate hue ang ko dil ke level se neeche rakhein aur mariz ko bilkul sthir (still) rakhein.",
-            "Ghaav ko saaf paani se halka dhoyein aur ghadi/chudi/ring turant nikal dein taaki sujan aane par rukawat na ho."
-        ]
-        fallback_donts = [
-            "Ghaav par cheer/cut na lagayein aur muh se zehar choosne ki galti KABHI na karein.",
-            "Rassi ya tourniquet ko itna tight na baandhein ki khoon ka bahav bilkul ruk jaye, aur barf (ice) na lagayein."
-        ]
-    elif "chest" in symptom_lower or "heart" in symptom_lower or "dard" in symptom_lower:
-        fallback_dos = [
-            "Mariz ko aaram se aadhi baithi hui (semi-upright) halat me bithayein.",
-            "Agar pehle se doctor ne Sorbitrate ya Aspirin suggest ki ho toh le sakte hain aur shant rahein."
-        ]
-        fallback_donts = [
-            "Mariz ko chalkar ya seedhiyan chadhkar jane na dein.",
-            "Bhari khana ya peena na dein."
-        ]
-
-    if not client:
-        return jsonify({
-            "priority": "CRITICAL PRIORITY (TIER 1)",
-            "headline": "Immediate First-Aid Protocol Active",
-            "advice": "Ambulance deploy ho rahi hai. Neeche diye gaye life-saving steps turant follow karein.",
-            "dos": fallback_dos,
-            "donts": fallback_donts,
-            "ambulance_needed": True
-        }), 200
-
-    triage_prompt = f"""
-    You are an emergency emergency medical specialist AI for JeevanSetu.
-    A patient has this acute emergency:
-    - Condition/Symptoms: {symptoms}
-    - Age: {age}
-    - Mobility: {mobility}
-
-    The ambulance is on the way (arrival 6-8 mins). Give critical pre-arrival FIRST-AID guidance in simple Hinglish/English.
-    Respond STRICTLY with raw JSON matching this schema:
-    {{
-      "priority": "CRITICAL PRIORITY (TIER 1)",
-      "headline": "Short 4-5 words condition summary",
-      "advice": "1 concise sentence reassuring the attendant.",
-      "dos": [
-        "First critical DO instruction",
-        "Second critical DO instruction"
-      ],
-      "donts": [
-        "First lethal mistake NOT to do (e.g. do not cut snakebite or tourniquet tightly)",
-        "Second mistake NOT to do"
-      ],
-      "voice_speech": "A concise 2-sentence voice instruction in simple Hindi/Hinglish to be read aloud immediately."
-    }}
-    """
-
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=triage_prompt
-        )
-        cleaned_text = response.text.replace('```json', '').replace('```', '').strip()
-        result_json = json.loads(cleaned_text)
-        return jsonify(result_json), 200
-    except Exception as e:
-        print(f"Gemini API Error: {e}")
-        return jsonify({
-            "priority": "CRITICAL PRIORITY (TIER 1)",
-            "headline": "Emergency First-Aid Protocol",
-            "advice": "Ambulance en route. Follow these life-saving precautions immediately.",
-            "dos": fallback_dos,
-            "donts": fallback_donts,
-            "voice_speech": "Mariz ko shaant rakhein aur sthir rakhein. Ghaav par koi cheer ya tight patti na baandhein."
-        }), 200
