@@ -6,7 +6,8 @@ from database import get_db_connection, init_db
 from google import genai
 
 app = Flask(__name__)
-CORS(app)
+# Enable CORS for all domains so GitHub Pages can call Render seamlessly
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # 1. Gemini Client Setup
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -30,10 +31,10 @@ def health_check():
 def register_user():
     data = request.get_json() or {}
     name = data.get('full_name')
-    email = data.get('email')
-    phone = data.get('phone')
+    email = data.get('email', '').strip().lower()
+    phone = data.get('phone', '').strip()
     password = data.get('password')
-    role = data.get('role', 'PATIENT').upper()
+    role = data.get('role', 'PATIENT').strip().upper()
 
     if not (name and email and phone and password):
         return jsonify({"error": "All fields are required"}), 400
@@ -53,24 +54,24 @@ def register_user():
             "user_id": user_id,
             "role": role
         }), 201
-    except Exception:
+    except Exception as e:
         conn.close()
-        return jsonify({"error": "Email or Phone already exists"}), 409
+        return jsonify({"error": "Email or Phone already registered"}), 409
 
 @app.route('/api/auth/login', methods=['POST'])
 def login_user():
     data = request.get_json() or {}
-    email = data.get('email')
-    password = data.get('password')
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
 
     if not (email and password):
-        return jsonify({"error": "Email and Password required"}), 400
+        return jsonify({"error": "Email and Password are required"}), 400
 
     conn = get_db_connection()
     user = conn.execute('''
         SELECT id, full_name, email, role, password_hash 
         FROM users 
-        WHERE email = ?
+        WHERE LOWER(email) = ?
     ''', (email,)).fetchone()
     conn.close()
 
@@ -81,7 +82,7 @@ def login_user():
                 "id": user["id"],
                 "name": user["full_name"],
                 "email": user["email"],
-                "role": user["role"]
+                "role": user["role"].upper()
             }
         }), 200
     
@@ -111,9 +112,9 @@ def get_hospitals():
             "distanceKm": r["distance_km"],
             "traumaLevel": r["trauma_level"],
             "phone": r["phone"],
-            "icuAvailable": r["icu_available"],
-            "totalIcu": r["icu_total"],
-            "oxygenBeds": r["oxygen_available"]
+            "icuAvailable": r["icu_available"] if r["icu_available"] is not None else 0,
+            "totalIcu": r["icu_total"] if r["icu_total"] is not None else 0,
+            "oxygenBeds": r["oxygen_available"] if r["oxygen_available"] is not None else 0
         })
     return jsonify(results), 200
 
@@ -171,7 +172,33 @@ def create_emergency():
     }), 201
 
 # -------------------------------------------------------------
-# 5. GEMINI AI CLINICAL TRIAGE
+# 5. GET RECENT EMERGENCIES (FOR HOSPITAL INBOUND STREAM)
+# -------------------------------------------------------------
+@app.route('/api/emergencies', methods=['GET'])
+def get_emergencies():
+    conn = get_db_connection()
+    emergencies = conn.execute('''
+        SELECT id, patient_name, symptom, priority, created_at
+        FROM emergency_requests
+        ORDER BY id DESC
+        LIMIT 10
+    ''').fetchall()
+    conn.close()
+
+    results = []
+    for em in emergencies:
+        results.append({
+            "id": em["id"],
+            "ticket": f"#JS-EM-{em['id']}",
+            "patient_name": em["patient_name"],
+            "symptom": em["symptom"],
+            "priority": em["priority"],
+            "time": em["created_at"]
+        })
+    return jsonify(results), 200
+
+# -------------------------------------------------------------
+# 6. GEMINI AI CLINICAL TRIAGE
 # -------------------------------------------------------------
 @app.route('/api/ai/triage', methods=['POST'])
 def ai_triage():
@@ -201,10 +228,10 @@ def ai_triage():
 
     Respond STRICTLY with a valid JSON object matching this structure:
     {{
-      "priority": "CRITICAL PRIORITY (TIER 1)" or "URGENT EVALUATION (TIER 2)" or "STABLE / CLINICAL OPD (TIER 3)",
+      "priority": "CRITICAL PRIORITY (TIER 1)",
       "headline": "Short 4-6 word clinical summary",
       "advice": "Two sentences of direct, life-saving advice for the patient/bystander while waiting.",
-      "ambulance_needed": true or false,
+      "ambulance_needed": true,
       "required_facility": "e.g., Cath Lab / Neuro ICU / General Emergency"
     }}
     Do not include markdown blocks or extra text, only raw JSON.
@@ -227,32 +254,9 @@ def ai_triage():
             "ambulance_needed": True,
             "required_facility": "Emergency Casualty Bay"
         }), 200
-# -------------------------------------------------------------
-# GET RECENT EMERGENCIES (FOR HOSPITAL INBOUND STREAM)
-# -------------------------------------------------------------
-@app.route('/api/emergencies', methods=['GET'])
-def get_emergencies():
-    conn = get_db_connection()
-    emergencies = conn.execute('''
-        SELECT id, patient_name, symptom, priority, created_at
-        FROM emergency_requests
-        ORDER BY id DESC
-        LIMIT 10
-    ''').fetchall()
-    conn.close()
 
-    results = []
-    for em in emergencies:
-        results.append({
-            "id": em["id"],
-            "ticket": f"#JS-EM-{em['id']}",
-            "patient_name": em["patient_name"],
-            "symptom": em["symptom"],
-            "priority": em["priority"],
-            "time": em["created_at"]
-        })
-    return jsonify(results), 200
 if __name__ == '__main__':
     init_db()
-    print("🚀 JeevanSetu AI Server running on https://jeevansetu-ai-7e5y.onrender.com")
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    print(f"🚀 JeevanSetu AI Server running on port {port}")
+    app.run(host="0.0.0.0", port=port, debug=False)
