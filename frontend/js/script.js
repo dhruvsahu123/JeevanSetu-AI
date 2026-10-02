@@ -241,7 +241,6 @@ async function loadHospitals() {
     console.warn("Backend waking up, activating verified local dataset:", err);
   }
 
-  // Pre-seeded Kanpur & Rooma corridor medical network
   allHospitals = [
     { name: "SPM Hospital Research & Trauma Centre", location: "Rooma / NH-19, Kanpur", lat: 26.3785, lng: 80.4421, phone: "0512-2410100", traumaLevel: "Level 1 Trauma", icuAvailable: 18, totalIcu: 25, oxygenBeds: 45 },
     { name: "Mahaadeva Multi-Speciality Hospital", location: "Naubasta / Rooma Bypass, Kanpur", lat: 26.4082, lng: 80.3456, phone: "0512-2621000", traumaLevel: "Level 2 Trauma", icuAvailable: 14, totalIcu: 20, oxygenBeds: 35 },
@@ -260,11 +259,69 @@ async function loadHospitals() {
 }
 
 // -------------------------------------------------------------
-// 6. EVENT LISTENERS & APPLICATION BOOTSTRAP
+// 6. FETCH & RENDER BLOOD BANKS
+// -------------------------------------------------------------
+async function loadBloodBanks() {
+  const container = document.getElementById("bloodBanksContainer");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/blood-banks`);
+    const data = res.ok ? await res.json() : [];
+
+    const list = data.length ? data : [
+      {
+        name: "SPM Trauma Blood Unit",
+        location: "Rooma / NH-19, Kanpur",
+        phone: "0512-2410100",
+        distanceKm: "1.8",
+        inventory: { "O_pos": 14, "O_neg": 2, "A_pos": 8, "B_pos": 16, "AB_pos": 5, "AB_neg": 1 }
+      },
+      {
+        name: "Kashi Ram Memorial Blood Centre",
+        location: "Ramadevi, Kanpur",
+        phone: "0512-2402555",
+        distanceKm: "3.8",
+        inventory: { "O_pos": 16, "O_neg": 1, "A_pos": 10, "B_pos": 20, "AB_pos": 6, "AB_neg": 0 }
+      },
+      {
+        name: "LLR / Hallet Apex Blood Bank",
+        location: "Swaroop Nagar, Kanpur",
+        phone: "0512-2556295",
+        distanceKm: "8.8",
+        inventory: { "O_pos": 24, "O_neg": 4, "A_pos": 18, "B_pos": 32, "AB_pos": 9, "AB_neg": 2 }
+      }
+    ];
+
+    container.innerHTML = list.map(b => `
+      <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:1.25rem;">
+        <h3 style="font-size:1.05rem; margin:0 0 0.3rem 0; color:#0f172a;">${b.name}</h3>
+        <p style="font-size:0.85rem; color:#64748b; margin:0 0 0.75rem 0;">${b.location} • <strong style="color:#2563eb;">${b.distanceKm} km</strong></p>
+        
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.4rem; text-align:center; margin-bottom:1rem;">
+          <div style="background:#fee2e2; padding:0.4rem; border-radius:6px;"><span style="font-size:0.75rem; color:#dc2626; display:block; font-weight:700;">O+</span><strong>${b.inventory.O_pos} Units</strong></div>
+          <div style="background:#fee2e2; padding:0.4rem; border-radius:6px;"><span style="font-size:0.75rem; color:#dc2626; display:block; font-weight:700;">O- (Rare)</span><strong>${b.inventory.O_neg} Units</strong></div>
+          <div style="background:#e0f2fe; padding:0.4rem; border-radius:6px;"><span style="font-size:0.75rem; color:#0369a1; display:block; font-weight:700;">B+</span><strong>${b.inventory.B_pos} Units</strong></div>
+          <div style="background:#f1f5f9; padding:0.4rem; border-radius:6px;"><span style="font-size:0.75rem; color:#475569; display:block; font-weight:700;">A+</span><strong>${b.inventory.A_pos} Units</strong></div>
+          <div style="background:#f1f5f9; padding:0.4rem; border-radius:6px;"><span style="font-size:0.75rem; color:#475569; display:block; font-weight:700;">AB+</span><strong>${b.inventory.AB_pos} Units</strong></div>
+          <div style="background:#fef2f2; padding:0.4rem; border-radius:6px;"><span style="font-size:0.75rem; color:#dc2626; display:block; font-weight:700;">AB-</span><strong>${b.inventory.AB_neg} Units</strong></div>
+        </div>
+
+        <a href="tel:${b.phone}" style="display:block; text-align:center; background:#dc2626; color:#fff; text-decoration:none; padding:0.5rem; border-radius:6px; font-size:0.85rem; font-weight:700;">📞 Request Units (${b.phone})</a>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.error("Blood bank load error:", e);
+  }
+}
+
+// -------------------------------------------------------------
+// 7. EVENT LISTENERS & LIFECYCLE
 // -------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   getUserLocation();
   loadHospitals();
+  loadBloodBanks();
 
   // Recenter GPS Button
   const recenter = document.getElementById("recenterBtn");
@@ -373,7 +430,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Pre-Triage Bed & Dispatch Handshake (Saves directly to ER desk queue)
+  // Pre-Triage Bed & Dispatch Handshake
   const triageConfirmBtn = document.getElementById("triageConfirmAction");
   if (triageConfirmBtn) {
     triageConfirmBtn.addEventListener("click", async () => {

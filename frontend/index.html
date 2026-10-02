@@ -42,10 +42,10 @@
       <div class="nav-menu" id="navMenu">
         <ul class="nav-links">
           <li><a href="#hospitals">Find Hospitals</a></li>
+          <li><a href="#blood-banks">Blood Bank</a></li>
           <li><a href="#triage">AI Triage</a></li>
           <li><a href="#ambulance">Ambulance</a></li>
           <li><a href="#how-it-works">How It Works</a></li>
-          <li><a href="#features">Features</a></li>
           <li><a href="#faq">FAQ</a></li>
         </ul>
         <div class="nav-actions">
@@ -180,7 +180,22 @@
 
         <!-- Dynamic Hospital Cards Grid -->
         <div class="hospitals-grid" id="hospitalsContainer">
-          <!-- Loaded dynamically from API via script.js -->
+          <!-- Loaded dynamically via script.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOOD BANK & CRITICAL DONOR MATRIX -->
+    <section class="section blood-section" id="blood-banks" style="background:#fff; padding:3rem 0; border-top:1px solid #e2e8f0;">
+      <div class="container">
+        <div class="section-header" style="text-align:center; margin-bottom:2rem;">
+          <span class="section-subtitle" style="color:#dc2626; font-weight:700; font-size:0.85rem; text-transform:uppercase;">Critical Hemotherapy</span>
+          <h2 style="font-size:1.8rem; margin:0.3rem 0;">Regional Blood Bank Inventory & Donor Matrix</h2>
+          <p style="color:#64748b;">Live verified units across Kanpur & Rooma highway trauma points.</p>
+        </div>
+
+        <div id="bloodBanksContainer" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+          <!-- Loaded dynamically via script.js -->
         </div>
       </div>
     </section>
@@ -305,7 +320,7 @@
               <span class="faq-chevron">&plus;</span>
             </button>
             <div class="faq-answer">
-              <p>JeevanSetu AI is an integrated technology platform that connects verified public and private hospitals, ambulance fleets, and patients onto a synchronized emergency coordination network.</p>
+              <p>JeevanSetu AI is an integrated technology platform connecting verified hospitals, ambulances, and citizens onto a single synchronized emergency response network.</p>
             </div>
           </div>
 
@@ -315,7 +330,7 @@
               <span class="faq-chevron">&plus;</span>
             </button>
             <div class="faq-answer">
-              <p>Registered partner hospitals interface with JeevanSetu via automated hospital management system (HMS) integration and dedicated hospital operations staff who provide regular verification audits.</p>
+              <p>Partner hospitals interface with JeevanSetu via real-time control desks where emergency staff update capacities immediately on admission and discharge.</p>
             </div>
           </div>
 
@@ -325,17 +340,7 @@
               <span class="faq-chevron">&plus;</span>
             </button>
             <div class="faq-answer">
-              <p>Immediately tap the red "SOS Dispatch" button on the platform or call national emergency numbers (108/112). Our system can simultaneously request an emergency responder while displaying your closest open trauma unit.</p>
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>Is my medical information kept secure?</span>
-              <span class="faq-chevron">&plus;</span>
-            </button>
-            <div class="faq-answer">
-              <p>Yes. Data entered during triage is strictly utilized to match emergency care and is encrypted in transit and at rest in accordance with standard medical data handling practices.</p>
+              <p>Immediately tap the red "SOS Dispatch" button or dial 108/112. JeevanSetu simultaneously calculates the nearest open trauma facility and dispatches ambulance telemetry.</p>
             </div>
           </div>
         </div>
@@ -390,6 +395,7 @@
         <h4>Critical Portals</h4>
         <ul>
           <li><a href="#hospitals">Hospital Directory</a></li>
+          <li><a href="#blood-banks">Blood Bank Matrix</a></li>
           <li><a href="#ambulance">Ambulance Network</a></li>
           <li><a href="#triage">AI Urgency Triage</a></li>
           <li><a href="login.html">Hospital HMS Login</a></li>
