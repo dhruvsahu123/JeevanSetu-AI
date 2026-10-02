@@ -113,6 +113,7 @@
                   <select id="primarySymptom" style="flex:1;" required>
                     <option value="" disabled selected>Select emergency condition</option>
                     <option value="Severe chest pain and shortness of breath">Severe Chest Pain / Shortness of Breath</option>
+                    <option value="Snakebite with pain and swelling">Snakebite / Saap ne kaata hai</option>
                     <option value="Severe head trauma and unconsciousness">Severe Head Trauma / Unconsciousness</option>
                     <option value="High persistent fever with delirium">High Persistent Fever with Delirium</option>
                     <option value="Acute bone fracture and heavy bleeding">Severe Fracture / Acute Physical Trauma</option>
@@ -140,14 +141,45 @@
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-block">Analyze Urgency & Find Nearest Center</button>
+              <button type="submit" class="btn btn-primary btn-block">Analyze Urgency & Get Life-Saving Advisory</button>
             </form>
 
-            <div id="triageResultBox" class="triage-result hidden">
-              <div class="result-badge" id="resultBadge">Critical Priority (Tier 1)</div>
-              <h4 id="resultTitle">Immediate Resuscitation Required</h4>
-              <p id="resultAdvice">Dispatched nearest Cardiac ICU equipped hospital. Avoid movement.</p>
-              <button class="btn btn-danger btn-sm" id="triageConfirmAction">Lock ICU Bed & Ambulance</button>
+            <!-- FIRST AID DOs & DONTs PRECAUTION RESULT BOX -->
+            <div id="triageResultBox" class="triage-result hidden" style="background:#fff; border:2px solid #dc2626; border-radius:12px; padding:1.25rem; margin-top:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <div class="result-badge" id="resultBadge" style="background:#dc2626; color:#fff; font-size:0.8rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:6px;">Critical Priority (Tier 1)</div>
+                <button type="button" id="speakAdvisoryBtn" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer; font-size:0.85rem; font-weight:600;">🔊 AI Bol Kar Bataye</button>
+              </div>
+
+              <h4 id="resultTitle" style="margin:0 0 0.4rem 0; font-size:1.15rem; color:#0f172a;">Immediate Attention Required</h4>
+              <p id="resultAdvice" style="font-size:0.88rem; color:#475569; margin-bottom:1rem;">Follow life-saving actions while ambulance is en route:</p>
+
+              <!-- DOs & DONTs GRID -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
+                <!-- KYA KAREIN (DOs) -->
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:0.75rem;">
+                  <strong style="color:#16a34a; font-size:0.85rem; display:flex; align-items:center; gap:0.3rem; margin-bottom:0.4rem;">
+                    ✅ KYA KAREIN (DOs)
+                  </strong>
+                  <ul id="dosList" style="margin:0; padding-left:1.1rem; font-size:0.82rem; color:#166534; line-height:1.4;">
+                    <li>Kaate hue ang ko dil se neeche rakhein.</li>
+                    <li>Patient ko bilkul sthir (still) rakhein.</li>
+                  </ul>
+                </div>
+
+                <!-- KYA NA KAREIN (DONTs) -->
+                <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.75rem;">
+                  <strong style="color:#dc2626; font-size:0.85rem; display:flex; align-items:center; gap:0.3rem; margin-bottom:0.4rem;">
+                    ❌ KYA NA KAREIN (DON'Ts)
+                  </strong>
+                  <ul id="dontsList" style="margin:0; padding-left:1.1rem; font-size:0.82rem; color:#991b1b; line-height:1.4;">
+                    <li>Ghaav par cheer/cut na lagayein.</li>
+                    <li>Muh se zehar choosne ki koshish na karein.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <button class="btn btn-danger btn-block" id="triageConfirmAction">Lock ICU Bed & Dispatch ALS Ambulance</button>
             </div>
           </div>
         </div>

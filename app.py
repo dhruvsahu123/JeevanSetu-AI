@@ -316,3 +316,93 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 JeevanSetu AI Server running on port {port}")
     app.run(host="0.0.0.0", port=port, debug=False)
+    # -------------------------------------------------------------
+# 6. GEMINI AI CLINICAL TRIAGE WITH FIRST-AID ADVISORY (DOs & DONTs)
+# -------------------------------------------------------------
+@app.route('/api/ai/triage', methods=['POST'])
+def ai_triage():
+    data = request.get_json() or {}
+    symptoms = data.get('symptoms', '')
+    age = data.get('age', 'Unknown')
+    mobility = data.get('mobility', 'Ambulatory')
+
+    if not symptoms:
+        return jsonify({"error": "Symptoms are required"}), 400
+
+    # Offline / Instant Rules Database (Agar network issue ya lag ho)
+    symptom_lower = symptoms.lower()
+    fallback_dos = ["Patient ko shaant aur sthir rakhein.", "Tight kapde dheele karein aur emergency hotline 108 par call karein."]
+    fallback_donts = ["Ghabrahat me mariz ko daudayein ya chalayein nahi.", "Bina doctori salah ke koi dawai na dein."]
+
+    if "snake" in symptom_lower or "saap" in symptom_lower:
+        fallback_dos = [
+            "Kaate hue ang ko dil ke level se neeche rakhein aur mariz ko bilkul sthir (still) rakhein.",
+            "Ghaav ko saaf paani se halka dhoyein aur ghadi/chudi/ring turant nikal dein taaki sujan aane par rukawat na ho."
+        ]
+        fallback_donts = [
+            "Ghaav par cheer/cut na lagayein aur muh se zehar choosne ki galti KABHI na karein.",
+            "Rassi ya tourniquet ko itna tight na baandhein ki khoon ka bahav bilkul ruk jaye, aur barf (ice) na lagayein."
+        ]
+    elif "chest" in symptom_lower or "heart" in symptom_lower or "dard" in symptom_lower:
+        fallback_dos = [
+            "Mariz ko aaram se aadhi baithi hui (semi-upright) halat me bithayein.",
+            "Agar pehle se doctor ne Sorbitrate ya Aspirin suggest ki ho toh le sakte hain aur shant rahein."
+        ]
+        fallback_donts = [
+            "Mariz ko chalkar ya seedhiyan chadhkar jane na dein.",
+            "Bhari khana ya peena na dein."
+        ]
+
+    if not client:
+        return jsonify({
+            "priority": "CRITICAL PRIORITY (TIER 1)",
+            "headline": "Immediate First-Aid Protocol Active",
+            "advice": "Ambulance deploy ho rahi hai. Neeche diye gaye life-saving steps turant follow karein.",
+            "dos": fallback_dos,
+            "donts": fallback_donts,
+            "ambulance_needed": True
+        }), 200
+
+    triage_prompt = f"""
+    You are an emergency emergency medical specialist AI for JeevanSetu.
+    A patient has this acute emergency:
+    - Condition/Symptoms: {symptoms}
+    - Age: {age}
+    - Mobility: {mobility}
+
+    The ambulance is on the way (arrival 6-8 mins). Give critical pre-arrival FIRST-AID guidance in simple Hinglish/English.
+    Respond STRICTLY with raw JSON matching this schema:
+    {{
+      "priority": "CRITICAL PRIORITY (TIER 1)",
+      "headline": "Short 4-5 words condition summary",
+      "advice": "1 concise sentence reassuring the attendant.",
+      "dos": [
+        "First critical DO instruction",
+        "Second critical DO instruction"
+      ],
+      "donts": [
+        "First lethal mistake NOT to do (e.g. do not cut snakebite or tourniquet tightly)",
+        "Second mistake NOT to do"
+      ],
+      "voice_speech": "A concise 2-sentence voice instruction in simple Hindi/Hinglish to be read aloud immediately."
+    }}
+    """
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=triage_prompt
+        )
+        cleaned_text = response.text.replace('```json', '').replace('```', '').strip()
+        result_json = json.loads(cleaned_text)
+        return jsonify(result_json), 200
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return jsonify({
+            "priority": "CRITICAL PRIORITY (TIER 1)",
+            "headline": "Emergency First-Aid Protocol",
+            "advice": "Ambulance en route. Follow these life-saving precautions immediately.",
+            "dos": fallback_dos,
+            "donts": fallback_donts,
+            "voice_speech": "Mariz ko shaant rakhein aur sthir rakhein. Ghaav par koi cheer ya tight patti na baandhein."
+        }), 200

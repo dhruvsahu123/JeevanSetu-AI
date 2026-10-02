@@ -6,6 +6,7 @@ let hospitalMarkers = [];
 let allHospitals = [];
 // Default fallback coordinates: Rooma NH-19 corridor, Kanpur
 let userCoords = { lat: 26.3785, lng: 80.4421 };
+let latestVoiceSpeech = "";
 
 // -------------------------------------------------------------
 // 1. HAVERSINE FORMULA (ACCURATE DISTANCE IN KM)
@@ -316,12 +317,33 @@ async function loadBloodBanks() {
 }
 
 // -------------------------------------------------------------
-// 7. EVENT LISTENERS & LIFECYCLE
+// 7. SPEECH SYNTHESIS ENGINE (FIRST-AID VOICE ADVISORY)
+// -------------------------------------------------------------
+function speakFirstAid(text) {
+  if ('speechSynthesis' in window && text) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find(v => v.lang.includes('hi') || v.lang.includes('IN'));
+    if (hindiVoice) utterance.voice = hindiVoice;
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+// -------------------------------------------------------------
+// 8. EVENT LISTENERS & LIFECYCLE
 // -------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   getUserLocation();
   loadHospitals();
   loadBloodBanks();
+
+  // Voice advisory button trigger
+  document.getElementById("speakAdvisoryBtn")?.addEventListener("click", () => {
+    if (latestVoiceSpeech) speakFirstAid(latestVoiceSpeech);
+  });
 
   // Recenter GPS Button
   const recenter = document.getElementById("recenterBtn");
@@ -381,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.open(`https://api.whatsapp.com/send?text=${sosMsg}`, "_blank");
   });
 
-  // Gemini AI Symptom Triage Form Submission
+  // Gemini AI Symptom Triage Form Submission with First-Aid DOs & DONTs
   const triageForm = document.getElementById("triageQuickForm");
   const triageResultBox = document.getElementById("triageResultBox");
 
@@ -394,7 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const submitBtn = triageForm.querySelector("button[type='submit']");
       submitBtn.disabled = true;
-      submitBtn.textContent = "AI Analyzing Urgency...";
+      submitBtn.textContent = "AI Analyzing Emergency & Pre-Advisory...";
 
       try {
         const res = await fetch(`${API_BASE}/ai/triage`, {
@@ -411,21 +433,48 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("resultTitle").textContent =
             data.headline || "Immediate Attention Required";
           document.getElementById("resultAdvice").textContent =
-            data.advice || "Proceed immediately to the nearest trauma unit.";
+            data.advice || "Follow emergency precautions while help arrives:";
+
+          // Render DOs
+          const dosUl = document.getElementById("dosList");
+          if (dosUl && Array.isArray(data.dos)) {
+            dosUl.innerHTML = data.dos.map(item => `<li>${item}</li>`).join('');
+          }
+
+          // Render DONTs
+          const dontsUl = document.getElementById("dontsList");
+          if (dontsUl && Array.isArray(data.donts)) {
+            dontsUl.innerHTML = data.donts.map(item => `<li>${item}</li>`).join('');
+          }
+
+          // Trigger Voice Speech Advisory
+          latestVoiceSpeech = data.voice_speech || data.advice || "Mariz ko sthir rakhein. Kripya ambulance ka intezar karein.";
+          speakFirstAid(latestVoiceSpeech);
         }
       } catch (err) {
         if (triageResultBox) {
           triageResultBox.classList.remove("hidden");
-          document.getElementById("resultBadge").textContent =
-            "Critical Priority (Tier 1)";
-          document.getElementById("resultTitle").textContent =
-            "Emergency Evaluation Advised";
-          document.getElementById("resultAdvice").textContent =
-            "Dispatching nearest cardiac trauma unit. Avoid patient movement.";
+          document.getElementById("resultBadge").textContent = "Critical Priority (Tier 1)";
+          document.getElementById("resultTitle").textContent = "Emergency Precaution Advisory";
+          
+          const isSnake = symptom.toLowerCase().includes("snake") || symptom.toLowerCase().includes("saap");
+          const dosUl = document.getElementById("dosList");
+          const dontsUl = document.getElementById("dontsList");
+
+          if (isSnake) {
+            if (dosUl) dosUl.innerHTML = "<li>Kaate hue ang ko dil ke level se neeche rakhein.</li><li>Mariz ko bilkul shaant aur sthir (still) rakhein.</li>";
+            if (dontsUl) dontsUl.innerHTML = "<li>Ghaav par cut/cheer na lagayein aur muh se zehar na choosein.</li><li>Rassi ya tourniquet ko bahut tight na baandhein.</li>";
+            latestVoiceSpeech = "Kaate hue ang ko dil se neeche rakhein aur mariz ko bilkul shaant rakhein. Ghaav par koi cut na lagayein.";
+          } else {
+            if (dosUl) dosUl.innerHTML = "<li>Mariz ko comfortable position me aaram karwayein.</li><li>Tight kapde dheele karein aur taazi hawa aane dein.</li>";
+            if (dontsUl) dontsUl.innerHTML = "<li>Mariz ko tezi se daudayein ya chalayein nahi.</li><li>Bina doctor ki salah ke koi bhari cheez na khilayein.</li>";
+            latestVoiceSpeech = "Mariz ko shaant baithayein. Tight kapde dheele karein.";
+          }
+          speakFirstAid(latestVoiceSpeech);
         }
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Analyze Urgency & Find Nearest Center";
+        submitBtn.textContent = "Analyze Urgency & Get Life-Saving Advisory";
       }
     });
   }
