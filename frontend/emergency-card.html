@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency Medical ID | JeevanSetu AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .card-wrap { background: #1e293b; border: 2px solid #dc2626; border-radius: 16px; max-width: 420px; width: 100%; padding: 1.75rem; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 1rem; }
+    .card-top h1 { font-size: 1.2rem; margin: 0; color: #f87171; display: flex; align-items: center; gap: 0.5rem; }
+    .blood-badge { background: #dc2626; color: #fff; font-size: 1.2rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 8px; }
+    .data-group { margin-bottom: 1rem; }
+    .data-group label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.2rem; }
+    .data-group p { font-size: 1rem; font-weight: 600; margin: 0; color: #f1f5f9; }
+    .call-btn { display: block; text-align: center; background: #dc2626; color: #fff; text-decoration: none; padding: 0.75rem; border-radius: 8px; font-weight: 700; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <div class="card-wrap">
+    <div class="card-top">
+      <h1>⚠️️ Emergency Medical ID</h1>
+      <span class="blood-badge" id="bloodBadge">--</span>
+    </div>
+
+    <div class="data-group">
+      <label>Patient Full Name</label>
+      <p id="patientName">Loading...</p>
+    </div>
+
+    <div class="data-group">
+      <label>Chronic Medical Conditions</label>
+      <p id="conditions">None reported</p>
+    </div>
+
+    <div class="data-group">
+      <label>Known Drug Allergies</label>
+      <p id="allergies" style="color: #fca5a5;">None</p>
+    </div>
+
+    <div class="data-group">
+      <label>Primary Emergency Contact</label>
+      <p id="guardianContact">--</p>
+    </div>
+
+    <a href="#" id="callGuardianBtn" class="call-btn">📞 Call Emergency Contact</a>
+  </div>
+
+  <script>
+    // URL parameters se data decode karein (e.g. ?name=...&blood=O%2B&phone=...)
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('n') || 'Citizen';
+    const blood = params.get('b') || 'O+';
+    const cond = params.get('c') || 'Hypertension / Asthma';
+    const alg = params.get('a') || 'Penicillin Allergy';
+    const phone = params.get('p') || '108';
+
+    document.getElementById('patientName').textContent = decodeURIComponent(name);
+    document.getElementById('bloodBadge').textContent = decodeURIComponent(blood);
+    document.getElementById('conditions').textContent = decodeURIComponent(cond);
+    document.getElementById('allergies').textContent = decodeURIComponent(alg);
+    document.getElementById('guardianContact').textContent = decodeURIComponent(phone);
+    
+    const callBtn = document.getElementById('callGuardianBtn');
+    callBtn.href = `tel:${phone}`;
+    callBtn.textContent = `📞 Call Guardian (${phone})`;
+  </script>
+</body>
+</html>
