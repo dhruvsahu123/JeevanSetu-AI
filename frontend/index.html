@@ -8,6 +8,12 @@
   <meta name="keywords" content="JeevanSetu, Jeevan Setu AI, emergency ambulance tracking, hospital beds, healthcare AI" />
   <meta name="author" content="Dhruv Sahu" />
 
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#dc2626" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,7 +36,7 @@
     <nav class="navbar container">
       <a href="#hero" class="logo">
         <span class="logo-mark">+</span>
-        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI</span></span>
+        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI Grid</span></span>
       </a>
 
       <button class="nav-toggle" id="navToggle" aria-label="Toggle Navigation">
@@ -436,5 +442,16 @@
   <!-- Leaflet Map JS Library & Core Script -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/script.js"></script>
+
+  <!-- Offline PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('JeevanSetu Offline PWA Engine Active'))
+          .catch((err) => console.warn('PWA registration failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>
