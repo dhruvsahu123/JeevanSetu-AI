@@ -103,14 +103,20 @@
             <form id="triageQuickForm" class="triage-form">
               <div class="form-group">
                 <label for="primarySymptom">Primary Concern / Symptom</label>
-                <select id="primarySymptom" required>
-                  <option value="" disabled selected>Select emergency condition</option>
-                  <option value="chest_pain">Severe Chest Pain / Shortness of Breath</option>
-                  <option value="head_injury">Severe Head Trauma / Unconsciousness</option>
-                  <option value="high_fever">High Persistent Fever with Delirium</option>
-                  <option value="fracture">Severe Fracture / Acute Physical Trauma</option>
-                  <option value="stroke">Sudden Facial Droop / Slurred Speech (FAST)</option>
-                </select>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <select id="primarySymptom" style="flex:1;" required>
+                    <option value="" disabled selected>Select emergency condition</option>
+                    <option value="Severe chest pain and shortness of breath">Severe Chest Pain / Shortness of Breath</option>
+                    <option value="Severe head trauma and unconsciousness">Severe Head Trauma / Unconsciousness</option>
+                    <option value="High persistent fever with delirium">High Persistent Fever with Delirium</option>
+                    <option value="Acute bone fracture and heavy bleeding">Severe Fracture / Acute Physical Trauma</option>
+                    <option value="Sudden facial droop and slurred speech">Sudden Facial Droop / Slurred Speech (FAST)</option>
+                  </select>
+                  <button type="button" id="voiceTriageBtn" title="Speak in Hindi/English" style="background:#fee2e2; border:1px solid #dc2626; color:#dc2626; padding:0.6rem 0.9rem; border-radius:8px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
+                    🎤
+                  </button>
+                </div>
+                <small id="voiceStatus" style="display:block; color:#64748b; font-size:0.78rem; margin-top:0.3rem;">Tap 🎤 to speak your emergency symptoms</small>
               </div>
 
               <div class="form-row">
@@ -361,7 +367,10 @@
 
       <div class="modal-actions">
         <button class="btn btn-danger btn-block" id="callHotlineBtn">Call 108 Emergency Control</button>
-        <button class="btn btn-ghost btn-block" id="cancelSosBtn">Cancel Trigger</button>
+        <button class="btn btn-secondary btn-block" id="whatsappGuardianBtn" style="background:#25D366; color:#fff; border:none; margin-top:0.5rem; font-weight:700; cursor:pointer; padding:0.75rem;">
+          📲 Send WhatsApp SOS with Live GPS
+        </button>
+        <button class="btn btn-ghost btn-block" id="cancelSosBtn" style="margin-top:0.4rem;">Cancel Trigger</button>
       </div>
     </div>
   </div>

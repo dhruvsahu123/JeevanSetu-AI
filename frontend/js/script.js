@@ -8,10 +8,10 @@ let allHospitals = [];
 let userCoords = { lat: 26.3785, lng: 80.4421 };
 
 // -------------------------------------------------------------
-// 1. HAVERSINE FORMULA (EXACT DISTANCE CALCULATION IN KM)
+// 1. HAVERSINE FORMULA (EXACT DISTANCE IN KM)
 // -------------------------------------------------------------
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth radius in km
+  const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -34,7 +34,7 @@ function initMap(lat, lng) {
     attribution: '© OpenStreetMap contributors | JeevanSetu AI'
   }).addTo(map);
 
-  // User Marker with Blue Pulse
+  // User Blue Pulse Marker
   userMarker = L.circleMarker([lat, lng], {
     radius: 10,
     fillColor: "#2563eb",
@@ -109,7 +109,7 @@ function recalculateAndRenderHospitals(filterType = 'all', searchQuery = '') {
     hospitalMarkers = [];
   }
 
-  // Update distance for every hospital
+  // Calculate distance for all hospitals
   allHospitals.forEach(h => {
     if (h.lat && h.lng) {
       h.distanceKm = parseFloat(calculateDistance(userCoords.lat, userCoords.lng, h.lat, h.lng));
@@ -118,16 +118,16 @@ function recalculateAndRenderHospitals(filterType = 'all', searchQuery = '') {
     }
   });
 
-  // Sort by closest distance first
+  // Sort by closest distance
   allHospitals.sort((a, b) => a.distanceKm - b.distanceKm);
 
-  // Update nearest hospital name in SOS modal
+  // Update nearest in SOS modal
   const nearestModal = document.getElementById("nearestHospitalModal");
   if (nearestModal && allHospitals[0]) {
     nearestModal.textContent = `${allHospitals[0].name} (${allHospitals[0].distanceKm} km)`;
   }
 
-  // Filter logic
+  // Apply filters
   let filtered = allHospitals.filter(h => {
     const matchesSearch = h.name.toLowerCase().includes(searchQuery) ||
                           h.location.toLowerCase().includes(searchQuery);
@@ -147,7 +147,7 @@ function recalculateAndRenderHospitals(filterType = 'all', searchQuery = '') {
   }
 
   filtered.forEach(h => {
-    // Add Marker on Map
+    // Add Marker on Leaflet Map
     if (h.lat && h.lng && map) {
       const marker = L.marker([h.lat, h.lng])
         .addTo(map)
@@ -165,7 +165,7 @@ function recalculateAndRenderHospitals(filterType = 'all', searchQuery = '') {
       hospitalMarkers.push(marker);
     }
 
-    // Card HTML
+    // Hospital Card UI
     const card = document.createElement("div");
     card.className = "hospital-card";
     card.innerHTML = `
@@ -197,7 +197,7 @@ function recalculateAndRenderHospitals(filterType = 'all', searchQuery = '') {
   });
 }
 
-// Map pan helper
+// Pan & Zoom to Specific Hospital Marker
 window.focusHospital = function(lat, lng, name) {
   if (map && lat && lng) {
     map.setView([lat, lng], 15);
@@ -215,7 +215,7 @@ window.focusHospital = function(lat, lng, name) {
 };
 
 // -------------------------------------------------------------
-// 5. FETCH HOSPITALS FROM CLOUD API (WITH LOCAL FALLBACK)
+// 5. FETCH HOSPITALS (API WITH ROBUST KANPUR/ROOMA FALLBACK)
 // -------------------------------------------------------------
 async function loadHospitals() {
   try {
@@ -229,7 +229,7 @@ async function loadHospitals() {
       }
     }
   } catch (err) {
-    console.warn("Backend waking up or network lag, using fallback dataset:", err);
+    console.warn("Backend waking up, running Kanpur/Rooma verified dataset:", err);
   }
 
   // Verified Kanpur & Rooma corridor fallback dataset
@@ -239,8 +239,10 @@ async function loadHospitals() {
     { name: "Vaishnavi Hospital & Critical Care", location: "Hamirpur Road, Naubasta, Kanpur", lat: 26.4150, lng: 80.3390, phone: "0512-2602200", traumaLevel: "Level 2 Trauma", icuAvailable: 12, totalIcu: 18, oxygenBeds: 30 },
     { name: "Kashi Ram Memorial Government Hospital", location: "Ramadevi, Kanpur", lat: 26.4310, lng: 80.3870, phone: "0512-2402555", traumaLevel: "Level 1 Trauma", icuAvailable: 24, totalIcu: 40, oxygenBeds: 80 },
     { name: "Raj Hospital (ICU, NICU & Trauma Centre)", location: "NH-2, Barra, Kanpur", lat: 26.4312, lng: 80.3015, phone: "0512-2281236", traumaLevel: "Level 1 Trauma", icuAvailable: 20, totalIcu: 30, oxygenBeds: 50 },
+    { name: "The Umrao Multi-Speciality Hospital", location: "Sachan Chauraha, Juhi Kalan, Kanpur", lat: 26.4420, lng: 80.3120, phone: "0512-2271500", traumaLevel: "Level 2 Trauma", icuAvailable: 18, totalIcu: 25, oxygenBeds: 45 },
     { name: "Regency Super Speciality Hospital", location: "A-2, Sarvodaya Nagar, Kanpur", lat: 26.4789, lng: 80.3065, phone: "0512-2555111", traumaLevel: "Level 1 Apex Trauma", icuAvailable: 38, totalIcu: 50, oxygenBeds: 120 },
     { name: "Lala Lajpat Rai Hospital (LLR / Hallet)", location: "Hallet Road, Swaroop Nagar, Kanpur", lat: 26.4835, lng: 80.3150, phone: "0512-2556295", traumaLevel: "Level 1 Apex Trauma", icuAvailable: 52, totalIcu: 70, oxygenBeds: 250 },
+    { name: "Narayana Super Speciality Hospital", location: "A-3, Sarvodaya Nagar, Kanpur", lat: 26.4795, lng: 80.3050, phone: "0512-3500000", traumaLevel: "Level 1 Trauma", icuAvailable: 32, totalIcu: 45, oxygenBeds: 110 },
     { name: "Apollo Spectra Hospitals", location: "117/1, Kakadeo, Kanpur", lat: 26.4820, lng: 80.2950, phone: "0512-3055555", traumaLevel: "Level 1 Trauma", icuAvailable: 21, totalIcu: 30, oxygenBeds: 70 },
     { name: "Rama Medical College Hospital & Research Centre", location: "Mandhana / Kalyanpur, Kanpur", lat: 26.5412, lng: 80.2215, phone: "0512-2780882", traumaLevel: "Level 1 Apex Trauma", icuAvailable: 30, totalIcu: 45, oxygenBeds: 150 }
   ];
@@ -248,7 +250,7 @@ async function loadHospitals() {
 }
 
 // -------------------------------------------------------------
-// 6. AI TRIAGE & SOS MODAL HANDLERS
+// 6. EVENT LISTENERS (TRIAGE, SOS MODAL, VOICE & WHATSAPP)
 // -------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   getUserLocation();
@@ -297,7 +299,22 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "tel:108";
   });
 
-  // Triage Form Submission with Gemini AI
+  // WhatsApp SOS Dispatch with Live GPS link
+  const whatsappBtn = document.getElementById("whatsappGuardianBtn");
+  whatsappBtn?.addEventListener("click", () => {
+    const mapsLink = `https://www.google.com/maps?q=${userCoords.lat},${userCoords.lng}`;
+    const sosMsg = encodeURIComponent(
+      `🚨 *EMERGENCY SOS ALERT - JeevanSetu AI*\n\n` +
+      `Mujhe medical emergency me madad chahiye!\n` +
+      `📍 *Mera Live GPS Location:* ${mapsLink}\n` +
+      `🏥 *Nearest Hospital:* ${allHospitals[0]?.name || 'Kanpur Emergency Trauma Unit'}\n` +
+      `⏰ *Dispatched at:* ${new Date().toLocaleTimeString()}\n\n` +
+      `Kripya turant mujhe call karein ya ambulance coordinate karein.`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${sosMsg}`, '_blank');
+  });
+
+  // AI Triage Form Submission
   const triageForm = document.getElementById("triageQuickForm");
   const triageResultBox = document.getElementById("triageResultBox");
 
@@ -338,5 +355,60 @@ document.addEventListener("DOMContentLoaded", () => {
         submitBtn.textContent = "Analyze Urgency & Find Nearest Center";
       }
     });
+  }
+
+  // Multilingual Speech Recognition (Voice Triage)
+  const voiceBtn = document.getElementById("voiceTriageBtn");
+  const voiceStatus = document.getElementById("voiceStatus");
+  const symptomDropdown = document.getElementById("primarySymptom");
+
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'hi-IN'; // Hindi / Indian English
+
+    voiceBtn?.addEventListener("click", () => {
+      try {
+        recognition.start();
+        voiceStatus.textContent = "🎙️ Listening... Bolna shuru kijiye (Hindi/English)";
+        voiceStatus.style.color = "#dc2626";
+        voiceBtn.style.background = "#dc2626";
+        voiceBtn.style.color = "#fff";
+      } catch (e) {
+        recognition.stop();
+      }
+    });
+
+    recognition.onresult = (event) => {
+      const speechTranscript = event.results[0][0].transcript;
+      voiceStatus.textContent = `Recognized: "${speechTranscript}"`;
+      voiceStatus.style.color = "#16a34a";
+      voiceBtn.style.background = "#fee2e2";
+      voiceBtn.style.color = "#dc2626";
+
+      let customOpt = document.createElement("option");
+      customOpt.value = speechTranscript;
+      customOpt.textContent = `🎙️ "${speechTranscript}"`;
+      customOpt.selected = true;
+      symptomDropdown.appendChild(customOpt);
+
+      triageForm.dispatchEvent(new Event('submit'));
+    };
+
+    recognition.onerror = () => {
+      voiceStatus.textContent = "Mic access error or timeout. Tap again.";
+      voiceStatus.style.color = "#dc2626";
+      voiceBtn.style.background = "#fee2e2";
+      voiceBtn.style.color = "#dc2626";
+    };
+
+    recognition.onend = () => {
+      voiceBtn.style.background = "#fee2e2";
+      voiceBtn.style.color = "#dc2626";
+    };
+  } else {
+    if (voiceBtn) voiceBtn.style.display = "none";
   }
 });
