@@ -1,64 +1,49 @@
-# 🚑 JeevanSetu AI (जीवनसेतु)
-> **AI-Orchestrated Emergency Response & Hospital Bed Telemetry Network**  
-> *Optimized for Critical Care & Highway Trauma Response across Kanpur & Rooma NH-19 Corridor.*
+# make_readme.py - Auto-generates SIH documentation
 
-[![Live Web Application](https://img.shields.io/badge/Live-Demo_Online-brightgreen?style=for-the-badge&logo=render)](https://dhruvsahu123.github.io/JeevanSetu-AI/)
-[![Backend Status](https://img.shields.io/badge/Backend-Render_Cloud-blue?style=for-the-badge&logo=fastapi)](https://jeevansetu-ai-7e5y.onrender.com/api/health)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+content = """# 🚑 JeevanSetu AI (जीवनसेतु)
+### Intelligent Emergency Healthcare Grid, Bed Telemetry & Pre-Arrival Triage
+*Developed for Smart India Hackathon (SIH) | Aligned with ABDM*
 
----
-
-## 🌟 The Problem
-During severe highway trauma or cardiac emergencies along regional corridors, patients lose critical "Golden Hour" minutes due to:
-1. Lack of real-time ICU/Oxygen bed availability data.
-2. Uncoordinated ambulance dispatches leading to hospital bouncing.
-3. Language and communication barriers during high-panic triage calls.
-
-## 💡 The Solution
-**JeevanSetu AI** bridges the communication divide between citizens, ambulance fleets, and emergency rooms:
-- **Satellite GPS Tracking & Live Map:** Uses browser geolocation and Haversine spatial algorithms to calculate real road distance to 26+ verified medical institutions.
-- **Multilingual AI Voice Triage:** Powered by Google Gemini API & Web Speech recognition for natural language symptom evaluation in Hindi and English.
-- **HMS Bed Inventory Sliders:** Hospital ER staff adjust ICU/ventilator beds in real-time, syncing immediately with public-facing maps.
-- **Emergency QR Health ID:** Portable medical passport storing blood group, chronic conditions, and guardian contacts for unconscious casualties.
-- **WhatsApp Live Coordinate Dispatch:** One-tap guardian alerting transmitting precise Google Maps pin coordinates.
-- **Offline PWA Engine:** Service Worker caching guarantees emergency hotlines and navigation remain accessible in low-connectivity areas.
+[![Live Portal](https://img.shields.io/badge/Live_Portal-Active-emerald?style=for-the-badge)](https://dhruvsahu123.github.io/JeevanSetu-AI/)
+[![Cloud API](https://img.shields.io/badge/Cloud_API-Render_Active-blue?style=for-the-badge)](https://jeevansetu-ai-7e5y.onrender.com/api/health)
 
 ---
 
-## 🛠️ Architecture & Tech Stack
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | HTML5, CSS3 Modern Flex/Grid, Vanilla ES6+ JavaScript, Leaflet.js |
-| **Backend API** | Python, Flask, Flask-CORS, Google GenAI SDK |
-| **Database** | SQLite3 with Automated Schema Seeding |
-| **Intelligence** | Google Gemini 2.5 Flash clinical prompt orchestration |
-| **Deployment** | GitHub Pages (Frontend), Render Cloud (Backend Web Service) |
+## 📌 Problem Statement
+During highway accidents and acute medical crises along the **Kanpur & Rooma NH-19 corridor**, patients frequently lose their lives during the **Golden Hour** due to:
+1. **Hospital Bouncing:** Lack of verified real-time ICU and oxygen bed availability.
+2. **First-Aid Panic Errors:** Attendants making lethal mistakes before ambulance arrival (e.g. cutting snakebites, moving fractures).
+3. **Casuality Delays:** 15-20 minutes lost in manual ER registration paperwork.
 
 ---
 
-## 🚀 Key Modules & Entry Points
-
-- **Public Emergency Grid:** `frontend/index.html`
-- **Hospital Control Desk:** `frontend/hospital-dashboard.html`
-- **Ambulance Live Telemetry:** `frontend/ambulance-tracking.html`
-- **Citizen Health Vault & QR:** `frontend/customer-dashboard.html`
-- **Public Emergency Medical Scan ID:** `frontend/emergency-card.html`
+## 🌟 Key SIH Innovations
+- **🛣️ OSRM Highway Routing:** Real-time road corridor polyline & driving ETA on Leaflet maps.
+- **🎙️ Multilingual AI Voice Triage:** Hindi/English voice input with Google Gemini 2.5 Flash.
+- **⚠️ Pre-Arrival First-Aid (DOs & DON'Ts):** Instant life-saving instructions spoken aloud via Text-to-Speech.
+- **⚡ 110 BPM CPR Metronome:** Web Audio API generating precise acoustic rhythm for chest compressions.
+- **🎫 Digital ER Gate Pass:** Zero-paperwork pre-admission token (#JS-EM-KAN-2026) for casualty desks.
+- **🩸 Blood Bank Inventory:** Real-time rare blood units tracking (O-, AB-, etc.).
+- **📶 Offline PWA:** Service Worker caching for highway low-connectivity zones.
 
 ---
 
-## 💻 Local Setup & Execution
+## 🛠 Tech Stack
+- **Frontend:** HTML5, CSS3 Grid, Vanilla ES6+ JavaScript, Leaflet.js
+- **Audio/Speech:** Web Audio API, Web Speech API (SpeechRecognition & SpeechSynthesis)
+- **Backend:** Python (Flask), Flask-CORS, REST APIs
+- **AI/ML:** Google Gemini 2.5 Flash SDK (`google-genai`)
+- **Database:** SQLite3 with automated Kanpur/Rooma hospital seeding
+- **Deployment:** GitHub Pages (Frontend) + Render Cloud (Backend)
 
-```bash
-# 1. Clone the repository
-git clone [https://github.com/dhruvsahu123/JeevanSetu-AI.git](https://github.com/dhruvsahu123/JeevanSetu-AI.git)
-cd JeevanSetu-AI
+---
 
-# 2. Install backend dependencies
-pip install -r requirements.txt
+## 👥 Team
+- **Lead Developer:** Dhruv Sahu
+- **Institution:** Axis Colleges, Kanpur
+"""
 
-# 3. Seed verified Kanpur hospital dataset
-python seed_kanpur_hospitals.py
+with open("README.md", "w", encoding="utf-8") as f:
+    f.write(content)
 
-# 4. Start local Flask backend
-python app.py
+print("✅ README.md successfully ban gayi hai!")
