@@ -7,10 +7,10 @@ from medical_knowledge import get_first_aid
 from google import genai
 
 app = Flask(__name__)
-# Enable Cross-Origin Resource Sharing (CORS) for all client endpoints
+# Cross-Origin Resource Sharing for all origins
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# 1. Initialize Gemini API Client
+# Gemini API Client
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 

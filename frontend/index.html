@@ -112,12 +112,15 @@
                 <div style="display:flex; gap:0.5rem; align-items:center;">
                   <select id="primarySymptom" style="flex:1;" required>
                     <option value="" disabled selected>Select emergency condition</option>
-                    <option value="Severe chest pain and shortness of breath">Severe Chest Pain / Shortness of Breath</option>
-                    <option value="Snakebite with pain and swelling">Snakebite / Saap ne kaata hai</option>
-                    <option value="Severe head trauma and unconsciousness">Severe Head Trauma / Unconsciousness</option>
-                    <option value="High persistent fever with delirium">High Persistent Fever with Delirium</option>
-                    <option value="Acute bone fracture and heavy bleeding">Severe Fracture / Acute Physical Trauma</option>
-                    <option value="Sudden facial droop and slurred speech">Sudden Facial Droop / Slurred Speech (FAST)</option>
+                    <option value="Snakebite / Saap ne kaata hai">Saap ka Katna (Snakebite)</option>
+                    <option value="Bone Fracture / Hath ya Pair tutna">Hath ya Pair Tutna (Bone Fracture)</option>
+                    <option value="Severe Stomach Pain / Pet me asahaniya dard">Pet me Asahaniya Dard (Acute Abdomen / Appendix)</option>
+                    <option value="Sudden Baby Delivery / Prasav peeda">Emergency Baby Delivery / Prasav Peeda (Labor Pain)</option>
+                    <option value="Severe Chest Pain / Dil ka daura">Seene me Tez Dard (Chest Pain / Heart Attack)</option>
+                    <option value="Severe Burn / Aag se jalna">Aag se Jalna (Severe Burns)</option>
+                    <option value="Choking / Gale me kuch phasna">Gale me Kuch Phasna (Choking / Saans rukna)</option>
+                    <option value="Electric Shock / Bijli ka jhatka">Bijli ka Jhatka (Electric Shock)</option>
+                    <option value="Head Injury / Sar me chot aur behoshi">Sar me Gambhir Chot (Head Trauma / Unconscious)</option>
                   </select>
                   <button type="button" id="voiceTriageBtn" title="Speak in Hindi/English" style="background:#fee2e2; border:1px solid #dc2626; color:#dc2626; padding:0.6rem 0.9rem; border-radius:8px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
                     🎤
@@ -181,6 +184,26 @@
 
               <button class="btn btn-danger btn-block" id="triageConfirmAction">Lock ICU Bed & Dispatch ALS Ambulance</button>
             </div>
+
+            <!-- SIH INNOVATION: INTERACTIVE CPR 110 BPM METRONOME -->
+            <div id="cprAssistantBox" class="hidden" style="background:#0f172a; color:#fff; border-radius:12px; padding:1.25rem; margin-top:1.25rem; border:2px solid #ef4444; text-align:center;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <span style="background:#ef4444; color:#fff; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:4px; text-transform:uppercase;">Golden Hour CPR Guide</span>
+                <button type="button" id="closeCprBtn" style="background:transparent; border:none; color:#94a3b8; font-size:1.2rem; cursor:pointer;">&times;</button>
+              </div>
+              <h4 style="margin:0 0 0.3rem 0; font-size:1.1rem; color:#f87171;">Interactive Chest Compression Metronome</h4>
+              <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:1rem;">Push hard & fast at 110 BPM in the center of the chest:</p>
+              
+              <div style="display:flex; justify-content:center; align-items:center; margin-bottom:1rem;">
+                <div id="cprPulseCircle" style="width:75px; height:75px; border-radius:50%; background:#ef4444; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem; color:#fff; transition:transform 0.1s ease; box-shadow: 0 0 20px rgba(239,68,68,0.6);">
+                  PUSH
+                </div>
+              </div>
+              <div style="display:flex; justify-content:center; gap:0.75rem;">
+                <button type="button" id="cprToggleBtn" style="background:#ef4444; color:#fff; border:none; padding:0.6rem 1.2rem; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.88rem;">🔊 Start 110 BPM Metronome</button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -386,6 +409,7 @@
     </section>
   </main>
 
+  <!-- EMERGENCY SOS MODAL -->
   <div class="modal-backdrop" id="emergencyModal">
     <div class="modal-card">
       <button class="modal-close" id="modalCloseBtn">&times;</button>
@@ -415,6 +439,53 @@
         </button>
         <button class="btn btn-ghost btn-block" id="cancelSosBtn" style="margin-top:0.4rem;">Cancel Trigger</button>
       </div>
+    </div>
+  </div>
+
+  <!-- SIH DIGITAL ER GATE PASS MODAL (ZERO-PAPERWORK PRE-ADMISSION) -->
+  <div class="modal-backdrop" id="gatePassModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.75); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:#fff; border-radius:16px; width:100%; max-width:460px; padding:1.75rem; border:2px solid #0284c7; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; margin-bottom:1rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span style="background:#0284c7; color:#fff; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.9rem;">+</span>
+          <strong style="color:#0f172a; font-size:1.05rem;">ABDM Emergency Token</strong>
+        </div>
+        <button id="closeGatePassBtn" style="background:transparent; border:none; font-size:1.3rem; cursor:pointer; color:#64748b;">&times;</button>
+      </div>
+
+      <div style="text-align:center; background:#f0fdf4; border:1px dashed #22c55e; border-radius:10px; padding:1rem; margin-bottom:1rem;">
+        <span style="font-size:0.75rem; color:#15803d; font-weight:700; text-transform:uppercase; display:block;">Digital ER Pre-Admission Token</span>
+        <h2 id="passTokenNumber" style="font-family:monospace; margin:0.3rem 0; font-size:1.6rem; color:#0f172a; letter-spacing:2px;">#JS-EM-KAN-2026-X89</h2>
+        <span style="font-size:0.8rem; color:#16a34a; font-weight:600;">✓ Priority ICU/Trauma Bed Bay Reserved</span>
+      </div>
+
+      <div style="font-size:0.85rem; color:#334155; line-height:1.6; margin-bottom:1.25rem;">
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding:0.3rem 0;">
+          <span>Facility Allocated:</span>
+          <strong id="passHospitalName" style="color:#0f172a;">SPM Trauma Center</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding:0.3rem 0;">
+          <span>Triage Urgency:</span>
+          <strong style="color:#dc2626;">Tier 1 - Resuscitation Immediate</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding:0.3rem 0;">
+          <span>Highway Corridor:</span>
+          <strong style="color:#0284c7;">Rooma NH-19 Emergency Corridor</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:0.3rem 0;">
+          <span>Verification:</span>
+          <strong style="color:#16a34a;">Digital Telemetry Synced to HMS Desk</strong>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc; border-radius:8px; padding:0.75rem; text-align:center; font-family:monospace; font-size:0.78rem; color:#64748b; margin-bottom:1rem; border:1px solid #e2e8f0;">
+        ||| | ||||| ||| |||||| |||||||| ||||| ||| ||||<br>
+        *SHOW AT CASUALTY RECEPTION FOR ZERO-PAPERWORK ADMISSION*
+      </div>
+
+      <button id="printPassBtn" onclick="window.print()" style="width:100%; background:#0f172a; color:#fff; border:none; padding:0.75rem; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.9rem;">
+        🖨️️ Download / Print Gate Pass
+      </button>
     </div>
   </div>
 
