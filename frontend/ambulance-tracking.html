@@ -13,14 +13,13 @@
   <style>
     body { background-color: #0f172a; color: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     .driver-nav { background: #1e293b; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-    .driver-grid { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 65px); }
+    .driver-grid { display: grid; grid-template-columns: 360px 1fr; height: calc(100vh - 65px); }
     @media (max-width: 850px) { .driver-grid { grid-template-columns: 1fr; height: auto; } }
     .side-panel { background: #1e293b; padding: 1.5rem; border-right: 1px solid #334155; overflow-y: auto; }
     #trackingMap { height: 100%; width: 100%; min-height: 400px; }
     .telemetry-card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; }
     .telemetry-card h3 { margin: 0 0 0.5rem 0; font-size: 1rem; color: #38bdf8; }
     .metric-row { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem; }
-    .status-badge-active { background: #16a34a; color: #fff; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
     .status-badge-transit { background: #dc2626; color: #fff; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
     .action-btn { width: 100%; padding: 0.75rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; margin-top: 0.5rem; font-family: inherit; }
   </style>
@@ -29,8 +28,8 @@
 
   <header class="driver-nav">
     <div style="display:flex; align-items:center; gap:0.75rem;">
-      <span style="background:#dc2626; color:#fff; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.85rem;">ALS FLEET</span>
-      <h1 style="font-size:1.15rem; margin:0;">Vehicle #UP78-JS-1081</h1>
+      <span style="background:#dc2626; color:#fff; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.85rem;" id="fleetBadge">ALS FLEET</span>
+      <h1 style="font-size:1.15rem; margin:0;" id="vehicleHeader">Vehicle #UP-78-AG-1021</h1>
     </div>
     <div style="display:flex; gap:0.75rem; align-items:center;">
       <span id="gpsIndicator" style="font-size:0.85rem; color:#4ade80;">● Driver Telemetry Active</span>
@@ -43,23 +42,23 @@
       <!-- ACTIVE EMERGENCY DISPATCH CARD -->
       <div class="telemetry-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-          <span class="status-badge-transit">PRIORITY 1 DISPATCH</span>
-          <span style="color:#94a3b8; font-size:0.8rem;" id="dispatchTime">Just now</span>
+          <span class="status-badge-transit" id="priorityBadge">PRIORITY 1 DISPATCH</span>
+          <span style="color:#94a3b8; font-size:0.8rem;" id="dispatchTime">Live Grid</span>
         </div>
-        <h2 style="font-size:1.1rem; margin:0 0 0.3rem 0; color:#f1f5f9;">Emergency Incident #JS-EM-104</h2>
-        <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.75rem 0;">Location: Rooma NH-19 Bypass (Opp. Axis Institute)</p>
+        <h2 style="font-size:1.1rem; margin:0 0 0.3rem 0; color:#f1f5f9;" id="incidentTitle">Active Incident #JS-EM-104</h2>
+        <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.75rem 0;" id="incidentPatient">Patient: Critical Citizen</p>
         
         <div class="metric-row">
-          <span style="color:#94a3b8;">Patient Symptom:</span>
-          <strong style="color:#f87171;">Acute Chest Pain / Respiratory</strong>
+          <span style="color:#94a3b8;">Primary Symptom:</span>
+          <strong style="color:#f87171;" id="symptomText">Acute Chest Pain</strong>
         </div>
         <div class="metric-row">
           <span style="color:#94a3b8;">Target Facility:</span>
-          <strong>SPM Hospital Trauma Unit</strong>
+          <strong id="targetHospital">Apex Emergency & Trauma</strong>
         </div>
         <div class="metric-row">
           <span style="color:#94a3b8;">Estimated ETA:</span>
-          <strong style="color:#38bdf8;" id="etaDisplay">4 mins (1.8 km)</strong>
+          <strong style="color:#38bdf8;" id="etaDisplay">Calculating...</strong>
         </div>
 
         <a href="tel:108" class="action-btn" style="background:#dc2626; color:#fff; text-decoration:none; display:block; text-align:center; box-sizing:border-box;">📞 Direct Casualty Hotline</a>
@@ -68,23 +67,19 @@
       <!-- ONBOARD PATIENT VITALS TELEMETRY -->
       <div class="telemetry-card">
         <h3>En-Route Pre-Triage Telemetry</h3>
-        <p style="font-size:0.8rem; color:#94a3b8; margin-top:0;">Transmitting in real-time to receiving ER team</p>
+        <p style="font-size:0.8rem; color:#94a3b8; margin-top:0;">Transmitting live updates to receiving ER unit</p>
         
         <div class="metric-row">
           <span>SpO2 Oxygen:</span>
-          <strong style="color:#4ade80;">94% on High-Flow Mask</strong>
+          <strong style="color:#4ade80;" id="spo2Val">95% (Stable)</strong>
         </div>
         <div class="metric-row">
           <span>Pulse / Heart Rate:</span>
-          <strong style="color:#facc15;">112 BPM (Tachycardia)</strong>
+          <strong style="color:#facc15;" id="pulseVal">108 BPM</strong>
         </div>
         <div class="metric-row">
-          <span>Blood Pressure:</span>
-          <strong>142 / 90 mmHg</strong>
-        </div>
-        <div class="metric-row">
-          <span>ICU Ventilator Ready:</span>
-          <strong style="color:#4ade80;">Bay #02 Reserved</strong>
+          <span>Telemetry Status:</span>
+          <strong style="color:#38bdf8;" id="serverSyncTag">Connected</strong>
         </div>
 
         <button class="action-btn" id="markDeliveredBtn" style="background:#2563eb; color:#fff;">✓ Confirm Hospital Handover</button>
@@ -102,11 +97,11 @@
     let destinationMarker;
     let routeLine;
 
-    // Base coordinates: Driver starting near Rooma NH-19 corridor
-    let ambLat = 26.3720;
-    let ambLng = 80.4480;
-    const destLat = 26.3785; // SPM Hospital Rooma
-    const destLng = 80.4421;
+    const AMBULANCE_ID = 1;
+    let ambLat = 26.4520;
+    let ambLng = 80.3350;
+    const destLat = 26.4499; // Apex Emergency & Trauma (Civil Lines)
+    const destLng = 80.3319;
 
     function initTrackingMap() {
       trackMap = L.map('trackingMap').setView([ambLat, ambLng], 14);
@@ -118,19 +113,19 @@
       // Hospital / Destination Marker
       destinationMarker = L.marker([destLat, destLng])
         .addTo(trackMap)
-        .bindPopup("<b>SPM Trauma Centre</b><br>Emergency Bay #2 Reserved")
+        .bindPopup("<b>Apex Trauma Institute</b><br>Emergency Critical Care Bay Ready")
         .openPopup();
 
-      // Ambulance Live Marker (Red Pulse)
+      // Ambulance Live Marker
       ambulanceMarker = L.circleMarker([ambLat, ambLng], {
         radius: 12,
         fillColor: "#dc2626",
         color: "#ffffff",
         weight: 3,
         fillOpacity: 1
-      }).addTo(trackMap).bindPopup("<b>🚑 ALS Ambulance #UP78-JS-1081</b><br>Speed: 52 km/h en route");
+      }).addTo(trackMap).bindPopup("<b>🚑 ALS Ambulance</b><br>Speed: En route");
 
-      // Draw initial connection line
+      // Route line
       routeLine = L.polyline([[ambLat, ambLng], [destLat, destLng]], {
         color: '#dc2626',
         weight: 4,
@@ -138,19 +133,17 @@
         opacity: 0.8
       }).addTo(trackMap);
 
-      // Try browser GPS for realistic live driver position
-      if ("geolocation" in navigator) {
-        navigator.geolocation.watchPosition((pos) => {
-          ambLat = pos.coords.latitude;
-          ambLng = pos.coords.longitude;
-          updateAmbulancePosition(ambLat, ambLng);
-        }, () => {
-          // Simulation fallback along NH-19 corridor
-          simulateMovement();
-        }, { enableHighAccuracy: true });
-      } else {
-        simulateMovement();
-      }
+      calculateETA();
+      syncLiveTelemetry();
+      startLocationSimulation();
+    }
+
+    function calculateETA() {
+      const dLat = (destLat - ambLat) * 111;
+      const dLng = (destLng - ambLng) * 111 * Math.cos(ambLat * (Math.PI / 180));
+      const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
+      const minutes = Math.max(1, Math.round((distKm / 45) * 60));
+      document.getElementById('etaDisplay').textContent = `${minutes} mins (${distKm.toFixed(2)} km)`;
     }
 
     function updateAmbulancePosition(lat, lng) {
@@ -159,25 +152,59 @@
         if (routeLine) {
           routeLine.setLatLngs([[lat, lng], [destLat, destLng]]);
         }
+        calculateETA();
       }
     }
 
-    // Realistic driver movement simulation toward SPM Hospital
-    function simulateMovement() {
+    // Push coordinates to Flask backend
+    async function syncBackendLocation(lat, lng) {
+      try {
+        await fetch(`/api/ambulances/${AMBULANCE_ID}/location`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ latitude: lat, longitude: lng, status: 'IN_TRANSIT' })
+        });
+        document.getElementById('serverSyncTag').textContent = "Synced (Live DB)";
+      } catch (e) {
+        document.getElementById('serverSyncTag').textContent = "Local Cached";
+      }
+    }
+
+    // Pull latest active emergency request
+    async function syncLiveTelemetry() {
+      try {
+        const res = await fetch('/api/emergencies');
+        const data = await res.json();
+        const active = (data.emergencies || []).find(e => e.status === 'ACTIVE') || (data.emergencies || [])[0];
+        if (active) {
+          document.getElementById('incidentTitle').textContent = `Incident #${active.id || '104'}`;
+          document.getElementById('incidentPatient').textContent = `Patient: ${active.patient_name || 'Emergency Casualty'}`;
+          document.getElementById('symptomText').textContent = active.symptom || 'Acute Trauma';
+          document.getElementById('priorityBadge').textContent = `${active.priority || 'CRITICAL'} DISPATCH`;
+        }
+      } catch (err) {
+        console.warn("Could not fetch emergency queue:", err);
+      }
+    }
+
+    // Movement simulation towards target hospital
+    function startLocationSimulation() {
       setInterval(() => {
-        const step = 0.0003;
-        if (Math.abs(ambLat - destLat) > 0.0002) {
+        const step = 0.0002;
+        if (Math.abs(ambLat - destLat) > 0.0001) {
           ambLat += (destLat > ambLat ? step : -step);
         }
-        if (Math.abs(ambLng - destLng) > 0.0002) {
+        if (Math.abs(ambLng - destLng) > 0.0001) {
           ambLng += (destLng > ambLng ? step : -step);
         }
         updateAmbulancePosition(ambLat, ambLng);
-      }, 3000);
+        syncBackendLocation(ambLat, ambLng);
+      }, 4000);
     }
 
-    document.getElementById('markDeliveredBtn')?.addEventListener('click', () => {
-      alert("Emergency Casualty Handover Completed! ER Doctors notified.");
+    document.getElementById('markDeliveredBtn')?.addEventListener('click', async () => {
+      await syncBackendLocation(destLat, destLng);
+      alert("✓ Casualty Handover Confirmed! Hospital ER team notified.");
     });
 
     function logout() {

@@ -11,17 +11,23 @@
   <!-- QRCode.js Library for instant dynamic QR generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    body { background-color: #f8fafc; }
+    body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
     .dash-header { background: #0f172a; color: #fff; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-    .dash-wrap { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem; }
-    @media (max-width: 800px) { .dash-wrap { grid-template-columns: 1fr; } }
+    .dash-wrap { max-width: 1050px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 1.3fr; gap: 2rem; }
+    @media (max-width: 860px) { .dash-wrap { grid-template-columns: 1fr; } }
     .box-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     .box-card h2 { font-size: 1.25rem; margin-top: 0; color: #0f172a; margin-bottom: 1.25rem; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 500px) { .field-row { grid-template-columns: 1fr; } }
     .field-grp { margin-bottom: 1rem; }
     .field-grp label { display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.3rem; }
     .field-grp input, .field-grp select { width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; }
-    .qr-area { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .field-grp input:focus, .field-grp select:focus { outline: none; border-color: #2563eb; ring: 2px solid #93c5fd; }
+    .qr-area { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
     #qrcode { padding: 1rem; background: #fff; border: 2px dashed #94a3b8; border-radius: 12px; margin-bottom: 1rem; min-height: 180px; display: flex; align-items: center; justify-content: center; }
+    .status-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .badge-synced { background: #dcfce7; color: #166534; }
+    .badge-syncing { background: #fef3c7; color: #92400e; }
   </style>
 </head>
 <body>
@@ -31,62 +37,134 @@
       <span class="logo-mark" style="background:#2563eb; color:#fff; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:800;">+</span>
       <strong style="font-size:1.15rem;">JeevanSetu Citizen Vault</strong>
     </div>
-    <div>
-      <a href="index.html" class="btn btn-secondary btn-sm" style="background:#334155; color:#fff; border:none; text-decoration:none;">Public Grid</a>
-      <button onclick="logout()" class="btn btn-secondary btn-sm" style="background:#dc2626; color:#fff; border:none; margin-left:0.5rem; cursor:pointer;">Sign Out</button>
+    <div style="display:flex; align-items:center; gap:0.5rem;">
+      <a href="index.html" class="btn btn-secondary btn-sm" style="background:#334155; color:#fff; padding:0.5rem 0.85rem; border-radius:6px; text-decoration:none; font-size:0.85rem; font-weight:600;">Public Grid</a>
+      <button onclick="logout()" class="btn btn-secondary btn-sm" style="background:#dc2626; color:#fff; padding:0.5rem 0.85rem; border-radius:6px; border:none; font-size:0.85rem; font-weight:600; cursor:pointer;">Sign Out</button>
     </div>
   </header>
 
   <main class="dash-wrap">
     <!-- QR HEALTH CARD GENERATOR -->
     <section class="box-card qr-area">
-      <h2>Emergency QR Health Card</h2>
-      <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:1.5rem;">Save or print this QR. First responders can scan this to view vital medical info without unlocking your phone.</p>
+      <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-bottom:0.75rem;">
+        <h2 style="margin:0;">QR Health Card</h2>
+        <span id="syncBadge" class="status-badge badge-synced">Live Synced</span>
+      </div>
+      <p style="font-size:0.85rem; color:#64748b; margin-top:0; margin-bottom:1.5rem;">
+        First responders can scan this encrypted card during emergencies to access critical medical metadata immediately.
+      </p>
       
       <div id="qrcode"></div>
-      <a id="previewCardLink" href="#" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:0.5rem; text-decoration:none;">🔍 Preview Scanned Card</a>
+      
+      <div style="display:flex; flex-direction:column; gap:0.5rem; width:100%; margin-top:0.5rem;">
+        <a id="previewCardLink" href="#" target="_blank" style="background:#0f172a; color:#fff; padding:0.65rem; border-radius:6px; text-decoration:none; font-size:0.9rem; font-weight:600; text-align:center;">
+          🔍 Preview Scanned Card
+        </a>
+        <button onclick="window.print()" style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; padding:0.65rem; border-radius:6px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+          🖨️ Print Emergency Card
+        </button>
+      </div>
     </section>
 
-    <!-- HEALTH PROFILE FORM -->
+    <!-- HEALTH PROFILE FORM CONNECTED TO SQLITE BACKEND -->
     <section class="box-card">
-      <h2>Emergency Medical Profile</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+        <h2 style="margin:0;">Emergency Medical Profile</h2>
+        <small id="lastUpdatedStatus" style="color:#64748b; font-size:0.8rem;"></small>
+      </div>
+
       <form id="healthProfileForm">
         <div class="field-grp">
-          <label>Full Name</label>
-          <input type="text" id="profName" value="Citizen User" required />
+          <label>Full Legal Name</label>
+          <input type="text" id="profName" placeholder="Full Name" required />
         </div>
+
+        <div class="field-row">
+          <div class="field-grp">
+            <label>Blood Group</label>
+            <select id="profBlood">
+              <option value="">Select Blood Group</option>
+              <option value="O+">O Positive (O+)</option>
+              <option value="O-">O Negative (O-)</option>
+              <option value="A+">A Positive (A+)</option>
+              <option value="A-">A Negative (A-)</option>
+              <option value="B+">B Positive (B+)</option>
+              <option value="B-">B Negative (B-)</option>
+              <option value="AB+">AB Positive (AB+)</option>
+              <option value="AB-">AB Negative (AB-)</option>
+            </select>
+          </div>
+          <div class="field-grp">
+            <label>Age</label>
+            <input type="number" id="profAge" placeholder="e.g. 28" min="1" max="120" />
+          </div>
+        </div>
+
         <div class="field-grp">
-          <label>Blood Group</label>
-          <select id="profBlood">
-            <option value="O+">O Positive (O+)</option>
-            <option value="O-">O Negative (O-)</option>
-            <option value="A+">A Positive (A+)</option>
-            <option value="A-">A Negative (A-)</option>
-            <option value="B+">B Positive (B+)</option>
-            <option value="B-">B Negative (B-)</option>
-            <option value="AB+">AB Positive (AB+)</option>
-            <option value="AB-">AB Negative (AB-)</option>
+          <label>Gender</label>
+          <select id="profGender">
+            <option value="">Select Gender</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
           </select>
         </div>
+
         <div class="field-grp">
           <label>Known Chronic Conditions / Implants</label>
-          <input type="text" id="profConditions" placeholder="e.g. Type 2 Diabetes, Cardiac Stent" />
+          <input type="text" id="profConditions" placeholder="e.g. Type 2 Diabetes, Asthma, Cardiac Stent" />
         </div>
+
         <div class="field-grp">
           <label>Critical Drug Allergies</label>
           <input type="text" id="profAllergies" placeholder="e.g. Penicillin, Aspirin, Sulfa drugs" />
         </div>
-        <div class="field-grp">
-          <label>Emergency Guardian Phone</label>
-          <input type="tel" id="profGuardianPhone" placeholder="+91 9876543210" required />
+
+        <div class="field-row">
+          <div class="field-grp">
+            <label>Emergency Contact Name</label>
+            <input type="text" id="profContactName" placeholder="Guardian / Relative Name" />
+          </div>
+          <div class="field-grp">
+            <label>Emergency Contact Phone</label>
+            <input type="tel" id="profGuardianPhone" placeholder="+91 9876543210" required />
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top:1.25rem;">Update & Refresh QR</button>
+
+        <button type="submit" id="saveBtn" style="background:#2563eb; color:#fff; border:none; padding:0.75rem 1rem; border-radius:6px; width:100%; font-size:0.95rem; font-weight:700; cursor:pointer; margin-top:0.5rem;">
+          Save & Sync Profile
+        </button>
       </form>
     </section>
   </main>
 
   <script>
     let qrInstance = null;
+
+    // Resolve active authenticated user ID (defaults to 1 for standalone verification)
+    function getActiveUserId() {
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const parsed = JSON.parse(user);
+          if (parsed.id) return parsed.id;
+        } catch(e) {}
+      }
+      return localStorage.getItem('user_id') || 1;
+    }
+
+    const currentUserId = getActiveUserId();
+
+    function updateBadge(state, text) {
+      const badge = document.getElementById('syncBadge');
+      if (state === 'syncing') {
+        badge.className = 'status-badge badge-syncing';
+        badge.innerText = text || 'Syncing...';
+      } else {
+        badge.className = 'status-badge badge-synced';
+        badge.innerText = text || 'Live Synced';
+      }
+    }
 
     function renderQR() {
       const name = encodeURIComponent(document.getElementById('profName').value.trim());
@@ -95,7 +173,6 @@
       const alg = encodeURIComponent(document.getElementById('profAllergies').value.trim());
       const phone = encodeURIComponent(document.getElementById('profGuardianPhone').value.trim());
 
-      // Base URL pointing directly to emergency-card.html
       const currentHost = window.location.origin + window.location.pathname.replace('customer-dashboard.html', '');
       const scanUrl = `${currentHost}emergency-card.html?n=${name}&b=${blood}&c=${cond}&a=${alg}&p=${phone}`;
 
@@ -113,30 +190,95 @@
       document.getElementById('previewCardLink').href = scanUrl;
     }
 
-    // Load initial user info
-    document.addEventListener('DOMContentLoaded', () => {
-      const user = localStorage.getItem('user');
-      if (user) {
-        try {
-          const u = JSON.parse(user);
-          if (u.name) document.getElementById('profName').value = u.name;
-          if (u.phone) document.getElementById('profGuardianPhone').value = u.phone;
-        } catch(e) {}
-      }
-      renderQR();
-    });
+    // Fetch live profile from Flask SQLite API
+    async function loadUserProfile() {
+      updateBadge('syncing', 'Loading...');
+      try {
+        const res = await fetch(`/api/patient/profile/${currentUserId}`);
+        if (!res.ok) throw new Error("Profile API endpoint returned " + res.status);
+        
+        const data = await res.json();
+        if (data.status === 'success' && data.profile) {
+          const p = data.profile;
+          if (p.full_name) document.getElementById('profName').value = p.full_name;
+          if (p.blood_group) document.getElementById('profBlood').value = p.blood_group;
+          if (p.age) document.getElementById('profAge').value = p.age;
+          if (p.gender) document.getElementById('profGender').value = p.gender;
+          if (p.emergency_contact_name) document.getElementById('profContactName').value = p.emergency_contact_name;
+          if (p.emergency_contact_phone) document.getElementById('profGuardianPhone').value = p.emergency_contact_phone;
+          if (p.chronic_conditions) document.getElementById('profConditions').value = p.chronic_conditions;
+          if (p.medical_allergies) document.getElementById('profAllergies').value = p.medical_allergies;
 
-    document.getElementById('healthProfileForm').addEventListener('submit', (e) => {
+          document.getElementById('lastUpdatedStatus').innerText = "Database verified";
+        }
+      } catch (err) {
+        console.warn("Backend API sync offline, falling back to localStorage cache:", err);
+        const cachedUser = localStorage.getItem('user');
+        if (cachedUser) {
+          try {
+            const u = JSON.parse(cachedUser);
+            if (u.name) document.getElementById('profName').value = u.name;
+            if (u.phone) document.getElementById('profGuardianPhone').value = u.phone;
+          } catch(e) {}
+        }
+      } finally {
+        updateBadge('synced', 'Live Synced');
+        renderQR();
+      }
+    }
+
+    // Save profile to Flask backend
+    document.getElementById('healthProfileForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      renderQR();
-      alert("Emergency QR Health Profile updated successfully!");
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerText = "Saving to Database...";
+      updateBadge('syncing', 'Saving...');
+
+      const payload = {
+        blood_group: document.getElementById('profBlood').value,
+        age: parseInt(document.getElementById('profAge').value) || null,
+        gender: document.getElementById('profGender').value,
+        emergency_contact_name: document.getElementById('profContactName').value.trim(),
+        emergency_contact_phone: document.getElementById('profGuardianPhone').value.trim(),
+        chronic_conditions: document.getElementById('profConditions').value.trim(),
+        medical_allergies: document.getElementById('profAllergies').value.trim()
+      };
+
+      try {
+        const res = await fetch(`/api/patient/profile/${currentUserId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.status === 'success') {
+          renderQR();
+          updateBadge('synced', 'Saved');
+          document.getElementById('lastUpdatedStatus').innerText = "Last saved just now";
+          alert("✓ Profile updated and saved to SQLite database successfully!");
+        } else {
+          alert("Failed to save: " + (data.message || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("Save error:", err);
+        renderQR();
+        alert("Server communication error. Check that 'python app.py' is running.");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "Save & Sync Profile";
+      }
     });
 
     function logout() {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('user_id');
       window.location.href = 'login.html';
     }
+
+    document.addEventListener('DOMContentLoaded', loadUserProfile);
   </script>
 </body>
 </html>

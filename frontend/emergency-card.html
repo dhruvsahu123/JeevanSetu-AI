@@ -9,22 +9,102 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
-    .card-wrap { background: #1e293b; border: 2px solid #dc2626; border-radius: 16px; max-width: 420px; width: 100%; padding: 1.75rem; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2); }
-    .card-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 1rem; }
-    .card-top h1 { font-size: 1.2rem; margin: 0; color: #f87171; display: flex; align-items: center; gap: 0.5rem; }
-    .blood-badge { background: #dc2626; color: #fff; font-size: 1.2rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 8px; }
+    body { 
+      background-color: #0f172a; 
+      color: #f8fafc; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      padding: 1rem; 
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+    }
+    .card-wrap { 
+      background: #1e293b; 
+      border: 2px solid #dc2626; 
+      border-radius: 16px; 
+      max-width: 440px; 
+      width: 100%; 
+      padding: 1.75rem; 
+      box-shadow: 0 10px 30px rgba(220, 38, 38, 0.25); 
+      box-sizing: border-box;
+    }
+    .card-top { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 1px solid #334155; 
+      padding-bottom: 1rem; 
+      margin-bottom: 1.25rem; 
+    }
+    .card-top h1 { 
+      font-size: 1.25rem; 
+      margin: 0; 
+      color: #f87171; 
+      display: flex; 
+      align-items: center; 
+      gap: 0.5rem; 
+    }
+    .blood-badge { 
+      background: #dc2626; 
+      color: #fff; 
+      font-size: 1.2rem; 
+      font-weight: 800; 
+      padding: 0.35rem 0.8rem; 
+      border-radius: 8px; 
+      min-width: 45px;
+      text-align: center;
+    }
     .data-group { margin-bottom: 1rem; }
-    .data-group label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.2rem; }
-    .data-group p { font-size: 1rem; font-weight: 600; margin: 0; color: #f1f5f9; }
-    .call-btn { display: block; text-align: center; background: #dc2626; color: #fff; text-decoration: none; padding: 0.75rem; border-radius: 8px; font-weight: 700; margin-top: 1.5rem; }
+    .data-group label { 
+      display: block; 
+      font-size: 0.75rem; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em; 
+      color: #94a3b8; 
+      margin-bottom: 0.25rem; 
+      font-weight: 600;
+    }
+    .data-group p { 
+      font-size: 1rem; 
+      font-weight: 600; 
+      margin: 0; 
+      color: #f1f5f9; 
+    }
+    .meta-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .call-btn { 
+      display: block; 
+      text-align: center; 
+      background: #dc2626; 
+      color: #fff; 
+      text-decoration: none; 
+      padding: 0.85rem; 
+      border-radius: 8px; 
+      font-weight: 700; 
+      margin-top: 1.5rem; 
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+      transition: background 0.2s;
+    }
+    .call-btn:hover { background: #b91c1c; }
+    .sync-tag {
+      font-size: 0.7rem;
+      color: #38bdf8;
+      text-align: right;
+      margin-top: 0.75rem;
+    }
   </style>
 </head>
 <body>
 
   <div class="card-wrap">
     <div class="card-top">
-      <h1>⚠️️ Emergency Medical ID</h1>
+      <h1>🚨 Emergency Medical ID</h1>
       <span class="blood-badge" id="bloodBadge">--</span>
     </div>
 
@@ -33,14 +113,25 @@
       <p id="patientName">Loading...</p>
     </div>
 
+    <div class="meta-row">
+      <div class="data-group" style="margin-bottom:0;">
+        <label>Age / Gender</label>
+        <p id="patientAgeGender">--</p>
+      </div>
+      <div class="data-group" style="margin-bottom:0;">
+        <label>Status</label>
+        <p style="color:#4ade80;">Active Profile</p>
+      </div>
+    </div>
+
     <div class="data-group">
       <label>Chronic Medical Conditions</label>
-      <p id="conditions">None reported</p>
+      <p id="conditions" style="color:#fbbf24;">None reported</p>
     </div>
 
     <div class="data-group">
       <label>Known Drug Allergies</label>
-      <p id="allergies" style="color: #fca5a5;">None</p>
+      <p id="allergies" style="color:#f87171;">None</p>
     </div>
 
     <div class="data-group">
@@ -49,26 +140,63 @@
     </div>
 
     <a href="#" id="callGuardianBtn" class="call-btn">📞 Call Emergency Contact</a>
+    <div id="syncStatus" class="sync-tag">Telemetry ready</div>
   </div>
 
   <script>
-    // URL parameters se data decode karein (e.g. ?name=...&blood=O%2B&phone=...)
     const params = new URLSearchParams(window.location.search);
-    const name = params.get('n') || 'Citizen';
-    const blood = params.get('b') || 'O+';
-    const cond = params.get('c') || 'Hypertension / Asthma';
-    const alg = params.get('a') || 'Penicillin Allergy';
-    const phone = params.get('p') || '108';
+    const userId = params.get('uid');
 
-    document.getElementById('patientName').textContent = decodeURIComponent(name);
-    document.getElementById('bloodBadge').textContent = decodeURIComponent(blood);
-    document.getElementById('conditions').textContent = decodeURIComponent(cond);
-    document.getElementById('allergies').textContent = decodeURIComponent(alg);
-    document.getElementById('guardianContact').textContent = decodeURIComponent(phone);
-    
+    // 1. Initial hydrate from URL query params (fallback / instant render)
+    const rawName = params.get('n') || 'Citizen';
+    const rawBlood = params.get('b') || '--';
+    const rawCond = params.get('c') || 'None reported';
+    const rawAlg = params.get('a') || 'None';
+    const rawPhone = params.get('p') || '108';
+
+    document.getElementById('patientName').textContent = decodeURIComponent(rawName);
+    document.getElementById('bloodBadge').textContent = decodeURIComponent(rawBlood);
+    document.getElementById('conditions').textContent = decodeURIComponent(rawCond);
+    document.getElementById('allergies').textContent = decodeURIComponent(rawAlg);
+    document.getElementById('guardianContact').textContent = decodeURIComponent(rawPhone);
+
     const callBtn = document.getElementById('callGuardianBtn');
-    callBtn.href = `tel:${phone}`;
-    callBtn.textContent = `📞 Call Guardian (${phone})`;
+    callBtn.href = `tel:${decodeURIComponent(rawPhone)}`;
+    callBtn.textContent = `📞 Call Guardian (${decodeURIComponent(rawPhone)})`;
+
+    // 2. Live sync from SQLite backend if user_id is present
+    async function syncFromBackend() {
+      if (!userId) return;
+
+      try {
+        const res = await fetch(`/api/patient/profile/${userId}`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (data.status === 'success' && data.profile) {
+          const p = data.profile;
+          if (p.full_name) document.getElementById('patientName').textContent = p.full_name;
+          if (p.blood_group) document.getElementById('bloodBadge').textContent = p.blood_group;
+          if (p.age || p.gender) {
+            document.getElementById('patientAgeGender').textContent = `${p.age || '--'} Yrs / ${p.gender || '--'}`;
+          }
+          if (p.chronic_conditions) document.getElementById('conditions').textContent = p.chronic_conditions;
+          if (p.medical_allergies) document.getElementById('allergies').textContent = p.medical_allergies;
+
+          const phone = p.emergency_contact_phone || rawPhone;
+          const contactTitle = p.emergency_contact_name ? `${p.emergency_contact_name} (${phone})` : phone;
+          document.getElementById('guardianContact').textContent = contactTitle;
+          callBtn.href = `tel:${phone}`;
+          callBtn.textContent = `📞 Call Guardian (${phone})`;
+
+          document.getElementById('syncStatus').textContent = "✓ Verified by JeevanSetu DB";
+        }
+      } catch (e) {
+        console.warn("Using offline parameters, server unavailable:", e);
+      }
+    }
+
+    syncFromBackend();
   </script>
 </body>
 </html>
