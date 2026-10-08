@@ -1,6 +1,4 @@
-# make_readme.py - Auto-generates SIH documentation
-
-content = """# 🚑 JeevanSetu AI (जीवनसेतु)
+﻿# 🚑 JeevanSetu AI (जीवनसेतु)
 ### Intelligent Emergency Healthcare Grid, Bed Telemetry & Pre-Arrival Triage
 *Developed for Smart India Hackathon (SIH) | Aligned with ABDM*
 
@@ -41,9 +39,3 @@ During highway accidents and acute medical crises along the **Kanpur & Rooma NH-
 ## 👥 Team
 - **Lead Developer:** Dhruv Sahu
 - **Institution:** Axis Colleges, Kanpur
-"""
-
-with open("README.md", "w", encoding="utf-8") as f:
-    f.write(content)
-
-print("✅ README.md successfully ban gayi hai!")
