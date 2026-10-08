@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from flask import Flask, request, jsonify
+import math
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -14,8 +15,31 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+def haversine_km(lat1, lon1, lat2, lon2):
+    """Calculates spherical distance between two GPS coordinates in kilometers."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) ** 2 +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(dlon / 2) ** 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return round(R * c, 2)
+
 # =============================================================
-# 1. CORE HEALTH & STATUS ENDPOINTS
+# 1. FRONTEND STATIC FILE DELIVERY
+# =============================================================
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('frontend', 'index.html')
+
+@app.route('/frontend/<path:filename>')
+def serve_frontend_files(filename):
+    return send_from_directory('frontend', filename)
+
+# =============================================================
+# 2. CORE HEALTH & STATUS ENDPOINTS
 # =============================================================
 
 @app.route('/api/health', methods=['GET'])
@@ -27,7 +51,7 @@ def health_check():
     }), 200
 
 # =============================================================
-# 2. AUTHENTICATION & ACCESS CONTROL
+# 3. AUTHENTICATION & ACCESS CONTROL
 # =============================================================
 
 @app.route('/api/auth/register', methods=['POST'])
@@ -66,7 +90,7 @@ def register_user():
 @app.route('/api/auth/login', methods=['POST'])
 def login_user():
     data = request.get_json() or {}
-    identifier = data.get('identifier')  # email or phone
+    identifier = data.get('identifier')
     password = data.get('password')
 
     if not identifier or not password:
@@ -94,7 +118,7 @@ def login_user():
     }), 200
 
 # =============================================================
-# 3. HOSPITALS & BED MANAGEMENT
+# 4. HOSPITALS & BED MANAGEMENT
 # =============================================================
 
 @app.route('/api/hospitals', methods=['GET'])
@@ -103,6 +127,7 @@ def get_hospitals():
     cursor = conn.cursor()
     hospitals = cursor.execute('''
         SELECT h.id, h.name, h.locality, h.distance_km, h.trauma_level, h.phone,
+               h.latitude, h.longitude,
                b.icu_available, b.icu_total, b.oxygen_available
         FROM hospitals h
         LEFT JOIN hospital_beds b ON h.id = b.hospital_id
@@ -133,7 +158,7 @@ def update_hospital_beds(hosp_id):
     return jsonify({"status": "success", "message": "Bed availability updated"}), 200
 
 # =============================================================
-# 4. EMERGENCY REQUESTS QUEUE
+# 5. EMERGENCY REQUESTS QUEUE
 # =============================================================
 
 @app.route('/api/emergency/create', methods=['POST'])
@@ -170,7 +195,7 @@ def get_emergencies():
     }), 200
 
 # =============================================================
-# 5. BLOOD BANK DIRECTORY & MOCK AI TRIAGE
+# 6. BLOOD BANK DIRECTORY & TRIAGE ESTIMATION
 # =============================================================
 
 @app.route('/api/blood-banks', methods=['GET'])
@@ -204,7 +229,7 @@ def ai_triage_symptom():
     }), 200
 
 # =============================================================
-# 6. PATIENT PROFILE & EMERGENCY TELEMETRY (Phase 21.5)
+# 7. PATIENT PROFILE & EMERGENCY TELEMETRY
 # =============================================================
 
 @app.route('/api/patient/profile/<int:user_id>', methods=['GET'])
@@ -282,7 +307,7 @@ def update_patient_profile(user_id):
     return jsonify({"status": "success", "message": "Patient profile updated successfully"}), 200
 
 # =============================================================
-# 7. AMBULANCE FLEET & LIVE TELEMETRY (Phase 22)
+# 8. AMBULANCE FLEET & LIVE TELEMETRY
 # =============================================================
 
 @app.route('/api/ambulances', methods=['GET'])
@@ -314,7 +339,7 @@ def update_ambulance_location(amb_id):
     return jsonify({"status": "success", "message": "Location updated"}), 200
 
 # =============================================================
-# TRIAGE ENGINE & ATOMIC DISPATCH PIPELINE (Phase 23/27)
+# 9. HAVERSINE TRIAGE DISPATCH PIPELINE
 # =============================================================
 
 @app.route('/api/dispatch/triage', methods=['POST'])
@@ -331,7 +356,6 @@ def triage_and_dispatch():
     cursor = conn.cursor()
 
     try:
-        # 1. Fetch hospitals that have bed availability
         bed_col = 'icu_available' if requires_icu else 'oxygen_available'
         query = f'''
             SELECT h.id, h.name, h.locality, h.phone, h.latitude, h.longitude, b.{bed_col}
@@ -348,15 +372,15 @@ def triage_and_dispatch():
                 "message": "No critical care beds available across the emergency corridor"
             }), 409
 
-        # Sort hospitals by dynamic Haversine distance from patient
         sorted_hospitals = sorted(
             candidate_hospitals,
-            key=lambda h: haversine_km(p_lat, p_lng, h['latitude'], h['longitude'])
+            key=lambda h: haversine_km(p_lat, p_lng, h['latitude'] if h['latitude'] else 26.4499, h['longitude'] if h['longitude'] else 80.3319)
         )
         selected_hosp = sorted_hospitals[0]
-        hosp_dist = haversine_km(p_lat, p_lng, selected_hosp['latitude'], selected_hosp['longitude'])
+        h_lat = selected_hosp['latitude'] if selected_hosp['latitude'] else 26.4499
+        h_lng = selected_hosp['longitude'] if selected_hosp['longitude'] else 80.3319
+        hosp_dist = haversine_km(p_lat, p_lng, h_lat, h_lng)
 
-        # 2. Select closest available ambulance
         available_ambs = cursor.execute('''
             SELECT id, vehicle_number, driver_name, driver_phone, current_latitude, current_longitude
             FROM ambulances
@@ -373,7 +397,6 @@ def triage_and_dispatch():
             selected_amb = sorted_ambs[0]
             amb_dist = haversine_km(p_lat, p_lng, selected_amb['current_latitude'], selected_amb['current_longitude'])
 
-        # 3. Atomically reserve bed and lock ambulance
         cursor.execute(f'''
             UPDATE hospital_beds
             SET {bed_col} = {bed_col} - 1
@@ -387,7 +410,6 @@ def triage_and_dispatch():
                 WHERE id = ?
             ''', (selected_amb['id'],))
 
-        # 4. Insert Emergency Incident Record
         cursor.execute('''
             INSERT INTO emergency_requests (patient_name, symptom, priority, status)
             VALUES (?, ?, ?, 'ACTIVE')
@@ -397,7 +419,6 @@ def triage_and_dispatch():
         conn.commit()
         conn.close()
 
-        # Approximate ETA at 40 km/h emergency speed
         amb_eta_mins = max(2, round((amb_dist / 40.0) * 60)) if amb_dist is not None else "Queued"
 
         return jsonify({
@@ -428,26 +449,6 @@ def triage_and_dispatch():
         conn.close()
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# Check and add latitude/longitude to hospitals if missing
-cursor.execute("PRAGMA table_info(hospitals);")
-cols = [col[1] for col in cursor.fetchall()]
-
-if 'latitude' not in cols:
-    cursor.execute("ALTER TABLE hospitals ADD COLUMN latitude REAL DEFAULT 26.4499;")
-if 'longitude' not in cols:
-    cursor.execute("ALTER TABLE hospitals ADD COLUMN longitude REAL DEFAULT 80.3319;")
-
-# Seed standard coordinates for key Kanpur medical hubs
-hosp_coords = [
-    (1, 26.4735, 80.3506),  # Apex / GSVM Medical College area
-    (2, 26.4350, 80.2980),  # Regency / Govind Nagar corridor
-    (3, 26.3785, 80.4421)   # SPM Hospital / Rooma NH-19 corridor
-]
-
-for hid, lat, lng in hosp_coords:
-    cursor.execute("UPDATE hospitals SET latitude = ?, longitude = ? WHERE id = ?;", (lat, lng, hid))
-
-conn.commit()
-print("✓ Hospital coordinates successfully migrated!")
-conn.close()
-'@ | Set-Content migrate_coords.py; python migrate_coords.py; Remove-Item migrate_coords.py
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)

@@ -199,4 +199,13 @@
     });
   </script>
 </body>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/frontend/sw.js')
+        .then((reg) => console.log('✓ Service Worker Registered:', reg.scope))
+        .catch((err) => console.warn('SW registration failed:', err));
+    });
+  }
+</script>
 </html>

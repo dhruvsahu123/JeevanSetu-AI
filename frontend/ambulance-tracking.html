@@ -3,216 +3,191 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ambulance Dispatch & Fleet Telemetry | JeevanSetu AI</title>
+  <title>JeevanSetu AI | Live Fleet Telemetry Dispatch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
-  <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    body { background-color: #0f172a; color: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .driver-nav { background: #1e293b; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-    .driver-grid { display: grid; grid-template-columns: 360px 1fr; height: calc(100vh - 65px); }
-    @media (max-width: 850px) { .driver-grid { grid-template-columns: 1fr; height: auto; } }
-    .side-panel { background: #1e293b; padding: 1.5rem; border-right: 1px solid #334155; overflow-y: auto; }
-    #trackingMap { height: 100%; width: 100%; min-height: 400px; }
-    .telemetry-card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; }
-    .telemetry-card h3 { margin: 0 0 0.5rem 0; font-size: 1rem; color: #38bdf8; }
-    .metric-row { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem; }
-    .status-badge-transit { background: #dc2626; color: #fff; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
-    .action-btn { width: 100%; padding: 0.75rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; margin-top: 0.5rem; font-family: inherit; }
+    body { background-color: #0b1329; color: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { background: #111e38; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 1000; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px; }
+    .nav-links a:hover { color: #fff; background: #1e3a5f; }
+
+    .main-grid { display: flex; flex: 1; position: relative; height: calc(100vh - 65px); }
+    #map { flex: 1; height: 100%; z-index: 10; }
+
+    /* Side HUD Overlay */
+    .hud-panel { width: 360px; background: rgba(17, 30, 56, 0.95); backdrop-filter: blur(8px); border-left: 1px solid #1e3a5f; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; z-index: 20; box-shadow: -4px 0 20px rgba(0,0,0,0.4); overflow-y: auto; }
+    .hud-badge { display: inline-block; background: #065f46; color: #34d399; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 9999px; letter-spacing: 0.5px; }
+    .stat-card { background: #0b1329; border: 1px solid #1e293b; border-radius: 10px; padding: 1rem; }
+    .stat-label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.25rem; }
+    .stat-val { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; }
+
+    .route-stepper { display: flex; flex-direction: column; gap: 0.75rem; }
+    .step-item { display: flex; gap: 0.75rem; font-size: 0.85rem; align-items: flex-start; }
+    .step-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+    .dot-green { background: #10b981; }
+    .dot-blue { background: #38bdf8; }
+    .dot-red { background: #ef4444; }
   </style>
 </head>
 <body>
 
-  <header class="driver-nav">
-    <div style="display:flex; align-items:center; gap:0.75rem;">
-      <span style="background:#dc2626; color:#fff; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.85rem;" id="fleetBadge">ALS FLEET</span>
-      <h1 style="font-size:1.15rem; margin:0;" id="vehicleHeader">Vehicle #UP-78-AG-1021</h1>
+  <header>
+    <div style="display:flex; align-items:center; gap:0.6rem;">
+      <span style="background:#dc2626; color:#fff; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:800;">🚑</span>
+      <strong style="font-size:1.1rem; letter-spacing:0.5px;">Fleet Command | Active Telemetry</strong>
     </div>
-    <div style="display:flex; gap:0.75rem; align-items:center;">
-      <span id="gpsIndicator" style="font-size:0.85rem; color:#4ade80;">● Driver Telemetry Active</span>
-      <button onclick="logout()" style="background:#334155; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer;">Exit</button>
-    </div>
+    <nav class="nav-links">
+      <a href="/">SOS Portal</a>
+      <a href="customer-dashboard.html">Citizen Vault</a>
+      <a href="hospital-dashboard.html">Hospital Hub</a>
+    </nav>
   </header>
 
-  <main class="driver-grid">
-    <aside class="side-panel">
-      <!-- ACTIVE EMERGENCY DISPATCH CARD -->
-      <div class="telemetry-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-          <span class="status-badge-transit" id="priorityBadge">PRIORITY 1 DISPATCH</span>
-          <span style="color:#94a3b8; font-size:0.8rem;" id="dispatchTime">Live Grid</span>
-        </div>
-        <h2 style="font-size:1.1rem; margin:0 0 0.3rem 0; color:#f1f5f9;" id="incidentTitle">Active Incident #JS-EM-104</h2>
-        <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.75rem 0;" id="incidentPatient">Patient: Critical Citizen</p>
-        
-        <div class="metric-row">
-          <span style="color:#94a3b8;">Primary Symptom:</span>
-          <strong style="color:#f87171;" id="symptomText">Acute Chest Pain</strong>
-        </div>
-        <div class="metric-row">
-          <span style="color:#94a3b8;">Target Facility:</span>
-          <strong id="targetHospital">Apex Emergency & Trauma</strong>
-        </div>
-        <div class="metric-row">
-          <span style="color:#94a3b8;">Estimated ETA:</span>
-          <strong style="color:#38bdf8;" id="etaDisplay">Calculating...</strong>
-        </div>
+  <div class="main-grid">
+    <div id="map"></div>
 
-        <a href="tel:108" class="action-btn" style="background:#dc2626; color:#fff; text-decoration:none; display:block; text-align:center; box-sizing:border-box;">📞 Direct Casualty Hotline</a>
+    <aside class="hud-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="hud-badge" id="telemetryStatus">EN ROUTE ACTIVE</span>
+        <small style="color:#64748b; font-size:0.75rem;">GPS Sync: 1 Hz</small>
       </div>
 
-      <!-- ONBOARD PATIENT VITALS TELEMETRY -->
-      <div class="telemetry-card">
-        <h3>En-Route Pre-Triage Telemetry</h3>
-        <p style="font-size:0.8rem; color:#94a3b8; margin-top:0;">Transmitting live updates to receiving ER unit</p>
-        
-        <div class="metric-row">
-          <span>SpO2 Oxygen:</span>
-          <strong style="color:#4ade80;" id="spo2Val">95% (Stable)</strong>
-        </div>
-        <div class="metric-row">
-          <span>Pulse / Heart Rate:</span>
-          <strong style="color:#facc15;" id="pulseVal">108 BPM</strong>
-        </div>
-        <div class="metric-row">
-          <span>Telemetry Status:</span>
-          <strong style="color:#38bdf8;" id="serverSyncTag">Connected</strong>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Assigned Emergency Unit</div>
+        <div class="stat-val" style="color:#38bdf8;" id="vehicleLabel">UP-78-AG-1021 (ALS-1)</div>
+        <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.3rem;">Driver: Ramesh Kumar • +91-9876500001</div>
+      </div>
 
-        <button class="action-btn" id="markDeliveredBtn" style="background:#2563eb; color:#fff;">✓ Confirm Hospital Handover</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div class="stat-card">
+          <div class="stat-label">Speed</div>
+          <div class="stat-val" id="speedLabel">42 km/h</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Dynamic ETA</div>
+          <div class="stat-val" style="color:#4ade80;" id="etaLabel">4 mins</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Live Corridor Route</div>
+        <div class="route-stepper" style="margin-top:0.75rem;">
+          <div class="step-item">
+            <span class="step-dot dot-green"></span>
+            <div><strong>Dispatch Origin:</strong> Civil Lines Stand</div>
+          </div>
+          <div class="step-item">
+            <span class="step-dot dot-blue"></span>
+            <div><strong>Casualty Pickup:</strong> Mall Road Junction</div>
+          </div>
+          <div class="step-item">
+            <span class="step-dot dot-red"></span>
+            <div><strong>Receiving Trauma:</strong> Apex Trauma Institute</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Current Geolocation Telemetry</div>
+        <div style="font-family:monospace; font-size:0.8rem; color:#cbd5e1; margin-top:0.4rem;">
+          LAT: <span id="curLat">26.4520</span><br>
+          LNG: <span id="curLng">80.3350</span>
+        </div>
       </div>
     </aside>
+  </div>
 
-    <div id="trackingMap"></div>
-  </main>
-
-  <!-- Leaflet Map JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    let trackMap;
-    let ambulanceMarker;
-    let destinationMarker;
-    let routeLine;
+    // 1. Initialize Map centered on Kanpur
+    const map = L.map('map', { zoomControl: false }).setView([26.4600, 80.3400], 14);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    const AMBULANCE_ID = 1;
-    let ambLat = 26.4520;
-    let ambLng = 80.3350;
-    const destLat = 26.4499; // Apex Emergency & Trauma (Civil Lines)
-    const destLng = 80.3319;
+    // Dark-mode Mapbox / CartoDB tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      maxZoom: 19
+    }).addTo(map);
 
-    function initTrackingMap() {
-      trackMap = L.map('trackingMap').setView([ambLat, ambLng], 14);
+    // 2. Route Waypoints across Kanpur Corridor
+    const waypoints = [
+      [26.4520, 80.3350], // Stand
+      [26.4550, 80.3370],
+      [26.4585, 80.3410],
+      [26.4630, 80.3440],
+      [26.4670, 80.3470],
+      [26.4710, 80.3490],
+      [26.4735, 80.3506]  // Apex Trauma Center
+    ];
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap | JeevanSetu Ambulance Grid'
-      }).addTo(trackMap);
+    // Draw route polyline
+    const routeLine = L.polyline(waypoints, { color: '#ef4444', weight: 4, opacity: 0.8, dashArray: '8, 8' }).addTo(map);
 
-      // Hospital / Destination Marker
-      destinationMarker = L.marker([destLat, destLng])
-        .addTo(trackMap)
-        .bindPopup("<b>Apex Trauma Institute</b><br>Emergency Critical Care Bay Ready")
-        .openPopup();
+    // Hospital Marker
+    L.marker([26.4735, 80.3506]).addTo(map).bindPopup("<strong>Apex Emergency & Trauma Institute</strong><br>Receiving Facility").openPopup();
 
-      // Ambulance Live Marker
-      ambulanceMarker = L.circleMarker([ambLat, ambLng], {
-        radius: 12,
-        fillColor: "#dc2626",
-        color: "#ffffff",
-        weight: 3,
-        fillOpacity: 1
-      }).addTo(trackMap).bindPopup("<b>🚑 ALS Ambulance</b><br>Speed: En route");
-
-      // Route line
-      routeLine = L.polyline([[ambLat, ambLng], [destLat, destLng]], {
-        color: '#dc2626',
-        weight: 4,
-        dashArray: '8, 8',
-        opacity: 0.8
-      }).addTo(trackMap);
-
-      calculateETA();
-      syncLiveTelemetry();
-      startLocationSimulation();
-    }
-
-    function calculateETA() {
-      const dLat = (destLat - ambLat) * 111;
-      const dLng = (destLng - ambLng) * 111 * Math.cos(ambLat * (Math.PI / 180));
-      const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
-      const minutes = Math.max(1, Math.round((distKm / 45) * 60));
-      document.getElementById('etaDisplay').textContent = `${minutes} mins (${distKm.toFixed(2)} km)`;
-    }
-
-    function updateAmbulancePosition(lat, lng) {
-      if (ambulanceMarker && trackMap) {
-        ambulanceMarker.setLatLng([lat, lng]);
-        if (routeLine) {
-          routeLine.setLatLngs([[lat, lng], [destLat, destLng]]);
-        }
-        calculateETA();
-      }
-    }
-
-    // Push coordinates to Flask backend
-    async function syncBackendLocation(lat, lng) {
-      try {
-        await fetch(`/api/ambulances/${AMBULANCE_ID}/location`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ latitude: lat, longitude: lng, status: 'IN_TRANSIT' })
-        });
-        document.getElementById('serverSyncTag').textContent = "Synced (Live DB)";
-      } catch (e) {
-        document.getElementById('serverSyncTag').textContent = "Local Cached";
-      }
-    }
-
-    // Pull latest active emergency request
-    async function syncLiveTelemetry() {
-      try {
-        const res = await fetch('/api/emergencies');
-        const data = await res.json();
-        const active = (data.emergencies || []).find(e => e.status === 'ACTIVE') || (data.emergencies || [])[0];
-        if (active) {
-          document.getElementById('incidentTitle').textContent = `Incident #${active.id || '104'}`;
-          document.getElementById('incidentPatient').textContent = `Patient: ${active.patient_name || 'Emergency Casualty'}`;
-          document.getElementById('symptomText').textContent = active.symptom || 'Acute Trauma';
-          document.getElementById('priorityBadge').textContent = `${active.priority || 'CRITICAL'} DISPATCH`;
-        }
-      } catch (err) {
-        console.warn("Could not fetch emergency queue:", err);
-      }
-    }
-
-    // Movement simulation towards target hospital
-    function startLocationSimulation() {
-      setInterval(() => {
-        const step = 0.0002;
-        if (Math.abs(ambLat - destLat) > 0.0001) {
-          ambLat += (destLat > ambLat ? step : -step);
-        }
-        if (Math.abs(ambLng - destLng) > 0.0001) {
-          ambLng += (destLng > ambLng ? step : -step);
-        }
-        updateAmbulancePosition(ambLat, ambLng);
-        syncBackendLocation(ambLat, ambLng);
-      }, 4000);
-    }
-
-    document.getElementById('markDeliveredBtn')?.addEventListener('click', async () => {
-      await syncBackendLocation(destLat, destLng);
-      alert("✓ Casualty Handover Confirmed! Hospital ER team notified.");
+    // Custom Ambulance Icon
+    const ambIcon = L.divIcon({
+      html: '<div style="font-size:24px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)); transform: translate(-12px, -12px);">🚑</div>',
+      className: 'amb-marker',
+      iconSize: [24, 24]
     });
 
-    function logout() {
-      localStorage.removeItem('user');
-      window.location.href = 'login.html';
+    const ambMarker = L.marker(waypoints[0], { icon: ambIcon }).addTo(map);
+
+    // 3. Telemetry Simulation Engine
+    let currentStep = 0;
+    let forward = true;
+
+    async function streamTelemetry(lat, lng) {
+      try {
+        await fetch('/api/ambulances/1/location', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lng,
+            status: 'DISPATCHED'
+          })
+        });
+      } catch (e) {
+        // Silent catch if offline
+      }
     }
 
-    document.addEventListener('DOMContentLoaded', initTrackingMap);
+    function stepMovement() {
+      if (forward) {
+        currentStep++;
+        if (currentStep >= waypoints.length - 1) forward = false;
+      } else {
+        currentStep--;
+        if (currentStep <= 0) forward = true;
+      }
+
+      const pt = waypoints[currentStep];
+      ambMarker.setLatLng(pt);
+
+      // Update HUD
+      document.getElementById('curLat').innerText = pt[0].toFixed(4);
+      document.getElementById('curLng').innerText = pt[1].toFixed(4);
+
+      const remainingSteps = waypoints.length - 1 - currentStep;
+      const etaMins = Math.max(1, Math.round(remainingSteps * 0.8));
+      document.getElementById('etaLabel').innerText = `${etaMins} mins`;
+
+      // Random speed fluctuations between 38 and 48 km/h
+      const speed = Math.floor(38 + Math.random() * 11);
+      document.getElementById('speedLabel').innerText = `${speed} km/h`;
+
+      // Push to backend SQLite
+      streamTelemetry(pt[0], pt[1]);
+    }
+
+    // Run movement tick every 2.5 seconds
+    setInterval(stepMovement, 2500);
   </script>
 </body>
 </html>

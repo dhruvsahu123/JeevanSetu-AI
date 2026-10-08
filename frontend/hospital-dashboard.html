@@ -3,106 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hospital Emergency Command Hub | JeevanSetu AI</title>
+  <title>JeevanSetu AI | Hospital Command Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
   <style>
     body { background-color: #0b1329; color: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .hosp-header { background: #111e38; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
-    .hosp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 1.5rem; max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }
-    @media (max-width: 900px) { .hosp-grid { grid-template-columns: 1fr; } }
-    .panel-card { background: #132240; border: 1px solid #1e3a5f; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .panel-card h2 { margin-top: 0; font-size: 1.2rem; color: #38bdf8; display: flex; justify-content: space-between; align-items: center; }
-    .bed-stat-card { background: #0b1329; border: 1px solid #1e3a5f; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
-    .bed-stat-card h3 { margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #94a3b8; }
-    .bed-counter-row { display: flex; justify-content: space-between; align-items: center; }
-    .bed-counter-row span { font-size: 1.8rem; font-weight: 800; }
-    .btn-counter { background: #1e3a5f; color: #fff; border: none; width: 34px; height: 34px; border-radius: 6px; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
-    .btn-counter:hover { background: #2563eb; }
-    .queue-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
-    .queue-table th { text-align: left; padding: 0.75rem; border-bottom: 2px solid #1e3a5f; color: #94a3b8; }
-    .queue-table td { padding: 0.75rem; border-bottom: 1px solid #1e293b; }
-    .badge-critical { background: #dc2626; color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
-    .badge-urgent { background: #f59e0b; color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
-    .badge-stable { background: #10b981; color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    header { background: #111e38; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
+    .nav-links { display: flex; gap: 0.75rem; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px; }
+    .nav-links a:hover { color: #fff; background: #1e3a5f; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media(max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card { background: #132240; border: 1px solid #1e3a5f; border-radius: 12px; padding: 1.5rem; }
+    .card h2 { margin: 0 0 1rem 0; font-size: 1.25rem; color: #38bdf8; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Ward Bed Controls */
+    .ward-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #1e293b; }
+    .ward-row:last-child { border-bottom: none; }
+    .ward-info strong { display: block; font-size: 1.05rem; }
+    .ward-info small { color: #94a3b8; }
+    .counter-ctrl { display: flex; align-items: center; gap: 0.75rem; }
+    .counter-btn { background: #1e3a5f; color: #fff; border: none; width: 34px; height: 34px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .counter-btn:hover { background: #2563eb; }
+    .counter-val { font-size: 1.3rem; font-weight: 700; width: 35px; text-align: center; }
+
+    /* Emergency Intake Table */
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+    th { text-align: left; padding: 0.75rem; background: #0b1329; color: #94a3b8; font-weight: 600; border-bottom: 1px solid #1e3a5f; }
+    td { padding: 0.75rem; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+    tr:hover { background: rgba(30, 58, 95, 0.3); }
+
+    .badge-critical { background: #7f1d1d; color: #fca5a5; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    .badge-urgent { background: #78350f; color: #fde047; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    .badge-stable { background: #064e3b; color: #6ee7b7; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
   </style>
 </head>
 <body>
 
-  <header class="hosp-header">
-    <div style="display:flex; align-items:center; gap:0.75rem;">
-      <span style="background:#2563eb; color:#fff; font-weight:800; padding:0.3rem 0.7rem; border-radius:6px; font-size:0.9rem;">HOSPITAL PORTAL</span>
-      <h1 style="font-size:1.2rem; margin:0;" id="hospTitle">Apex Emergency & Trauma Institute</h1>
+  <header>
+    <div style="display:flex; align-items:center; gap:0.6rem;">
+      <span style="background:#2563eb; color:#fff; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:800;">🏥</span>
+      <strong style="font-size:1.15rem; letter-spacing:0.5px;">Apex Trauma Center | Hospital Command Hub</strong>
     </div>
-    <div style="display:flex; gap:1rem; align-items:center;">
-      <span id="liveStatusTag" style="font-size:0.85rem; color:#4ade80;">● ER Ward Online</span>
-      <a href="index.html" style="background:#1e3a5f; color:#fff; text-decoration:none; padding:0.4rem 0.8rem; border-radius:6px; font-size:0.85rem;">Public Grid</a>
-    </div>
+    <nav class="nav-links">
+      <a href="/">Public SOS Grid</a>
+      <a href="customer-dashboard.html">Citizen Vault</a>
+      <a href="ambulance-tracking.html">Fleet Dispatch</a>
+    </nav>
   </header>
 
-  <main class="hosp-grid">
-    <!-- BED INVENTORY CONTROLS -->
-    <aside class="panel-card">
-      <h2>
-        <span>🛏️ Live Ward Inventory</span>
-        <small style="font-size:0.75rem; color:#94a3b8;" id="syncLabel">Auto-syncing</small>
-      </h2>
-      <p style="font-size:0.8rem; color:#94a3b8;">Adjust live capacity when admissions or discharges occur.</p>
+  <main class="container">
+    <div class="grid-2">
+      <!-- Bed Control Unit -->
+      <section class="card">
+        <h2>
+          <span>Live Ward Bed Capacity</span>
+          <small style="font-size:0.75rem; color:#4ade80;" id="bedSyncStatus">Synced</small>
+        </h2>
 
-      <div class="bed-stat-card">
-        <h3>Critical Care ICU Beds</h3>
-        <div class="bed-counter-row">
-          <span style="color:#ef4444;" id="icuCount">--</span>
-          <div style="display:flex; gap:0.5rem;">
-            <button class="btn-counter" onclick="adjustBed('icu', -1)">-</button>
-            <button class="btn-counter" onclick="adjustBed('icu', 1)">+</button>
+        <div class="ward-row">
+          <div class="ward-info">
+            <strong style="color:#ef4444;">ICU Ventilator Beds</strong>
+            <small>Reserved for Tier-1 trauma and cardiac cases</small>
+          </div>
+          <div class="counter-ctrl">
+            <button class="counter-btn" onclick="adjustBed('icu', -1)">-</button>
+            <span class="counter-val" id="icuVal">--</span>
+            <button class="counter-btn" onclick="adjustBed('icu', 1)">+</button>
           </div>
         </div>
-      </div>
 
-      <div class="bed-stat-card">
-        <h3>High-Flow Oxygen Beds</h3>
-        <div class="bed-counter-row">
-          <span style="color:#38bdf8;" id="oxyCount">--</span>
-          <div style="display:flex; gap:0.5rem;">
-            <button class="btn-counter" onclick="adjustBed('oxygen', -1)">-</button>
-            <button class="btn-counter" onclick="adjustBed('oxygen', 1)">+</button>
+        <div class="ward-row">
+          <div class="ward-info">
+            <strong style="color:#38bdf8;">High-Flow Oxygen Beds</strong>
+            <small>Dedicated pulmonary & post-op stabilizing ward</small>
+          </div>
+          <div class="counter-ctrl">
+            <button class="counter-btn" onclick="adjustBed('oxygen', -1)">-</button>
+            <span class="counter-val" id="oxygenVal">--</span>
+            <button class="counter-btn" onclick="adjustBed('oxygen', 1)">+</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="bed-stat-card">
-        <h3>Emergency Casualty Hotline</h3>
-        <p style="margin:0.2rem 0; font-size:0.9rem; font-weight:700; color:#f1f5f9;" id="hospPhone">+91-512-2550101</p>
-        <small style="color:#64748b;">Direct line for Kanpur 108 Dispatch</small>
-      </div>
-    </aside>
+      <!-- Facility Profile Summary -->
+      <section class="card">
+        <h2>Facility Overview</h2>
+        <div style="font-size:0.9rem; line-height:1.6; color:#cbd5e1;">
+          <div><strong>Location:</strong> Civil Lines, Kanpur (Trauma Level 1)</div>
+          <div><strong>Emergency Helpline:</strong> +91-512-2550101</div>
+          <div><strong>Rapid Blood Stock:</strong> Hallet Blood Bank (Connected Corridor)</div>
+          <div style="margin-top:1rem; padding:0.75rem; background:#0b1329; border-radius:8px; border:1px solid #1e3a5f;">
+            <small style="color:#94a3b8;">System Status:</small><br>
+            <span style="color:#4ade80; font-weight:600;">● Auto-Triage Dispatch Connected to Haversine Routing Engine</span>
+          </div>
+        </div>
+      </section>
+    </div>
 
-    <!-- INCOMING EMERGENCY CASUALTIES -->
-    <section class="panel-card">
+    <!-- Active Emergency Feed -->
+    <section class="card">
       <h2>
-        <span>🚨 Active Emergency Influx</span>
-        <button onclick="refreshData()" style="background:#1e3a5f; color:#fff; border:none; padding:0.3rem 0.6rem; border-radius:4px; font-size:0.75rem; cursor:pointer;">Refresh</button>
+        <span>Active Emergency Influx Queue</span>
+        <button onclick="loadEmergencyQueue()" style="background:#1e3a5f; color:#fff; border:none; padding:0.3rem 0.8rem; border-radius:6px; cursor:pointer; font-size:0.8rem;">Refresh</button>
       </h2>
-      <p style="font-size:0.8rem; color:#94a3b8;">Real-time feed of queued and en-route casualties dispatched across Kanpur.</p>
-
-      <div style="overflow-x:auto;">
-        <table class="queue-table">
+      <div style="overflow-x: auto;">
+        <table>
           <thead>
             <tr>
-              <th>Incident</th>
-              <th>Patient</th>
-              <th>Reported Symptom</th>
-              <th>Triage Priority</th>
+              <th>ID</th>
+              <th>Patient / Casualty</th>
+              <th>Reported Symptoms</th>
+              <th>Priority Tier</th>
               <th>Status</th>
+              <th>Logged Time</th>
             </tr>
           </thead>
           <tbody id="emergencyTableBody">
-            <tr>
-              <td colspan="5" style="text-align:center; color:#64748b;">Loading active incidents...</td>
-            </tr>
+            <tr><td colspan="6" style="text-align:center; color:#64748b;">Loading active emergency requests...</td></tr>
           </tbody>
         </table>
       </div>
@@ -110,88 +134,108 @@
   </main>
 
   <script>
-    const HOSPITAL_ID = 1; // Apex Emergency & Trauma
+    const HOSPITAL_ID = 1; // Primary Apex Hospital
     let currentIcu = 0;
     let currentOxygen = 0;
 
-    async function fetchHospitalData() {
+    // Load Live Hospital Bed Count
+    async function loadHospitalBeds() {
       try {
         const res = await fetch('/api/hospitals');
         const data = await res.json();
         const hosp = (data.hospitals || []).find(h => h.id === HOSPITAL_ID) || data.hospitals[0];
+        
         if (hosp) {
-          document.getElementById('hospTitle').innerText = hosp.name;
-          document.getElementById('hospPhone').innerText = hosp.phone;
           currentIcu = hosp.icu_available ?? 0;
           currentOxygen = hosp.oxygen_available ?? 0;
-          document.getElementById('icuCount').innerText = currentIcu;
-          document.getElementById('oxyCount').innerText = currentOxygen;
+          document.getElementById('icuVal').innerText = currentIcu;
+          document.getElementById('oxygenVal').innerText = currentOxygen;
         }
       } catch (err) {
-        console.error("Failed to load hospital data:", err);
+        console.error('Failed to fetch bed inventory:', err);
       }
     }
 
+    // Live Adjust Bed (+1 / -1)
     async function adjustBed(type, delta) {
+      let newIcu = currentIcu;
+      let newOxygen = currentOxygen;
+
       if (type === 'icu') {
-        currentIcu = Math.max(0, currentIcu + delta);
-        document.getElementById('icuCount').innerText = currentIcu;
+        newIcu = Math.max(0, currentIcu + delta);
       } else {
-        currentOxygen = Math.max(0, currentOxygen + delta);
-        document.getElementById('oxyCount').innerText = currentOxygen;
+        newOxygen = Math.max(0, currentOxygen + delta);
       }
 
+      const status = document.getElementById('bedSyncStatus');
+      status.innerText = "Syncing...";
+      status.style.color = "#fde047";
+
       try {
-        await fetch(`/api/hospitals/${HOSPITAL_ID}/beds`, {
+        const res = await fetch(`/api/hospitals/${HOSPITAL_ID}/beds`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            icu_available: currentIcu,
-            oxygen_available: currentOxygen
+            icu_available: newIcu,
+            oxygen_available: newOxygen
           })
         });
+
+        if (res.ok) {
+          currentIcu = newIcu;
+          currentOxygen = newOxygen;
+          document.getElementById('icuVal').innerText = currentIcu;
+          document.getElementById('oxygenVal').innerText = currentOxygen;
+          status.innerText = "Synced";
+          status.style.color = "#4ade80";
+        }
       } catch (err) {
-        console.error("Failed to update bed inventory:", err);
+        status.innerText = "Sync Error";
+        status.style.color = "#ef4444";
       }
     }
 
-    async function fetchEmergencies() {
+    // Load Emergency Influx Queue
+    async function loadEmergencyQueue() {
       try {
         const res = await fetch('/api/emergencies');
         const data = await res.json();
         const tbody = document.getElementById('emergencyTableBody');
         tbody.innerHTML = '';
 
-        if (!data.emergencies || data.emergencies.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">No active emergencies in queue</td></tr>';
+        const emergencies = data.emergencies || [];
+        if (emergencies.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b;">No active emergency cases reported.</td></tr>';
           return;
         }
 
-        data.emergencies.forEach(em => {
-          const tr = document.createElement('tr');
-          const badgeClass = em.priority.includes('CRITICAL') ? 'badge-critical' : (em.priority.includes('URGENT') ? 'badge-urgent' : 'badge-stable');
-          tr.innerHTML = `
-            <td><strong>#${em.id}</strong></td>
-            <td>${em.patient_name || 'Emergency Casualty'}</td>
-            <td>${em.symptom || 'Unspecified'}</td>
-            <td><span class="${badgeClass}">${em.priority}</span></td>
-            <td style="color:#38bdf8; font-weight:600;">${em.status || 'ACTIVE'}</td>
+        emergencies.forEach(e => {
+          let badgeClass = 'badge-stable';
+          if (e.priority.includes('CRITICAL')) badgeClass = 'badge-critical';
+          else if (e.priority.includes('URGENT')) badgeClass = 'badge-urgent';
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>#${e.id}</strong></td>
+            <td>${e.patient_name}</td>
+            <td>${e.symptom}</td>
+            <td><span class="${badgeClass}">${e.priority}</span></td>
+            <td><span style="color:#38bdf8; font-weight:600;">${e.status}</span></td>
+            <td style="color:#94a3b8; font-size:0.8rem;">${e.created_at || 'Just now'}</td>
           `;
-          tbody.appendChild(tr);
+          tbody.appendChild(row);
         });
       } catch (err) {
-        console.error("Failed to fetch emergency queue:", err);
+        console.error('Failed to load emergencies:', err);
       }
     }
 
-    function refreshData() {
-      fetchHospitalData();
-      fetchEmergencies();
-    }
-
+    // Polling triggers
     document.addEventListener('DOMContentLoaded', () => {
-      refreshData();
-      setInterval(refreshData, 5000); // Poll every 5s for live ward sync
+      loadHospitalBeds();
+      loadEmergencyQueue();
+      setInterval(loadHospitalBeds, 5000);    // Sync beds every 5s
+      setInterval(loadEmergencyQueue, 4000);   // Sync inbound queue every 4s
     });
   </script>
 </body>
