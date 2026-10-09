@@ -890,5 +890,55 @@ def get_active_referrals():
         'active_transfers': ACTIVE_REFERRALS
     })
 
+
+# --- MASS CASUALTY CODE RED BROADCAST & SIREN DESK API ---
+ACTIVE_MCI_STATE = {
+    'alert_active': False,
+    'code_type': 'NONE',
+    'corridor': 'NH-19 Rooma',
+    'mobilized_units': 0,
+    'acknowledged_by': None,
+    'timestamp': None
+}
+
+@app.route('/api/mci/broadcast/trigger', methods=['POST'])
+def trigger_mci_broadcast():
+    global ACTIVE_MCI_STATE
+    data = request.get_json() or {}
+    code_type = data.get('code_type', 'CODE_RED')
+    corridor = data.get('corridor', 'NH-19 Rooma Chokepoint (KM 442)')
+    
+    ACTIVE_MCI_STATE = {
+        'alert_active': True,
+        'code_type': code_type,
+        'corridor': corridor,
+        'mobilized_units': 12,
+        'acknowledged_by': None,
+        'timestamp': time.strftime('%H:%M:%S IST')
+    }
+    
+    return jsonify({
+        'status': 'success',
+        'alert_state': ACTIVE_MCI_STATE,
+        'directive': f"URGENT: {code_type} declared at {corridor}. All off-duty trauma surgeons, OR teams, and rotary blood courier fleets mobilized."
+    })
+
+@app.route('/api/mci/broadcast/status', methods=['GET'])
+def get_mci_broadcast_status():
+    return jsonify({'status': 'success', 'mci_state': ACTIVE_MCI_STATE})
+
+@app.route('/api/mci/broadcast/acknowledge', methods=['POST'])
+def acknowledge_mci():
+    global ACTIVE_MCI_STATE
+    data = request.get_json() or {}
+    officer = data.get('officer_name', 'Dr. S. K. Verma (Chief Medical Officer)')
+    ACTIVE_MCI_STATE['alert_active'] = False
+    ACTIVE_MCI_STATE['acknowledged_by'] = officer
+    
+    return jsonify({
+        'status': 'success',
+        'message': f"Alert silenced and acknowledged by {officer}. Trauma bays on active standby."
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
