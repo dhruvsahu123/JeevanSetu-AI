@@ -283,5 +283,67 @@ def get_analytics_summary():
         ]
     })
 
+
+# --- HOSPITAL TREATMENT & TRAUMA COST ESTIMATOR API ---
+PROCEDURE_BASE_RATES = {
+    'CARDIAC_PCI': {'name': 'Primary Angioplasty (PCI / Stent)', 'base_govt': 15000, 'base_pvt': 145000, 'icu_days': 2},
+    'POLYTRAUMA': {'name': 'Polytrauma Resuscitation & Ortho Fixation', 'base_govt': 8000, 'base_pvt': 95000, 'icu_days': 3},
+    'NEURO_TRAUMA': {'name': 'Severe Head Injury / Craniotomy', 'base_govt': 20000, 'base_pvt': 185000, 'icu_days': 4},
+    'STROKE_THROMBOLYSIS': {'name': 'Acute Ischemic Stroke Thrombolysis (r-tPA)', 'base_govt': 5000, 'base_pvt': 65000, 'icu_days': 2},
+    'RESPIRATORY_VENT': {'name': 'ARDS / Ventilator Support & ICU', 'base_govt': 4000, 'base_pvt': 45000, 'icu_days': 3}
+}
+
+@app.route('/api/cost/estimate', methods=['POST'])
+def estimate_cost():
+    data = request.get_json() or {}
+    proc_key = data.get('procedure_key', 'CARDIAC_PCI')
+    tier = data.get('hospital_tier', 'PRIVATE')  # GOVT, TRUST, PRIVATE
+    has_pmjay = bool(data.get('ayushman_covered', False))
+    icu_stay_days = int(data.get('icu_days', 2))
+
+    proc = PROCEDURE_BASE_RATES.get(proc_key, PROCEDURE_BASE_RATES['CARDIAC_PCI'])
+    
+    # Base estimation
+    if tier == 'GOVT':
+        base_fee = proc['base_govt']
+        icu_per_day = 1200
+        nursing_consumables = 3500
+    elif tier == 'TRUST':
+        base_fee = int(proc['base_pvt'] * 0.45)
+        icu_per_day = 4500
+        nursing_consumables = 8000
+    else:  # PRIVATE Tertiary
+        base_fee = proc['base_pvt']
+        icu_per_day = 12500
+        nursing_consumables = 18000
+
+    icu_total = icu_stay_days * icu_per_day
+    gross_total = base_fee + icu_total + nursing_consumables
+
+    covered_amount = 0
+    if has_pmjay:
+        covered_amount = gross_total
+        patient_payable = 0
+        status_note = '100% Cashless under Ayushman Bharat PM-JAY (Government Empanelled Rates)'
+    else:
+        patient_payable = gross_total
+        status_note = 'Standard Estimated Out-of-Pocket Tariff'
+
+    return jsonify({
+        'status': 'success',
+        'procedure': proc['name'],
+        'hospital_tier': tier,
+        'breakdown': {
+            'procedure_base_fee': base_fee,
+            'icu_charges': icu_total,
+            'icu_days': icu_stay_days,
+            'consumables_medicines': nursing_consumables
+        },
+        'gross_estimated_total': gross_total,
+        'pmjay_coverage_amount': covered_amount,
+        'patient_estimated_payable': patient_payable,
+        'coverage_note': status_note
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

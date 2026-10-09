@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Hospital Treatment Cost Estimator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --red: #EF4444;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 900px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
+    select, input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem 0.9rem; border-radius: 8px; font-size: 0.95rem; margin-bottom: 1.2rem; outline: none; }
+    select:focus, input:focus { border-color: var(--teal); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .btn-calc { background: var(--teal); color: #07111F; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; width: 100%; }
+    .btn-calc:hover { background: #0d9488; }
+    .result-box { display: none; background: #09192b; border: 1px solid var(--teal); border-radius: 10px; padding: 1.5rem; margin-top: 1.5rem; }
+    .breakdown-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--border); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">💳 Hospital Treatment & Trauma Cost Estimator</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Transparent healthcare pricing & Ayushman PM-JAY coverage engine</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <div class="card">
+      <div class="grid-2">
+        <div>
+          <label>EMERGENCY PROCEDURE / INTERVENTION</label>
+          <select id="procSelect">
+            <option value="CARDIAC_PCI">Primary Angioplasty (Cath Lab / Stent)</option>
+            <option value="POLYTRAUMA">Polytrauma Resuscitation & Ortho Fixation</option>
+            <option value="NEURO_TRAUMA">Severe Head Injury / Craniotomy</option>
+            <option value="STROKE_THROMBOLYSIS">Acute Stroke Thrombolysis (r-tPA)</option>
+            <option value="RESPIRATORY_VENT">Severe ARDS / Ventilator Support</option>
+          </select>
+        </div>
+        <div>
+          <label>HOSPITAL CATEGORY / TIER</label>
+          <select id="tierSelect">
+            <option value="PRIVATE">Private Tertiary (e.g. Regency, Apollo)</option>
+            <option value="TRUST">Trust / Non-Profit (e.g. SPM Rooma)</option>
+            <option value="GOVT">Government Apex (e.g. Hallet / LLR Hospital)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label>ESTIMATED ICU DAYS NEEDED</label>
+          <input type="number" id="icuDays" value="2" min="0" max="15">
+        </div>
+        <div>
+          <label>AYUSHMAN BHARAT (PM-JAY) BENEFICIARY?</label>
+          <select id="pmjaySelect">
+            <option value="false">No - Self / Out-of-Pocket</option>
+            <option value="true">Yes - Golden Card Holder (Cashless)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="calculateEstimate()">GENERATE TRANSPARENT ESTIMATE</button>
+
+      <div class="result-box" id="resultBox">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h3 id="resProcName" style="color:var(--sky); font-size:1.1rem;"></h3>
+          <span id="resCoverBadge" style="background:rgba(20,184,166,0.2); color:var(--teal); font-weight:700; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:4px;"></span>
+        </div>
+
+        <div class="breakdown-row">
+          <span style="color:var(--muted);">Procedure Base / OT Charges:</span>
+          <strong id="bProcedure" style="font-family:'JetBrains Mono';"></strong>
+        </div>
+        <div class="breakdown-row">
+          <span style="color:var(--muted);">ICU & Monitoring Charges:</span>
+          <strong id="bIcu" style="font-family:'JetBrains Mono';"></strong>
+        </div>
+        <div class="breakdown-row">
+          <span style="color:var(--muted);">Nursing, Medicines & Consumables:</span>
+          <strong id="bConsumables" style="font-family:'JetBrains Mono';"></strong>
+        </div>
+        <div class="breakdown-row" style="border-bottom:none; margin-top:0.5rem;">
+          <span style="font-size:1rem; font-weight:700;">Gross Estimated Cost:</span>
+          <strong id="bGross" style="font-family:'JetBrains Mono'; font-size:1.1rem; color:var(--sky);"></strong>
+        </div>
+
+        <div style="background:#07111F; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="color:var(--muted); font-size:0.8rem;">ESTIMATED PATIENT PAYABLE</div>
+            <div id="resPayable" style="font-size:1.8rem; font-weight:800; font-family:'JetBrains Mono'; color:var(--teal);">₹0</div>
+          </div>
+          <p id="resNote" style="color:var(--muted); font-size:0.8rem; max-width:55%; text-align:right;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateEstimate() {
+      var pkey = document.getElementById('procSelect').value;
+      var tier = document.getElementById('tierSelect').value;
+      var days = parseInt(document.getElementById('icuDays').value);
+      var pmjay = (document.getElementById('pmjaySelect').value === 'true');
+
+      fetch('/api/cost/estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ procedure_key: pkey, hospital_tier: tier, icu_days: days, ayushman_covered: pmjay })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('resProcName').textContent = data.procedure;
+        document.getElementById('resCoverBadge').textContent = data.hospital_tier + ' TIER';
+
+        document.getElementById('bProcedure').textContent = '₹' + data.breakdown.procedure_base_fee.toLocaleString('en-IN');
+        document.getElementById('bIcu').textContent = '₹' + data.breakdown.icu_charges.toLocaleString('en-IN') + ' (' + data.breakdown.icu_days + ' days)';
+        document.getElementById('bConsumables').textContent = '₹' + data.breakdown.consumables_medicines.toLocaleString('en-IN');
+        document.getElementById('bGross').textContent = '₹' + data.gross_estimated_total.toLocaleString('en-IN');
+
+        document.getElementById('resPayable').textContent = '₹' + data.patient_estimated_payable.toLocaleString('en-IN');
+        document.getElementById('resNote').textContent = data.coverage_note;
+      })
+      .catch(function(err) { console.error(err); });
+    }
+  </script>
+</body>
+</html>
