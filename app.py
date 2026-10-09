@@ -720,5 +720,40 @@ def get_blackspots():
         'black_spots': KANPUR_BLACK_SPOTS
     })
 
+
+# --- REGIONAL DISASTER SURGE & MUTUAL-AID DISPATCH API ---
+REGIONAL_FACILITIES = [
+    {'id': 'HOSP-KGMU-LKO', 'name': 'KGMU Trauma Center (Lucknow)', 'distance_km': 84.5, 'transit_min': 72, 'icu_avail': 14, 'burn_icu': 5, 'level': 'APEX_QUATERNARY'},
+    {'id': 'HOSP-DH-UNNAO', 'name': 'District Hospital Emergency (Unnao)', 'distance_km': 19.2, 'transit_min': 24, 'icu_avail': 6, 'burn_icu': 1, 'level': 'SECONDARY_STABILIZATION'},
+    {'id': 'HOSP-SRN-PRY', 'name': 'SRN Medical College Hospital (Prayagraj)', 'distance_km': 195.0, 'transit_min': 160, 'icu_avail': 21, 'burn_icu': 8, 'level': 'APEX_TERTIARY'},
+    {'id': 'HOSP-SGPGI-LKO', 'name': 'SGPGIMS Advanced Resuscitation (Lucknow)', 'distance_km': 92.0, 'transit_min': 80, 'icu_avail': 9, 'burn_icu': 4, 'level': 'SUPER_SPECIALTY'}
+]
+
+@app.route('/api/surge/regional-grid', methods=['GET'])
+def get_surge_grid():
+    return jsonify({
+        'status': 'success',
+        'kanpur_load_status': 'SURGE_SATURATED (94% ICU Occupied)',
+        'facilities': REGIONAL_FACILITIES
+    })
+
+@app.route('/api/surge/divert', methods=['POST'])
+def execute_diversion():
+    data = request.get_json() or {}
+    facility_id = data.get('target_facility_id', 'HOSP-KGMU-LKO')
+    patients_count = int(data.get('patients_to_divert', 3))
+    
+    matched = next((f for f in REGIONAL_FACILITIES if f['id'] == facility_id), None)
+    if not matched:
+        return jsonify({'status': 'error', 'message': 'Target facility not found'}), 404
+
+    return jsonify({
+        'status': 'success',
+        'target_facility': matched['name'],
+        'patients_diverted': patients_count,
+        'route_corridor': f'NH-27 / Lucknow-Kanpur Expressway Express Corridor (ETA {matched["transit_min"]} mins)',
+        'coordination_notice': f'Inter-district mutual aid handshake confirmed with {matched["name"]}. Receiving surgical team prepped for {patients_count} critical trauma victims.'
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
