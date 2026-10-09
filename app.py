@@ -702,5 +702,23 @@ def summon_donors():
         'advisory': f"Emergency Broadcast Sent to 48 pre-verified {group} donors within 8 km radius of {facility}. ETA for first batch: 18-25 minutes."
     })
 
+
+# --- KANPUR HIGHWAY ACCIDENT BLACK SPOT TELEMETRY API ---
+KANPUR_BLACK_SPOTS = [
+    {'id': 'BS-NH19-01', 'name': 'Rooma Flyover Cut (KM 442)', 'lat': 26.3842, 'lng': 80.4215, 'risk_level': 'HIGH_FATALITY', 'advisory': 'Merge bottleneck from service lane. Slow to 40 km/h.'},
+    {'id': 'BS-NH19-02', 'name': 'Ahirwan Highway Cut & Flyover', 'lat': 26.4020, 'lng': 80.4050, 'risk_level': 'SEVERE_CRASH_ZONE', 'advisory': 'High-speed heavy truck crossing. Maintain lane.'},
+    {'id': 'BS-NH19-03', 'name': 'Ramadevi Chauraha Roundabout', 'lat': 26.4251, 'lng': 80.3871, 'risk_level': 'EXTREME_CONGESTION', 'advisory': 'Multi-direction pedestrian & e-rickshaw surge.'},
+    {'id': 'BS-GT-04', 'name': 'Tatmill Intersection', 'lat': 26.4485, 'lng': 80.3542, 'risk_level': 'BLIND_INTERSECTION', 'advisory': 'Railway station transit junction. Signal preemption advised.'},
+    {'id': 'BS-GT-05', 'name': 'Kalyanpur GT Road Crossing', 'lat': 26.4912, 'lng': 80.2541, 'risk_level': 'METRO_PILLAR_BLIND_SPOT', 'advisory': 'Pillar blind corner. Emergency siren active.'}
+]
+
+@app.route('/api/telemetry/blackspots', methods=['GET'])
+def get_blackspots():
+    return jsonify({
+        'status': 'success',
+        'count': len(KANPUR_BLACK_SPOTS),
+        'black_spots': KANPUR_BLACK_SPOTS
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
