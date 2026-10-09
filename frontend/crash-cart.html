@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Emergency Crash Cart & Trauma Drug Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1000px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .calc-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; margin-bottom: 2rem; }
+    .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
+    input, select { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: var(--teal); }
+
+    .drug-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+    .drug-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
+    .badge { font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+    .badge-cardiac { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-bleed { background: rgba(245, 158, 11, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge-pressor { background: rgba(56, 189, 248, 0.2); color: var(--sky); border: 1px solid var(--sky); }
+
+    .dose-value { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 800; color: var(--teal); margin: 0.5rem 0 0.25rem; }
+    .prep-box { background: #07111F; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; font-size: 0.8rem; color: var(--muted); margin-top: 0.75rem; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">💉 Crash Cart & Emergency Resuscitation Drug Pacer</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Weight-based emergency dosing for shock, cardiac arrest & severe trauma bleeding</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <div class="calc-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:1.1rem; color:var(--sky);">PATIENT CLINICAL PROFILE</h3>
+        <span style="font-family:monospace; font-size:0.8rem; color:var(--teal);">ACLS / ATLS GUIDELINE CALIBRATION</span>
+      </div>
+
+      <div class="grid-inputs">
+        <div>
+          <label>PATIENT ESTIMATED WEIGHT (KG)</label>
+          <input type="number" id="patWeight" value="70" min="5" max="150" oninput="computeDoses()">
+        </div>
+        <div>
+          <label>AGE CATEGORY</label>
+          <select id="ageCat" onchange="computeDoses()">
+            <option value="ADULT">Adult Patient (≥ 16 Yrs)</option>
+            <option value="PEDIATRIC">Pediatric Case (< 16 Yrs)</option>
+          </select>
+        </div>
+        <div>
+          <label>PRIMARY EMERGENCY SYNDROME</label>
+          <select id="syndromeSelect" onchange="computeDoses()">
+            <option value="CARDIAC_ARREST">Cardiac Arrest (Ventricular Fibrillation / Asystole)</option>
+            <option value="HYPOVOLEMIC_SHOCK">Polytrauma Hemorrhagic Shock</option>
+            <option value="ANAPHYLAXIS">Severe Anaphylaxis / Airway Compromise</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:1.1rem; color:var(--sky); margin-bottom:1rem;">ACTIVE RESUSCITATION FORMULATIONS</h3>
+    <div class="drug-grid" id="drugGrid"></div>
+  </div>
+
+  <script>
+    function computeDoses() {
+      var w = parseFloat(document.getElementById('patWeight').value) || 70;
+      var age = document.getElementById('ageCat').value;
+      var syndrome = document.getElementById('syndromeSelect').value;
+
+      var drugs = [
+        {
+          name: 'Adrenaline (Epinephrine 1:10,000 IV)',
+          badge: 'Cardiac Arrest',
+          badgeClass: 'badge-cardiac',
+          calcDose: (age === 'ADULT') ? '1 mg (10 mL IV/IO)' : (w * 0.01).toFixed(2) + ' mg (' + (w * 0.1).toFixed(1) + ' mL 1:10,000)',
+          freq: 'Repeat every 3-5 minutes during active chest compressions',
+          prep: 'IV Push followed by 20 mL Normal Saline flush & limb elevation'
+        },
+        {
+          name: 'Tranexamic Acid (TXA 100 mg/mL)',
+          badge: 'Hemorrhage / Crash',
+          badgeClass: 'badge-bleed',
+          calcDose: (age === 'ADULT') ? '1 g (10 mL) Bolus' : (Math.min(1000, w * 15)).toFixed(0) + ' mg Slow IV',
+          freq: 'Administer loading dose over 10 min within 3 hours of trauma',
+          prep: 'Followed by 1 g infusion over next 8 hours in 100 mL NS'
+        },
+        {
+          name: 'Amiodarone (Cordarone 50 mg/mL)',
+          badge: 'Refractory VF / pVT',
+          badgeClass: 'badge-cardiac',
+          calcDose: (age === 'ADULT') ? '300 mg (6 mL IV Push)' : (w * 5).toFixed(0) + ' mg IV/IO Push',
+          freq: 'First dose after 3rd shock. Repeat 150 mg after 5th shock if needed',
+          prep: 'Dilute in 20-30 mL 5% Dextrose. Do not dilute in Normal Saline'
+        },
+        {
+          name: 'Noradrenaline (Norepinephrine Infusion)',
+          badge: 'Septic / Neuro Shock',
+          badgeClass: 'badge-pressor',
+          calcDose: (w * 0.1).toFixed(1) + ' to ' + (w * 0.5).toFixed(1) + ' mcg/min',
+          freq: 'Titrate to maintain Mean Arterial Pressure (MAP) ≥ 65 mmHg',
+          prep: 'Mix 4 mg in 50 mL 5% Dextrose. Run via dedicated central line or large vein'
+        },
+        {
+          name: 'Atropine Sulphate (0.6 mg/mL)',
+          badge: 'Symptomatic Bradycardia',
+          badgeClass: 'badge-cardiac',
+          calcDose: (age === 'ADULT') ? '1 mg (1.67 mL IV)' : (Math.min(0.5, w * 0.02)).toFixed(2) + ' mg IV',
+          freq: 'Every 3-5 minutes. Maximum cumulative dose: 3 mg',
+          prep: 'Rapid IV bolus. Avoid small doses < 0.1 mg to prevent paradoxical bradycardia'
+        }
+      ];
+
+      var grid = document.getElementById('drugGrid');
+      grid.innerHTML = '';
+
+      for (var i = 0; i < drugs.length; i++) {
+        var d = drugs[i];
+        var card = document.createElement('div');
+        card.className = 'drug-card';
+        card.innerHTML = [
+          '<div>',
+            '<div style="display:flex; justify-content:space-between; align-items:center;">',
+              '<span class="badge ' + d.badgeClass + '">' + d.badge + '</span>',
+              '<small style="color:var(--muted); font-size:0.75rem;">' + (w + ' kg') + '</small>',
+            '</div>',
+            '<h4 style="margin-top:0.6rem; font-size:1.05rem;">' + d.name + '</h4>',
+            '<div class="dose-value">' + d.calcDose + '</div>',
+            '<p style="color:var(--sky); font-size:0.8rem; font-weight:600;">' + d.freq + '</p>',
+          '</div>',
+          '<div class="prep-box"><strong>Administration:</strong> ' + d.prep + '</div>'
+        ].join('');
+
+        grid.appendChild(card);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', computeDoses);
+  </script>
+</body>
+</html>
