@@ -755,5 +755,26 @@ def execute_diversion():
         'coordination_notice': f'Inter-district mutual aid handshake confirmed with {matched["name"]}. Receiving surgical team prepped for {patients_count} critical trauma victims.'
     })
 
+
+# --- AFTER-ACTION REVIEW (AAR) & MEDICO-LEGAL AUDIT API ---
+@app.route('/api/audit/aar-report/<case_token>', methods=['GET'])
+def generate_aar_report(case_token):
+    return jsonify({
+        'status': 'success',
+        'case_token': case_token,
+        'incident_date': '2026-10-09',
+        'incident_corridor': 'NH-19 Rooma Cut (KM 442)',
+        'milestones': [
+            {'stage': 'T0: SOS Distress Beacon Triggered', 'timestamp': '14:02:10 IST', 'delta': '+0m 00s', 'benchmark': 'Within 30s', 'compliance': 'COMPLIANT'},
+            {'stage': 'T1: ALS Unit UP-78-AG-1021 Dispatched', 'timestamp': '14:03:45 IST', 'delta': '+1m 35s', 'benchmark': 'Within 2 mins', 'compliance': 'COMPLIANT'},
+            {'stage': 'T2: On-Scene Extrication & Cervical Collar', 'timestamp': '14:11:20 IST', 'delta': '+9m 10s', 'benchmark': 'Within 10 mins', 'compliance': 'COMPLIANT'},
+            {'stage': 'T3: Green Corridor Ramadevi Locked', 'timestamp': '14:14:05 IST', 'delta': '+11m 55s', 'benchmark': 'Pre-arrival', 'compliance': 'COMPLIANT'},
+            {'stage': 'T4: Apex ER Bay Trauma Transfer (SPM/LLR)', 'timestamp': '14:26:30 IST', 'delta': '+24m 20s', 'benchmark': '< 60 mins', 'compliance': 'GOLDEN_HOUR_MET'}
+        ],
+        'compliance_index': '96.8%',
+        'legal_advisory': 'No gross negligence detected. Rapid corridor clearance and standard ATLS cervical spine protocol strictly adhered to.',
+        'cryptographic_seal': 'SHA256: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069'
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

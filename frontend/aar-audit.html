@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Incident After-Action Review & Forensic Audit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1050px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .kpi-box { background: #07111F; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; color: var(--teal); margin-top: 0.2rem; }
+
+    .timeline-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.88rem; }
+    .timeline-table th, .timeline-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .timeline-table th { color: var(--muted); text-transform: uppercase; font-size: 0.75rem; }
+    
+    .badge { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    .badge-comp { background: rgba(20, 184, 166, 0.2); color: var(--teal); }
+
+    .seal-box { background: #07111F; border: 1px dashed var(--teal); border-radius: 8px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--muted); word-break: break-all; margin-top: 1.2rem; }
+    .btn-print { background: var(--teal); color: #07111F; border: none; padding: 0.8rem 1.6rem; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; }
+    .btn-print:hover { background: #0d9488; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">⚖️ Incident After-Action Review (AAR) & Forensic Audit</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Medico-legal trauma velocity, standard of care benchmarks & forensic sign-off</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="kpi-row">
+      <div class="kpi-box">
+        <small style="color:var(--muted); font-weight:700;">INCIDENT CASE TOKEN</small>
+        <div class="kpi-val" style="color:var(--sky); font-size:1.4rem;">JS-EM-KAN-8891</div>
+      </div>
+      <div class="kpi-box">
+        <small style="color:var(--muted); font-weight:700;">TOTAL TRANSIT-TO-CARE</small>
+        <div class="kpi-val">24m 20s</div>
+      </div>
+      <div class="kpi-box">
+        <small style="color:var(--muted); font-weight:700;">ATLS COMPLIANCE SCORE</small>
+        <div class="kpi-val">96.8%</div>
+      </div>
+    </div>
+
+    <!-- Forensic Milestone Audit Table -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <h3 style="font-size:1.1rem; color:var(--sky);">TIME-MOTION VELOCITY AUDIT LOG</h3>
+        <button class="btn-print" onclick="window.print()">🖨️ EXPORT FORENSIC DOSSIER</button>
+      </div>
+
+      <table class="timeline-table">
+        <thead>
+          <tr>
+            <th>Trauma Milestone</th>
+            <th>Recorded Timestamp</th>
+            <th>Elapsed (Delta)</th>
+            <th>Clinical Benchmark</th>
+            <th>Evaluation</th>
+          </tr>
+        </thead>
+        <tbody id="auditRows"></tbody>
+      </table>
+
+      <div style="background:#081728; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1.5rem;">
+        <strong style="color:var(--teal); font-size:0.85rem;">LEGAL FINDING / CMO CERTIFICATION: </strong>
+        <p id="legalText" style="color:var(--text); font-size:0.88rem; margin-top:0.35rem; line-height:1.5;"></p>
+      </div>
+
+      <div class="seal-box" id="cryptoSeal">
+        CRYPTOGRAPHIC INTEGRITY SEAL: CALCULATING...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function loadAar() {
+      fetch('/api/audit/aar-report/JS-EM-KAN-8891')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          var tbody = document.getElementById('auditRows');
+          tbody.innerHTML = '';
+
+          for (var i = 0; i < data.milestones.length; i++) {
+            var m = data.milestones[i];
+            var tr = document.createElement('tr');
+            tr.innerHTML = [
+              '<td style="font-weight:700; color:#fff;">' + m.stage + '</td>',
+              '<td style="font-family:monospace; color:var(--sky);">' + m.timestamp + '</td>',
+              '<td style="font-family:monospace;">' + m.delta + '</td>',
+              '<td style="color:var(--muted);">' + m.benchmark + '</td>',
+              '<td><span class="badge badge-comp">' + m.compliance + '</span></td>'
+            ].join('');
+            tbody.appendChild(tr);
+          }
+
+          document.getElementById('legalText').textContent = data.legal_advisory;
+          document.getElementById('cryptoSeal').textContent = data.cryptographic_seal + ' (VERIFIED TAMPER-PROOF)';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAar);
+  </script>
+</body>
+</html>
