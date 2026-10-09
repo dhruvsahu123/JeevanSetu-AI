@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Burn Resuscitation & Parkland Fluid Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 950px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .calc-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; margin-bottom: 2rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
+    input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    input:focus { border-color: var(--teal); }
+
+    .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .res-card { background: #081728; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+    .res-card.highlight { border-color: var(--teal); background: #092036; }
+    .metric-val { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; color: var(--teal); margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">🔥 Acute Burn Resuscitation (Parkland Formula)</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">24-Hour Ringer's Lactate resuscitation protocol for major thermal trauma</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <div class="calc-card">
+      <h3 style="font-size: 1.1rem; color: var(--sky);">PATIENT BIOMETRICS & TBSA SEVERITY</h3>
+      <div class="grid-2">
+        <div>
+          <label>PATIENT WEIGHT (KG)</label>
+          <input type="number" id="burnWeight" value="65" min="10" max="180" oninput="calcParkland()">
+        </div>
+        <div>
+          <label>TOTAL BURN SURFACE AREA (% TBSA 2nd / 3rd DEGREE)</label>
+          <input type="number" id="burnTbsa" value="35" min="1" max="100" oninput="calcParkland()">
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="res-card highlight">
+          <small style="color:var(--muted); font-size:0.75rem; font-weight:700;">TOTAL 24-HOUR RINGER LACTATE</small>
+          <div class="metric-val" id="totalFluid">-- mL</div>
+          <p style="color:var(--muted); font-size:0.8rem;">Standard 4 mL × kg × %TBSA guideline</p>
+        </div>
+
+        <div class="res-card">
+          <small style="color:var(--muted); font-size:0.75rem; font-weight:700;">FIRST 8 HOURS (50%)</small>
+          <div class="metric-val" style="color:var(--sky);" id="first8Rate">-- mL/hr</div>
+          <p style="color:var(--muted); font-size:0.8rem;" id="first8Vol">Total: -- mL</p>
+        </div>
+
+        <div class="res-card">
+          <small style="color:var(--muted); font-size:0.75rem; font-weight:700;">NEXT 16 HOURS (REMAINING 50%)</small>
+          <div class="metric-val" style="color:var(--muted);" id="next16Rate">-- mL/hr</div>
+          <p style="color:var(--muted); font-size:0.8rem;" id="next16Vol">Total: -- mL</p>
+        </div>
+      </div>
+
+      <div style="background:#07111F; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1.5rem;">
+        <h4 style="font-size:0.85rem; color:var(--sky); margin-bottom:0.35rem;">CLINICAL ENDPOINT TARGETS:</h4>
+        <p style="color:var(--muted); font-size:0.85rem; line-height:1.4;">
+          Maintain adult urinary output at <strong>0.5 – 1.0 mL/kg/hour</strong> (30–50 mL/hr). Titrate IV infusion rate dynamically based on Foley catheter output rather than adhering blindly to theoretical math.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calcParkland() {
+      var w = parseFloat(document.getElementById('burnWeight').value) || 65;
+      var tbsa = parseFloat(document.getElementById('burnTbsa').value) || 35;
+
+      var totalMl = 4 * w * tbsa;
+      var first8Ml = totalMl / 2;
+      var first8PerHour = first8Ml / 8;
+
+      var next16Ml = totalMl / 2;
+      var next16PerHour = next16Ml / 16;
+
+      document.getElementById('totalFluid').textContent = totalMl.toLocaleString('en-IN') + ' mL';
+      document.getElementById('first8Rate').textContent = Math.round(first8PerHour) + ' mL/hr';
+      document.getElementById('first8Vol').textContent = 'Total: ' + Math.round(first8Ml).toLocaleString('en-IN') + ' mL';
+      document.getElementById('next16Rate').textContent = Math.round(next16PerHour) + ' mL/hr';
+      document.getElementById('next16Vol').textContent = 'Total: ' + Math.round(next16Ml).toLocaleString('en-IN') + ' mL';
+    }
+
+    document.addEventListener('DOMContentLoaded', calcParkland);
+  </script>
+</body>
+</html>
