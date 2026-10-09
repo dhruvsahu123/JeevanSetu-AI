@@ -345,5 +345,46 @@ def estimate_cost():
         'coverage_note': status_note
     })
 
+
+# --- EN-ROUTE VITALS TELEMETRY & PRE-ARRIVAL ADVISORY API ---
+@app.route('/api/teleconsult/vitals', methods=['POST'])
+def relay_vitals():
+    data = request.get_json() or {}
+    ambulance_id = data.get('ambulance_id', 'UP-78-AG-1021')
+    hr = int(data.get('heart_rate', 110))
+    bp = data.get('blood_pressure', '90/60')
+    spo2 = int(data.get('spo2', 89))
+    gcs = int(data.get('gcs_score', 12))  # Glasgow Coma Scale 3-15
+    ecg_status = data.get('ecg_status', 'Sinus Tachycardia / ST Elevation')
+
+    # Clinical Priority Scoring
+    is_critical = spo2 < 90 or gcs < 9 or hr > 120 or 'Elevation' in ecg_status
+    advisory = []
+
+    if spo2 < 90:
+        advisory.append('Prepare High Flow Nasal Cannula (HFNC) / Rapid Sequence Intubation')
+    if 'Elevation' in ecg_status:
+        advisory.append('Activate Cath Lab Team - Code STEMI Pre-Alert')
+    if gcs < 9:
+        advisory.append('Severe Neuro Trauma Protocol - Secure Airway Immediate CT Scan')
+    if not advisory:
+        advisory.append('Patient vitals stabilized en-route. Maintain IV access.')
+
+    return jsonify({
+        'status': 'success',
+        'ambulance_id': ambulance_id,
+        'triage_alert': 'CODE_RED_CRITICAL' if is_critical else 'CODE_YELLOW_STABLE',
+        'timestamp': time.strftime('%H:%M:%S IST'),
+        'vitals_received': {
+            'heart_rate': f'{hr} bpm',
+            'bp': bp,
+            'spo2': f'{spo2}%',
+            'gcs_score': f'{gcs}/15',
+            'ecg': ecg_status
+        },
+        'er_pre_arrival_actions': advisory,
+        'assigned_hospital': 'SPM Hospital Trauma Centre / Hallet Apex Grid'
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
