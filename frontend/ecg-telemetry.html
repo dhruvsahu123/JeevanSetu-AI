@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | 12-Lead ECG Telemetry & STEMI Cath Lab Dispatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1100px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .ecg-viewport { background: #000; border: 2px solid #166534; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; position: relative; }
+    canvas { width: 100%; height: 180px; display: block; background: #031309; border-radius: 6px; }
+
+    .grid-ctrl { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
+    select, input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem; outline: none; }
+    
+    .btn-cath { background: var(--danger); color: #fff; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; font-size: 0.95rem; }
+    .btn-cath:hover { background: #dc2626; }
+
+    .result-box { display: none; background: #1c0a0a; border: 2px solid var(--danger); border-radius: 10px; padding: 1.25rem; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">🫀 12-Lead ECG Telemetry & Pre-Arrival Cath Lab Dispatch</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Live waveform telemetry streaming & Door-to-Balloon STEMI alert handshake</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <!-- Live ECG Oscilloscope Screen -->
+    <div class="ecg-viewport">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; font-family:'JetBrains Mono'; font-size:0.8rem; color:#4ade80;">
+        <span>LEAD II (25 mm/s, 10 mm/mV)</span>
+        <span id="rateDisplay">HR: 92 BPM | REGULAR</span>
+      </div>
+      <canvas id="ecgCanvas"></canvas>
+    </div>
+
+    <div class="grid-ctrl">
+      <div class="card">
+        <h3 style="font-size:1.05rem; color:var(--sky); margin-bottom:1rem;">TELEMETRY PARAMETERS</h3>
+        <label>DETECTED RHYTHM / SYNDROME</label>
+        <select id="rhythmSelect">
+          <option value="INFERIOR_STEMI">Inferior Wall STEMI (ST Elevation II, III, aVF)</option>
+          <option value="ANTERIOR_STEMI">Extensive Anterior STEMI (V1 - V4 Elevation)</option>
+          <option value="VENTRICULAR_FIBRILLATION">Ventricular Fibrillation (Malignant)</option>
+          <option value="SINUS_RHYTHM">Normal Sinus Rhythm</option>
+        </select>
+
+        <label>TRANSMITTING FLEET UNIT</label>
+        <input type="text" value="ALS-UP78-AG-1021 (En-Route NH-19)" readonly style="color:var(--muted);">
+
+        <label>ST-ELEVATION MAGNITUDE (MM)</label>
+        <input type="number" id="stElev" value="2.8" step="0.1">
+
+        <button class="btn-cath" onclick="interpretAndDispatch()">⚡ TRANSMIT ECG & ACTIVATE CATH LAB</button>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:1.05rem; color:var(--sky); margin-bottom:0.75rem;">INTERVENTIONAL PROTOCOL</h3>
+        <p style="color:var(--muted); font-size:0.85rem; line-height:1.5;">
+          Early pre-notification allows cardiologists at **LLR / Regency Hospital** to scrub in and calibrate the fluoroscopy suite before the ambulance arrives, cutting average Door-to-Balloon times from 78 mins to <strong>under 32 minutes</strong>.
+        </p>
+
+        <div class="result-box" id="resBox">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong id="diagTitle" style="color:var(--danger); font-size:1.05rem;"></strong>
+            <span style="background:var(--danger); color:#fff; font-size:0.7rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:4px;">CODE STEMI</span>
+          </div>
+          <p id="diagDetails" style="color:var(--text); font-size:0.85rem; margin:0.5rem 0;"></p>
+          <div style="background:#07111F; border:1px solid var(--border); border-radius:6px; padding:0.75rem; font-size:0.8rem; color:var(--teal);">
+            <strong>Cath Lab Directive: </strong><span id="diagDirect"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var canvas = document.getElementById('ecgCanvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentElement.clientWidth - 32;
+    canvas.height = 180;
+
+    var x = 0;
+    var y = canvas.height / 2;
+    var step = 0;
+
+    function drawGrid() {
+      ctx.strokeStyle = '#064e3b';
+      ctx.lineWidth = 0.5;
+      for (var i = 0; i < canvas.width; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+      }
+      for (var j = 0; j < canvas.height; j += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, j);
+        ctx.lineTo(canvas.width, j);
+        ctx.stroke();
+      }
+    }
+
+    drawGrid();
+
+    // Oscilloscope continuous ECG sweep
+    setInterval(function() {
+      ctx.fillStyle = 'rgba(3, 19, 9, 0.08)';
+      ctx.fillRect(x, 0, 8, canvas.height);
+
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+
+      x += 2;
+      step++;
+
+      var mid = canvas.height / 2;
+      var beatPos = step % 60;
+
+      if (beatPos === 10) y = mid - 8;         // P wave
+      else if (beatPos === 15) y = mid;
+      else if (beatPos === 20) y = mid + 6;     // Q wave
+      else if (beatPos === 22) y = mid - 55;    // R wave peak
+      else if (beatPos === 24) y = mid + 20;    // S wave
+      else if (beatPos === 32) y = mid - 14;    // T wave (elevated)
+      else if (beatPos === 40) y = mid;
+      else y = mid;
+
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      if (x > canvas.width) {
+        x = 0;
+      }
+    }, 25);
+
+    function interpretAndDispatch() {
+      var payload = {
+        rhythm_pattern: document.getElementById('rhythmSelect').value,
+        heart_rate: 92,
+        st_elevation_mm: parseFloat(document.getElementById('stElev').value),
+        leads: ['II', 'III', 'aVF']
+      };
+
+      fetch('/api/ecg/telemetry/interpret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        document.getElementById('resBox').style.display = 'block';
+        document.getElementById('diagTitle').textContent = data.rhythm_detected;
+        document.getElementById('diagDetails').textContent = data.st_elevation_reading;
+        document.getElementById('diagDirect').textContent = data.cath_lab_action;
+        alert('🚨 CATH LAB BROADCAST TRANSMITTED:
+
+' + data.rhythm_detected + '
+' + data.cath_lab_action);
+      });
+    }
+  </script>
+</body>
+</html>

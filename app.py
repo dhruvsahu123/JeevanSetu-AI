@@ -776,5 +776,42 @@ def generate_aar_report(case_token):
         'cryptographic_seal': 'SHA256: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069'
     })
 
+
+# --- ECG TELEMETRY & PRE-ARRIVAL STEMI CATH LAB DISPATCH API ---
+@app.route('/api/ecg/telemetry/interpret', methods=['POST'])
+def interpret_ecg():
+    data = request.get_json() or {}
+    rhythm = data.get('rhythm_pattern', 'INFERIOR_STEMI')
+    heart_rate = int(data.get('heart_rate', 92))
+    st_elevation_mm = float(data.get('st_elevation_mm', 2.8))
+    leads_affected = data.get('leads', ['II', 'III', 'aVF'])
+
+    if rhythm == 'INFERIOR_STEMI':
+        diagnosis = 'Acute Inferior Wall STEMI (RCA Occlusion)'
+        urgency = 'CODE_STEMI_CRITICAL'
+        protocol = 'Activate Regency / LLR Cath Lab team immediately. Administer Aspirin 300mg + Ticagrelor 180mg en-route.'
+    elif rhythm == 'ANTERIOR_STEMI':
+        diagnosis = 'Extensive Anterior STEMI (LAD Occlusion)'
+        urgency = 'CODE_STEMI_CRITICAL'
+        protocol = 'High risk of cardiogenic shock. Cath Lab standby. Continuous 12-lead monitoring.'
+    elif rhythm == 'VENTRICULAR_FIBRILLATION':
+        diagnosis = 'Ventricular Fibrillation (Cardiac Arrest)'
+        urgency = 'CODE_BLUE_RESUSCITATION'
+        protocol = 'Immediate unsynchronized defibrillation (200J Biphasic) & CPR 110 BPM.'
+    else:
+        diagnosis = 'Normal Sinus Rhythm'
+        urgency = 'STABLE'
+        protocol = 'Maintain transit telemetry. Continue routine observation.'
+
+    return jsonify({
+        'status': 'success',
+        'heart_rate_bpm': heart_rate,
+        'rhythm_detected': diagnosis,
+        'urgency_level': urgency,
+        'st_elevation_reading': f'{st_elevation_mm} mm elevation in {leads_affected}',
+        'cath_lab_action': protocol,
+        'timestamp': time.strftime('%H:%M:%S IST')
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
