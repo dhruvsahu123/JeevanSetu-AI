@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Trauma GCS & RTS Physiological Scoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 950px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .calc-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; margin-bottom: 2rem; }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
+    select { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem 0.9rem; border-radius: 8px; font-size: 0.9rem; outline: none; }
+    select:focus { border-color: var(--teal); }
+
+    .output-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+    .out-card { background: #081728; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
+    .out-val { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 800; color: var(--teal); margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">🧠 Glasgow Coma Scale (GCS) & Revised Trauma Score (RTS)</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Objective physiological injury severity & trauma survival prediction</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <div class="calc-card">
+      <h3 style="font-size: 1.1rem; color: var(--sky);">1. GLASGOW COMA SCALE (GCS) EVALUATION</h3>
+      <div class="score-grid">
+        <div>
+          <label>EYE OPENING RESPONSE (E)</label>
+          <select id="gcsEye" onchange="updateScores()">
+            <option value="4">4 - Spontaneous (Open naturally)</option>
+            <option value="3">3 - To Sound (Opens on verbal command)</option>
+            <option value="2">2 - To Pressure / Pain</option>
+            <option value="1">1 - None (Does not open)</option>
+          </select>
+        </div>
+        <div>
+          <label>VERBAL RESPONSE (V)</label>
+          <select id="gcsVerbal" onchange="updateScores()">
+            <option value="5">5 - Oriented (Knows name, date, place)</option>
+            <option value="4">4 - Confused (Disoriented sentences)</option>
+            <option value="3">3 - Inappropriate Words</option>
+            <option value="2">2 - Incomprehensible Sounds (Moaning)</option>
+            <option value="1">1 - None (No sounds)</option>
+          </select>
+        </div>
+        <div>
+          <label>MOTOR RESPONSE (M)</label>
+          <select id="gcsMotor" onchange="updateScores()">
+            <option value="6">6 - Obeys Commands</option>
+            <option value="5">5 - Localizes to Pain</option>
+            <option value="4">4 - Normal Flexion (Withdrawal)</option>
+            <option value="3">3 - Abnormal Flexion (Decorticate)</option>
+            <option value="2">2 - Extension (Decerebrate)</option>
+            <option value="1">1 - None (Flaccid)</option>
+          </select>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.1rem; color: var(--sky); margin-top: 1.5rem;">2. VITAL PARAMETERS (RTS CALCULATION)</h3>
+      <div class="score-grid">
+        <div>
+          <label>SYSTOLIC BLOOD PRESSURE (SBP)</label>
+          <select id="rtsSbp" onchange="updateScores()">
+            <option value="4">> 89 mmHg (Normal)</option>
+            <option value="3">76 - 89 mmHg (Moderate Shock)</option>
+            <option value="2">50 - 75 mmHg (Severe Shock)</option>
+            <option value="1">1 - 49 mmHg (Profound Shock)</option>
+            <option value="0">0 mmHg (No Pulse)</option>
+          </select>
+        </div>
+        <div>
+          <label>RESPIRATORY RATE (RR)</label>
+          <select id="rtsRr" onchange="updateScores()">
+            <option value="4">10 - 29 breaths/min (Normal)</option>
+            <option value="3">> 29 breaths/min (Tachypneic)</option>
+            <option value="2">6 - 9 breaths/min (Depressed)</option>
+            <option value="1">1 - 5 breaths/min (Impending Arrest)</option>
+            <option value="0">0 (Apneic / No Breathing)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="output-strip">
+        <div class="out-card">
+          <small style="color:var(--muted); font-weight:700; font-size:0.75rem;">TOTAL GCS SCORE (3 - 15)</small>
+          <div class="out-val" id="gcsResult">15 / 15</div>
+          <p id="gcsSeverity" style="color:var(--teal); font-size:0.85rem; font-weight:700;">Mild / Alert Status</p>
+        </div>
+        <div class="out-card">
+          <small style="color:var(--muted); font-weight:700; font-size:0.75rem;">REVISED TRAUMA SCORE (RTS 0 - 7.84)</small>
+          <div class="out-val" style="color:var(--sky);" id="rtsResult">7.84</div>
+          <p id="survivalProb" style="color:var(--sky); font-size:0.85rem; font-weight:700;">Survival Probability: 98.8%</p>
+        </div>
+      </div>
+
+      <div style="background:#07111F; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1.5rem;" id="advisoryBox">
+        <h4 style="font-size:0.85rem; color:var(--sky); margin-bottom:0.35rem;">TRAUMA DIRECTIVE & DESTINATION:</h4>
+        <p id="traumaAdvisory" style="color:var(--muted); font-size:0.85rem; line-height:1.4;">
+          Standard trauma evaluation. Maintain observation. Secondary center transfer eligible.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateScores() {
+      var e = parseInt(document.getElementById('gcsEye').value);
+      var v = parseInt(document.getElementById('gcsVerbal').value);
+      var m = parseInt(document.getElementById('gcsMotor').value);
+      var gcs = e + v + m;
+
+      var sbpCode = parseInt(document.getElementById('rtsSbp').value);
+      var rrCode = parseInt(document.getElementById('rtsRr').value);
+
+      // GCS Code for RTS
+      var gcsCode = 4;
+      if (gcs >= 13) gcsCode = 4;
+      else if (gcs >= 9) gcsCode = 3;
+      else if (gcs >= 6) gcsCode = 2;
+      else if (gcs >= 4) gcsCode = 1;
+      else gcsCode = 0;
+
+      // Physiological RTS = 0.9368(GCS) + 0.7326(SBP) + 0.2908(RR)
+      var rts = (0.9368 * gcsCode) + (0.7326 * sbpCode) + (0.2908 * rrCode);
+
+      document.getElementById('gcsResult').textContent = gcs + ' / 15';
+
+      var gcsLabel = document.getElementById('gcsSeverity');
+      var adv = document.getElementById('traumaAdvisory');
+
+      if (gcs <= 8) {
+        gcsLabel.textContent = 'Severe Head Injury (GCS ≤ 8)';
+        gcsLabel.style.color = 'var(--danger)';
+        document.getElementById('gcsResult').style.color = 'var(--danger)';
+        adv.innerHTML = '<strong style="color:var(--danger);">🚨 MANDATORY INTUBATION & IMMEDIATE LEVEL-1 TRAUMA (HALLET/LLR) TRANSFER.</strong> Airway reflexes lost. Direct neurosurgical CT standby activated.';
+      } else if (gcs <= 12) {
+        gcsLabel.textContent = 'Moderate Head Injury (GCS 9 - 12)';
+        gcsLabel.style.color = 'var(--yellow)';
+        document.getElementById('gcsResult').style.color = 'var(--yellow)';
+        adv.innerHTML = '<strong>High Risk:</strong> Continuous neurological check every 15 mins. Prepare for secondary CT scan and high flow oxygen.';
+      } else {
+        gcsLabel.textContent = 'Mild Head Injury (GCS 13 - 15)';
+        gcsLabel.style.color = 'var(--teal)';
+        document.getElementById('gcsResult').style.color = 'var(--teal)';
+        adv.innerHTML = 'Standard trauma protocol. Vital signs stable. Secondary trauma center eligible.';
+      }
+
+      document.getElementById('rtsResult').textContent = rts.toFixed(2);
+      var survPct = (rts >= 7.84) ? '98.8%' : (rts >= 6.0 ? '89.2%' : (rts >= 4.0 ? '60.5%' : '< 30%'));
+      document.getElementById('survivalProb').textContent = 'Survival Probability: ' + survPct;
+    }
+
+    document.addEventListener('DOMContentLoaded', updateScores);
+  </script>
+</body>
+</html>
