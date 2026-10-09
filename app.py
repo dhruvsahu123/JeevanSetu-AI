@@ -813,5 +813,46 @@ def interpret_ecg():
         'timestamp': time.strftime('%H:%M:%S IST')
     })
 
+
+# --- E-FAST ULTRASOUND PROTOCOL & HEMOPERITONEUM PREDICTOR API ---
+@app.route('/api/diagnostics/fast-scan', methods=['POST'])
+def process_fast_ultrasound():
+    data = request.get_json() or {}
+    ruq = bool(data.get('morisons_pouch', False))
+    luq = bool(data.get('splenorenal', False))
+    pelvic = bool(data.get('suprapubic', False))
+    pericardial = bool(data.get('subxiphoid', False))
+
+    positive_zones = []
+    if ruq: positive_zones.append("Morison's Pouch (Hepatorenal)")
+    if luq: positive_zones.append('Splenorenal Recess')
+    if pelvic: positive_zones.append('Pelvic (Retrovesical / Douglas)')
+    if pericardial: positive_zones.append('Pericardial Sac (Tamponade Risk)')
+
+    pos_count = len(positive_zones)
+    
+    if pos_count >= 2 or pericardial:
+        urgency = 'CRITICAL_SURGICAL_INTERVENTION'
+        est_blood_loss = '1000 - 1500+ mL (Severe Hemoperitoneum)'
+        action = 'Immediate Exploratory Laparotomy / Subxiphoid Window. Activate Level-1 Trauma OT.'
+    elif pos_count == 1:
+        urgency = 'HIGH_PRIORITY_OBSERVATION'
+        est_blood_loss = '400 - 800 mL (Occult Free Fluid)'
+        action = 'Urgent Abdominal Contrast CT Scan & Serial FAST repeat in 20 minutes.'
+    else:
+        urgency = 'NEGATIVE_SCAN'
+        est_blood_loss = '< 200 mL (No free fluid identified)'
+        action = 'No gross free acoustic fluid detected. Continue serial vitals and observational trauma protocol.'
+
+    return jsonify({
+        'status': 'success',
+        'positive_zones_count': pos_count,
+        'flagged_spaces': positive_zones,
+        'urgency_level': urgency,
+        'estimated_internal_bleed': est_blood_loss,
+        'surgical_action': action,
+        'timestamp': time.strftime('%H:%M:%S IST')
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
