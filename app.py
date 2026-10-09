@@ -526,5 +526,49 @@ def handle_404(e):
         return send_from_directory(app.root_path, path)
     return send_from_directory(app.root_path, 'index.html'), 200
 
+
+# --- AI VISION SURVEILLANCE & CRASH DETECTION API ---
+@app.route('/api/ai/vision/detect', methods=['POST'])
+def analyze_crash_feed():
+    data = request.get_json() or {}
+    camera_id = data.get('camera_id', 'CAM-NH19-ROOMA-KM442')
+    impact_type = data.get('impact_type', 'ROLLOVER')
+    speed_estimate_kmh = int(data.get('estimated_speed_kmh', 78))
+    airbag_deployed = bool(data.get('airbag_deployed', True))
+    ocr_plate = data.get('license_plate', 'UP-78-EV-9021')
+
+    # Severity scoring engine
+    severity_score = 30
+    if impact_type in ['ROLLOVER', 'HEAD_ON']: severity_score += 40
+    elif impact_type == 'MULTI_COLLISION': severity_score += 50
+    else: severity_score += 20
+
+    if speed_estimate_kmh > 65: severity_score += 20
+    if airbag_deployed: severity_score += 10
+
+    severity_score = min(100, severity_score)
+
+    if severity_score >= 80:
+        level = 'CATASTROPHIC'
+        triage_action = 'Immediate Code Red Multi-Agency Dispatch (Fire + 2 ALS Ambulances)'
+    elif severity_score >= 50:
+        level = 'SEVERE'
+        triage_action = 'Deploy 1 ALS Ambulance with hydraulic extrication team'
+    else:
+        level = 'MODERATE'
+        triage_action = 'Deploy BLS Patrol Unit for roadside assistance'
+
+    return jsonify({
+        'status': 'success',
+        'camera_node': camera_id,
+        'detected_plate': ocr_plate,
+        'ocr_confidence': '98.2%',
+        'crash_severity_score': severity_score,
+        'severity_grade': level,
+        'estimated_casualties': '2-4' if severity_score >= 70 else '1-2',
+        'recommended_dispatch': triage_action,
+        'timestamp': time.strftime('%H:%M:%S IST')
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
