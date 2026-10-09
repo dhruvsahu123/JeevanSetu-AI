@@ -1,7 +1,10 @@
-﻿from flask import Flask, render_template, request, jsonify, send_from_directory
-from flask_cors import CORS
-import sqlite3
 import os
+import time
+import sqlite3
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
+
+from flask import Flask, render_template, request, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder='frontend', static_url_path='/frontend')
 CORS(app)
@@ -384,6 +387,40 @@ def relay_vitals():
         },
         'er_pre_arrival_actions': advisory,
         'assigned_hospital': 'SPM Hospital Trauma Centre / Hallet Apex Grid'
+    })
+
+
+# --- KANPUR TRAFFIC GREEN CORRIDOR & SIGNAL PREEMPTION API ---
+ACTIVE_CORRIDORS = [
+    {'corridor_id': 'GC-NH19-01', 'name': 'NH-19 Rooma to Hallet Trauma Apex', 'length_km': 14.2, 'chokepoints': ['Rooma Cut', 'Ramadevi Roundabout', 'Tatmill Chauraha', 'Mariampur Crossing'], 'status': 'STANDBY'},
+    {'corridor_id': 'GC-GT-02', 'name': 'GT Road Kalyanpur to LLR ER Bay', 'length_km': 9.8, 'chokepoints': ['Kalyanpur Crossing', 'Rawatpur Bus Depot', 'Medical College Gate'], 'status': 'STANDBY'},
+    {'corridor_id': 'GC-VIP-03', 'name': 'Civil Lines to Regency Super-Specialty', 'length_km': 6.5, 'chokepoints': ['Bada Chauraha', 'Phoolbagh', 'Sarvodaya Nagar Gate'], 'status': 'STANDBY'}
+]
+
+@app.route('/api/traffic/corridors', methods=['GET'])
+def get_corridors():
+    return jsonify({'status': 'success', 'corridors': ACTIVE_CORRIDORS})
+
+@app.route('/api/traffic/preempt/<corridor_id>', methods=['POST'])
+def preempt_signals(corridor_id):
+    matched = None
+    for c in ACTIVE_CORRIDORS:
+        if c['corridor_id'] == corridor_id:
+            c['status'] = 'GREEN_LOCKED'
+            matched = c
+            break
+
+    if not matched:
+        return jsonify({'status': 'error', 'message': 'Corridor not found'}), 404
+
+    return jsonify({
+        'status': 'success',
+        'corridor_id': corridor_id,
+        'corridor_name': matched['name'],
+        'signal_status': 'ALL_SIGNALS_GREEN_PREEMPTED',
+        'duration_cleared': '18 Minutes Wave Cleared',
+        'traffic_police_units_alerted': len(matched['chokepoints']) * 2,
+        'advisory': f"Police bike outriders and intersection wardens locked on {matched['name']}. Traffic cleared for en-route ALS units."
     })
 
 if __name__ == '__main__':
