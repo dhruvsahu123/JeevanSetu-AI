@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | ER Desk & Admin Authentication</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem; }
+    .login-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; max-width: 420px; width: 100%; padding: 2.25rem; box-shadow: 0 0 35px rgba(20, 184, 166, 0.1); }
+    .brand-title { display: flex; align-items: center; gap: 0.5rem; font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.75rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.4rem; }
+    input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.95rem; margin-bottom: 1.25rem; outline: none; }
+    input:focus { border-color: var(--sky); }
+    .btn-login { width: 100%; background: var(--teal); color: #07111F; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
+    .btn-login:hover { background: #0d9488; }
+    .demo-hint { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--sky); border-radius: 8px; padding: 0.75rem; font-size: 0.8rem; color: var(--muted); margin-top: 1.5rem; }
+    .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="brand-title">
+      <span>🔒</span>
+      <span>ER DESK AUTHENTICATION</span>
+    </div>
+    <p class="subtitle">Authorized Medical Staff & Casualty Officers Only</p>
+
+    <div id="errorBox" class="error-msg"></div>
+
+    <form onsubmit="handleLogin(event)">
+      <label>STAFF EMAIL / REGISTRATION ID</label>
+      <input type="email" id="email" value="admin@jeevansetu.in" required>
+
+      <label>SECURITY PASSCODE</label>
+      <input type="password" id="password" value="kanpur123" required>
+
+      <button type="submit" class="btn-login">ACCESS TRAUMA GRID</button>
+    </form>
+
+    <div class="demo-hint">
+      <strong style="color:var(--sky);">Quick Test Access:</strong><br>
+      ID: <code>admin@jeevansetu.in</code><br>
+      Pass: <code>kanpur123</code>
+    </div>
+
+    <div style="text-align:center; margin-top:1.25rem;">
+      <a href="../index.html" style="color:var(--sky); text-decoration:none; font-size:0.85rem; font-weight:700;">← Return to Citizen Portal</a>
+    </div>
+  </div>
+
+  <script>
+    function handleLogin(e) {
+      e.preventDefault();
+      var errBox = document.getElementById('errorBox');
+      errBox.style.display = 'none';
+
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      })
+      .then(function(res) {
+        if (!res.ok) { throw new Error('Invalid credentials'); }
+        return res.json();
+      })
+      .then(function(data) {
+        localStorage.setItem('js_auth_token', data.token);
+        localStorage.setItem('js_user', JSON.stringify(data.user));
+        window.location.href = 'hospital-dashboard.html';
+      })
+      .catch(function(err) {
+        errBox.textContent = 'Authentication failed. Please verify credentials.';
+        errBox.style.display = 'block';
+      });
+    }
+  </script>
+</body>
+</html>

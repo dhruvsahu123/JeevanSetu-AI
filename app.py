@@ -139,5 +139,27 @@ def search_medicines():
     conn.close()
     return jsonify({"status": "success", "count": len(rows), "results": rows})
 
+
+# --- HOSPITAL ER STAFF & ADMIN AUTHENTICATION API ---
+@app.route('/api/auth/login', methods=['POST'])
+def staff_login():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+
+    # Default authorized triage desk credentials for testing
+    if email == 'admin@jeevansetu.in' and password == 'kanpur123':
+        return jsonify({
+            'status': 'success',
+            'token': 'JS-AUTH-JWT-DEMO-KAN-2026',
+            'user': {
+                'name': 'Dr. Alok Verma',
+                'role': 'ER Triage In-Charge',
+                'hospital': 'SPM Hospital Research & Trauma Centre'
+            }
+        })
+
+    return jsonify({'status': 'error', 'message': 'Invalid medical ID or password'}), 401
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
