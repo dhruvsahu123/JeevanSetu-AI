@@ -171,5 +171,76 @@ def serve_sw():
 def serve_manifest():
     return send_from_directory('.', 'manifest.json', mimetype='application/json')
 
+
+# --- BLOOD BANK INTELLIGENCE & COMPATIBILITY MATRIX ---
+BLOOD_COMPATIBILITY = {
+    'O-': ['O-'],
+    'O+': ['O-', 'O+'],
+    'A-': ['O-', 'A-'],
+    'A+': ['O-', 'O+', 'A-', 'A+'],
+    'B-': ['O-', 'B-'],
+    'B+': ['O-', 'O+', 'B-', 'B+'],
+    'AB-': ['O-', 'A-', 'B-', 'AB-'],
+    'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
+    'BOMBAY_HH': ['BOMBAY_HH']
+}
+
+@app.route('/api/blood/match', methods=['POST'])
+def match_blood():
+    data = request.get_json() or {}
+    patient_group = data.get('blood_group', 'O-').strip().upper()
+    component = data.get('component', 'PRBC').strip().upper()
+    units_needed = int(data.get('units_needed', 2))
+
+    compatible_groups = BLOOD_COMPATIBILITY.get(patient_group, [patient_group])
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM blood_banks ORDER BY id ASC')
+    blood_banks = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    matches = []
+    total_compatible_units = 0
+
+    for b in blood_banks:
+        avail_breakdown = {
+            'O-': b.get('units_o_negative', 0),
+            'AB-': b.get('units_ab_negative', 0),
+            'B-': b.get('units_b_negative', 0),
+            'O+': b.get('units_o_positive', 0),
+            'B+': b.get('units_b_positive', 0)
+        }
+        
+        bank_compatible_units = sum(avail_breakdown.get(grp, 0) for grp in compatible_groups)
+        total_compatible_units += bank_compatible_units
+
+        matches.append({
+            'facility_id': b['id'],
+            'facility_name': b['facility_name'],
+            'locality': b['locality'],
+            'phone': b['contact_phone'],
+            'compatible_units_available': bank_compatible_units,
+            'breakdown': {grp: avail_breakdown.get(grp, 0) for grp in compatible_groups if grp in avail_breakdown}
+        })
+
+    matches.sort(key=lambda x: x['compatible_units_available'], reverse=True)
+
+    is_rare = patient_group in ['O-', 'AB-', 'B-', 'BOMBAY_HH']
+    critical_shortage = total_compatible_units < units_needed
+
+    return jsonify({
+        'status': 'success',
+        'patient_group': patient_group,
+        'component_type': component,
+        'units_requested': units_needed,
+        'compatible_donor_groups': compatible_groups,
+        'is_rare_phenotype': is_rare,
+        'critical_shortage': critical_shortage,
+        'total_available_in_grid': total_compatible_units,
+        'facilities_ranked': matches,
+        'advisory': 'Initiate intra-city inter-bank emergency component relay.' if critical_shortage else 'Direct dispatch possible from top matching center.'
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
