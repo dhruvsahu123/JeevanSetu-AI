@@ -602,5 +602,38 @@ def handle_mci_tags():
         }
     })
 
+
+# --- AI DYNAMIC TRAFFIC WAVE & SIGNAL PREEMPTION ENGINE ---
+INTERSECTIONS = [
+    {'id': 'INT-01', 'name': 'Rooma NH-19 Flyover Junction', 'lat': 26.3842, 'lng': 80.4215, 'light': 'RED', 'preempted': False},
+    {'id': 'INT-02', 'name': 'Ramadevi Chauraha Roundabout', 'lat': 26.4251, 'lng': 80.3871, 'light': 'RED', 'preempted': False},
+    {'id': 'INT-03', 'name': 'Tatmill Intersection', 'lat': 26.4485, 'lng': 80.3542, 'light': 'YELLOW', 'preempted': False},
+    {'id': 'INT-04', 'name': 'Mariampur Crossroad (LLR Gate)', 'lat': 26.4820, 'lng': 80.3015, 'light': 'RED', 'preempted': False}
+]
+
+@app.route('/api/traffic/signals', methods=['GET'])
+def get_signals():
+    return jsonify({'status': 'success', 'intersections': INTERSECTIONS})
+
+@app.route('/api/traffic/override/<signal_id>', methods=['POST'])
+def override_signal(signal_id):
+    matched = None
+    for item in INTERSECTIONS:
+        if item['id'] == signal_id:
+            item['light'] = 'GREEN'
+            item['preempted'] = True
+            matched = item
+            break
+            
+    if not matched:
+        return jsonify({'status': 'error', 'message': 'Signal not found'}), 404
+
+    return jsonify({
+        'status': 'success',
+        'signal': matched,
+        'hold_duration_sec': 120,
+        'clearance_advisory': f"Emergency corridor wave locked. All conflicting traffic halted at {matched['name']}."
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
