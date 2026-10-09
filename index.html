@@ -239,6 +239,8 @@
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#14B8A6">
 </head>
 <body>
 
@@ -403,6 +405,15 @@
 
     function closeSOS() {
       document.getElementById('sosModal').style.display = 'none';
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('PWA ServiceWorker Active:', reg.scope))
+          .catch(err => console.log('PWA Registration Error:', err));
+      });
     }
   </script>
 </body>

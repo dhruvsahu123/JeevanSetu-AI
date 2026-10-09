@@ -161,5 +161,15 @@ def staff_login():
 
     return jsonify({'status': 'error', 'message': 'Invalid medical ID or password'}), 401
 
+
+# --- PWA STATIC ASSETS ROUTING ---
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('.', 'sw.js', mimetype='application/javascript')
+
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory('.', 'manifest.json', mimetype='application/json')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
