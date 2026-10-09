@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Kanpur Blood Grid & Donor Summon Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1100px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800; margin-top: 0.25rem; }
+
+    .summon-box { background: #1c0a0a; border: 2px solid var(--danger); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+    .summon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    label { font-size: 0.75rem; color: var(--muted); font-weight: 700; display: block; margin-bottom: 0.35rem; }
+    select, input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; outline: none; }
+    .btn-summon { background: var(--danger); color: #fff; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 1.35rem; }
+    .btn-summon:hover { background: #dc2626; }
+
+    .center-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+    .center-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
+    .inventory-table { width: 100%; margin-top: 1rem; border-collapse: collapse; font-size: 0.82rem; }
+    .inventory-table td { padding: 0.4rem 0; border-bottom: 1px solid rgba(30, 53, 79, 0.5); }
+    .badge-unit { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">🩸 Kanpur Regional Blood Bank Grid & Emergency Summon</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Live component reserves (PRBC, FFP, SDP) and automated regional donor broadcast</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <small style="color:var(--muted); font-weight:700;">UNIVERSAL O-NEG RESERVE</small>
+        <div class="kpi-val" id="kpiOneg" style="color:var(--danger);">-- Units</div>
+      </div>
+      <div class="kpi-card">
+        <small style="color:var(--muted); font-weight:700;">SINGLE DONOR PLATELETS (SDP)</small>
+        <div class="kpi-val" id="kpiSdp" style="color:var(--yellow);">-- Units</div>
+      </div>
+      <div class="kpi-card">
+        <small style="color:var(--muted); font-weight:700;">ACTIVE 24x7 CENTERS</small>
+        <div class="kpi-val" id="kpiCenters" style="color:var(--teal);">4 Centers</div>
+      </div>
+    </div>
+
+    <!-- Automated Donor Summon -->
+    <div class="summon-box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="color:var(--danger); font-size:1.15rem;">⚡ RAPID DONOR SUMMON BROADCAST</h3>
+          <p style="color:var(--muted); font-size:0.82rem; margin-top:0.2rem;">Broadcasts immediate notification to geo-fenced registered voluntary donors.</p>
+        </div>
+        <span style="background:rgba(239,68,68,0.2); color:var(--danger); font-size:0.75rem; font-weight:800; padding:0.25rem 0.5rem; border-radius:4px;">CRITICAL REQUISITION</span>
+      </div>
+
+      <div class="summon-grid">
+        <div>
+          <label>REQUISITE BLOOD PHENOTYPE</label>
+          <select id="summonGroup">
+            <option value="O-">O-Negative (Universal Donor)</option>
+            <option value="AB-">AB-Negative</option>
+            <option value="B-">B-Negative</option>
+            <option value="A-">A-Negative</option>
+            <option value="PLATELETS">Single Donor Platelets (Dengue/Trauma)</option>
+          </select>
+        </div>
+        <div>
+          <label>RECIPIENT APEX HOSPITAL</label>
+          <select id="summonFacility">
+            <option value="LLR Apex Trauma (Medical College)">LLR Apex Trauma (Medical College)</option>
+            <option value="SPM Hospital Research & Trauma (Rooma)">SPM Hospital Trauma (Rooma)</option>
+            <option value="Regency Super-Specialty ER">Regency Super-Specialty ER</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn-summon" onclick="triggerDonorSummon()">📢 BROADCAST EMERGENCY CALL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Centers Inventory Grid -->
+    <h3 style="font-size:1.15rem; color:var(--sky); margin-bottom:1rem;">INTER-CONNECTED KANPUR BLOOD CENTERS</h3>
+    <div class="center-grid" id="centersGrid"></div>
+  </div>
+
+  <script>
+    function loadBloodGrid() {
+      fetch('/api/blood/network')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          document.getElementById('kpiOneg').textContent = data.critical_reserves.O_NEGATIVE_UNITS + ' Units';
+          document.getElementById('kpiSdp').textContent = data.critical_reserves.SDP_PLATELETS + ' Units';
+          document.getElementById('kpiCenters').textContent = data.total_centers + ' Facilities';
+
+          var grid = document.getElementById('centersGrid');
+          grid.innerHTML = '';
+          var list = data.centers || [];
+
+          for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            var card = document.createElement('div');
+            card.className = 'center-card';
+
+            card.innerHTML = [
+              '<div>',
+                '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">',
+                  '<h4 style="font-size:1.05rem; max-width:80%;">' + item.name + '</h4>',
+                  '<span style="font-size:0.7rem; background:rgba(20,184,166,0.15); color:var(--teal); padding:0.2rem 0.5rem; border-radius:4px; font-weight:700;">' + item.status + '</span>',
+                '</div>',
+                '<p style="color:var(--muted); font-size:0.82rem;">📍 ' + item.locality + '</p>',
+                '<table class="inventory-table">',
+                  '<tr><td style="color:var(--danger); font-weight:700;">O-Negative</td><td class="badge-unit" style="color:var(--danger);">' + item.inventory.O_NEG + ' Units</td></tr>',
+                  '<tr><td>O-Positive</td><td class="badge-unit">' + item.inventory.O_POS + ' Units</td></tr>',
+                  '<tr><td>A-Positive / B-Positive</td><td class="badge-unit">' + item.inventory.A_POS + ' / ' + item.inventory.B_POS + ' Units</td></tr>',
+                  '<tr><td style="color:var(--yellow); font-weight:700;">SDP Platelets</td><td class="badge-unit" style="color:var(--yellow);">' + item.inventory.PLATELETS_SDP + ' Units</td></tr>',
+                '</table>',
+              '</div>',
+              '<a href="tel:' + item.contact.replace(/[^0-9+]/g, '') + '" style="margin-top:1.2rem; background:#1E354F; color:var(--sky); border:1px solid var(--border); padding:0.6rem; border-radius:6px; font-weight:700; text-align:center; text-decoration:none; display:block; font-size:0.85rem;">📞 Contact Bank (' + item.contact + ')</a>'
+            ].join('');
+
+            grid.appendChild(card);
+          }
+        });
+    }
+
+    function triggerDonorSummon() {
+      var payload = {
+        blood_group: document.getElementById('summonGroup').value,
+        facility: document.getElementById('summonFacility').value
+      };
+
+      fetch('/api/blood/summon-donors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        alert('📢 DONOR BROADCAST ACTIVATED:
+
+' + data.advisory);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadBloodGrid);
+  </script>
+</body>
+</html>

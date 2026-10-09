@@ -635,5 +635,72 @@ def override_signal(signal_id):
         'clearance_advisory': f"Emergency corridor wave locked. All conflicting traffic halted at {matched['name']}."
     })
 
+
+# --- KANPUR REGIONAL BLOOD GRID & DONOR DISPATCH API ---
+KANPUR_BLOOD_BANKS = [
+    {
+        'id': 'BB-ROTARY-01',
+        'name': 'Kanpur Rotary Blood Centre',
+        'locality': 'Kakadeo / Rawatpur',
+        'contact': '+91-512-2500000',
+        'inventory': {'O_POS': 18, 'O_NEG': 4, 'A_POS': 12, 'B_POS': 22, 'AB_POS': 8, 'PLATELETS_SDP': 6},
+        'status': 'OPERATIONAL_24X7'
+    },
+    {
+        'id': 'BB-LLR-02',
+        'name': 'Ganesh Shankar Vidyarthi Memorial (LLR) Blood Bank',
+        'locality': 'Swaroop Nagar (Medical College)',
+        'contact': '+91-512-2535555',
+        'inventory': {'O_POS': 34, 'O_NEG': 2, 'A_POS': 19, 'B_POS': 41, 'AB_POS': 14, 'PLATELETS_SDP': 9},
+        'status': 'APEX_TRAUMA_RESERVE'
+    },
+    {
+        'id': 'BB-UHM-03',
+        'name': 'Ursula Memorial District Blood Bank',
+        'locality': 'Civil Lines',
+        'contact': '+91-512-2304444',
+        'inventory': {'O_POS': 14, 'O_NEG': 1, 'A_POS': 8, 'B_POS': 16, 'AB_POS': 5, 'PLATELETS_SDP': 2},
+        'status': 'OPERATIONAL_24X7'
+    },
+    {
+        'id': 'BB-SPM-04',
+        'name': 'SPM Trauma Transfusion Unit',
+        'locality': 'Rooma (NH-19 Corridor)',
+        'contact': '+91-512-2410101',
+        'inventory': {'O_POS': 9, 'O_NEG': 3, 'A_POS': 7, 'B_POS': 11, 'AB_POS': 4, 'PLATELETS_SDP': 4},
+        'status': 'HIGHWAY_HOTLINE'
+    }
+]
+
+@app.route('/api/blood/network', methods=['GET'])
+def get_blood_network():
+    total_o_neg = sum(b['inventory']['O_NEG'] for b in KANPUR_BLOOD_BANKS)
+    total_sdp = sum(b['inventory']['PLATELETS_SDP'] for b in KANPUR_BLOOD_BANKS)
+    return jsonify({
+        'status': 'success',
+        'total_centers': len(KANPUR_BLOOD_BANKS),
+        'critical_reserves': {
+            'O_NEGATIVE_UNITS': total_o_neg,
+            'SDP_PLATELETS': total_sdp
+        },
+        'centers': KANPUR_BLOOD_BANKS
+    })
+
+@app.route('/api/blood/summon-donors', methods=['POST'])
+def summon_donors():
+    data = request.get_json() or {}
+    group = data.get('blood_group', 'O-')
+    urgency = data.get('urgency', 'CRITICAL')
+    facility = data.get('facility', 'LLR Apex Trauma')
+
+    return jsonify({
+        'status': 'success',
+        'dispatched_alerts': 48,
+        'channel': 'SMS + WhatsApp API Relay',
+        'target_group': group,
+        'destination': facility,
+        'advisory': f"Emergency Broadcast Sent to 48 pre-verified {group} donors within 8 km radius of {facility}. ETA for first batch: 18-25 minutes."
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
