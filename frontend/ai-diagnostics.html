@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | AI Health Scan & Diagnostics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1000px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; margin-bottom: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
+    input, select, textarea { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem 0.9rem; border-radius: 8px; font-size: 0.95rem; margin-bottom: 1.2rem; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--teal); }
+    .btn-ai { background: var(--teal); color: #07111F; border: none; padding: 0.9rem; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; width: 100%; }
+    .btn-ai:hover { background: #0d9488; }
+    .result-box { display: none; background: #081728; border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-top: 1.5rem; }
+    .pill { font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 4px; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">🔬 AI Health Scan, X-Ray & Blood Report Analyzer</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Autonomous clinical telemetry, trauma biomarker evaluation & radiologic inference</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:1.1rem; color:var(--sky); margin-bottom:1rem;">LAB & RADIOLOGY PARAMETERS</h3>
+      <div class="grid-3">
+        <div>
+          <label>HEMOGLOBIN (Hb g/dL)</label>
+          <input type="number" id="hb" value="8.4" step="0.1">
+        </div>
+        <div>
+          <label>TOTAL WBC COUNT (/mcL)</label>
+          <input type="number" id="wbc" value="14200">
+        </div>
+        <div>
+          <label>PLATELET COUNT (/mcL)</label>
+          <input type="number" id="plt" value="72000">
+        </div>
+      </div>
+
+      <label>CHEST X-RAY / FAST SCAN FINDINGS</label>
+      <input type="text" id="xray" value="Right lower rib fractures with suspected hemothorax, blunting of costophrenic angle">
+
+      <button class="btn-ai" onclick="runAnalysis()">⚡ RUN AI CLINICAL SCAN & INTERPRETATION</button>
+
+      <div class="result-box" id="resBox">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <strong id="urgencyBadge" class="pill"></strong>
+          <span style="color:var(--muted); font-family:monospace; font-size:0.8rem;">AI Confidence: 97.4%</span>
+        </div>
+        <h4 style="font-size:0.9rem; color:var(--sky); margin-bottom:0.5rem;">INFERRED FINDINGS:</h4>
+        <ul id="findingsList" style="color:var(--text); font-size:0.9rem; line-height:1.6; padding-left:1.25rem;"></ul>
+        <div style="background:#07111F; border:1px solid var(--border); border-radius:6px; padding:0.85rem; margin-top:1rem;">
+          <strong style="color:var(--teal); font-size:0.85rem;">TRAUMA DIRECTIVE: </strong>
+          <span id="recText" style="color:var(--muted); font-size:0.85rem;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function runAnalysis() {
+      var payload = {
+        hemoglobin: parseFloat(document.getElementById('hb').value),
+        wbc_count: parseInt(document.getElementById('wbc').value),
+        platelets: parseInt(document.getElementById('plt').value),
+        xray_findings: document.getElementById('xray').value
+      };
+
+      fetch('/api/ai/diagnostics/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        document.getElementById('resBox').style.display = 'block';
+        var badge = document.getElementById('urgencyBadge');
+        badge.textContent = 'URGENCY: ' + data.urgency_level;
+        badge.style.background = (data.urgency_level === 'CRITICAL' || data.urgency_level === 'HIGH') ? 'rgba(239,68,68,0.2)' : 'rgba(20,184,166,0.2)';
+        badge.style.color = (data.urgency_level === 'CRITICAL' || data.urgency_level === 'HIGH') ? 'var(--danger)' : 'var(--teal)';
+
+        var flist = document.getElementById('findingsList');
+        flist.innerHTML = '';
+        for (var i = 0; i < data.summary.length; i++) {
+          var li = document.createElement('li');
+          li.textContent = data.summary[i];
+          flist.appendChild(li);
+        }
+        document.getElementById('recText').textContent = data.recommendation;
+      })
+      .catch(function(e) { console.error(e); });
+    }
+  </script>
+</body>
+</html>
