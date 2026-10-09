@@ -112,6 +112,7 @@
       margin-bottom: 1.25rem;
       background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     .hero p {
@@ -237,6 +238,7 @@
       margin-top: auto;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -249,7 +251,8 @@
       <a href="frontend/hospital-dashboard.html">Hospital Network</a>
       <a href="frontend/ambulance-tracking.html">Ambulance GPS</a>
       <a href="frontend/customer-dashboard.html">Citizen Vault</a>
-      <a href="frontend/login.html" class="btn-login">Sign In</a>
+      <a href="blood-banks.html">Blood Hub</a>
+      <a href="medical-knowledge.html">Clinical Registry</a>`n      <a href="login.html" class="btn-login">Sign In</a>
     </nav>
   </header>
 
@@ -268,7 +271,7 @@
           <h3>Emergency SOS</h3>
           <p>Instant dispatch trigger. Allocates nearest available ICU bed and priority ambulance without waiting.</p>
         </div>
-        <a href="frontend/customer-dashboard.html" class="card-btn btn-sos">Trigger Instant SOS</a>
+        <button onclick="launchSOS()" class="card-btn btn-sos">🚨 Trigger Instant SOS</button>
       </div>
 
       <!-- 2. Hospital Beds -->
@@ -323,5 +326,85 @@
     <p>© 2026 JeevanSetu AI. Designed for Kanpur Emergency Healthcare Network.</p>
   </footer>
 
+
+  <!-- Instant SOS Modal with Scannable QR -->
+  <div id="sosModal" style="display:none; position:fixed; inset:0; background:rgba(7,17,31,0.88); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:#0D1B2A; border:2px solid #EF4444; border-radius:16px; padding:2rem; max-width:500px; width:100%; box-shadow:0 0 45px rgba(239,68,68,0.35); text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #1E354F; padding-bottom:0.75rem;">
+        <span style="color:#EF4444; font-weight:800; font-size:1.1rem;">🚨 ABDM EMERGENCY PASS</span>
+        <span style="background:#EF4444; color:#fff; font-size:0.75rem; padding:0.2rem 0.6rem; border-radius:4px; font-weight:800;">GOLDEN HOUR TIER-1</span>
+      </div>
+
+      <div style="display:flex; justify-content:center; margin:1rem 0;">
+        <div id="qrCodeContainer" style="background:#fff; padding:10px; border-radius:8px; display:inline-block;"></div>
+      </div>
+
+      <div style="background:#07111F; border:1px solid #1E354F; border-radius:10px; padding:1rem; text-align:left; margin-bottom:1.25rem;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+          <span style="color:#94A3B8; font-size:0.8rem;">TOKEN ID:</span>
+          <strong id="passToken" style="color:#38BDF8; font-family:monospace; font-size:0.95rem;">JS-EM-KAN-0001</strong>
+        </div>
+        <div style="margin-bottom:0.4rem;">
+          <span style="color:#94A3B8; font-size:0.8rem;">ASSIGNED TRAUMA DESK:</span>
+          <div id="passHosp" style="color:#F8FAFC; font-weight:700; font-size:0.9rem;">SPM Hospital Trauma Centre (Rooma)</div>
+        </div>
+        <div>
+          <span style="color:#94A3B8; font-size:0.8rem;">DISPATCH UNIT:</span>
+          <div id="passAmb" style="color:#14B8A6; font-weight:700; font-size:0.9rem;">UP-78-AG-1021 (ALS Mobile ICU)</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:0.75rem;">
+        <button onclick="window.location.href='frontend/ambulance-tracking.html'" style="flex:1; background:#14B8A6; color:#07111F; border:none; padding:0.75rem; border-radius:8px; font-weight:800; cursor:pointer;">Track Ambulance</button>
+        <button onclick="window.print()" style="background:#1E354F; color:#38BDF8; border:1px solid #38BDF8; padding:0.75rem 1rem; border-radius:8px; font-weight:700; cursor:pointer;">🖨️ Print</button>
+        <button onclick="closeSOS()" style="background:#1E354F; color:#F8FAFC; border:none; padding:0.75rem 1rem; border-radius:8px; font-weight:700; cursor:pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var qrInstance = null;
+
+    function renderQR(tokenText) {
+      var container = document.getElementById('qrCodeContainer');
+      container.innerHTML = '';
+      qrInstance = new QRCode(container, {
+        text: 'JEEVANSETU-PASS:' + tokenText,
+        width: 140,
+        height: 140,
+        colorDark: '#07111F',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function launchSOS() {
+      var modal = document.getElementById('sosModal');
+      modal.style.display = 'flex';
+      fetch('/api/sos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ patient_name: 'Emergency Citizen', symptom: 'Cardiac / Trauma SOS', priority: 'CRITICAL' })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if(data.token) {
+          document.getElementById('passToken').textContent = data.token;
+          document.getElementById('passHosp').textContent = data.hospital_assigned;
+          document.getElementById('passAmb').textContent = data.ambulance_assigned;
+          renderQR(data.token);
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        renderQR('JS-EM-KAN-OFFLINE');
+      });
+    }
+
+    function closeSOS() {
+      document.getElementById('sosModal').style.display = 'none';
+    }
+  </script>
 </body>
+
 </html>
