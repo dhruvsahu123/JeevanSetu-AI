@@ -7,18 +7,12 @@ let allHospitals = [];
 // Default fallback coordinates: Rooma NH-19 corridor, Kanpur
 let userCoords = { lat: 26.3785, lng: 80.4421 };
 let latestVoiceSpeech = "";
-let currentRoutePolyline = null;
-
-// CPR Metronome State
-let audioCtx = null;
-let cprInterval = null;
-let isCprActive = false;
 
 // -------------------------------------------------------------
 // 1. HAVERSINE FORMULA (ACCURATE DISTANCE IN KM)
 // -------------------------------------------------------------
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth radius in km
+  const R = 6371; // Earth's mean radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -44,7 +38,7 @@ function initMap(lat, lng) {
     attribution: "© OpenStreetMap contributors | JeevanSetu AI Grid"
   }).addTo(map);
 
-  // User Marker
+  // User Blue Dot Marker
   userMarker = L.circleMarker([lat, lng], {
     radius: 10,
     fillColor: "#2563eb",
@@ -107,68 +101,7 @@ function getUserLocation() {
 }
 
 // -------------------------------------------------------------
-// 4. OSRM HIGHWAY ROUTING (ROAD CORRIDOR POLYLINE)
-// -------------------------------------------------------------
-async function drawRoadRouteToHospital(destLat, destLng, hospName) {
-  if (!map || !userCoords.lat) return;
-
-  if (currentRoutePolyline) {
-    map.removeLayer(currentRoutePolyline);
-  }
-
-  const statusEl = document.getElementById("gpsStatus");
-  if (statusEl) statusEl.innerHTML = `🛣️ <strong>OSRM Highway Routing:</strong> Calculating road corridor to ${hospName}...`;
-
-  try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${userCoords.lng},${userCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (data.routes && data.routes.length > 0) {
-      const route = data.routes[0];
-      const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-      const distanceKm = (route.distance / 1000).toFixed(1);
-      const durationMins = Math.round(route.duration / 60);
-
-      currentRoutePolyline = L.polyline(coords, {
-        color: "#0284c7",
-        weight: 5,
-        opacity: 0.85,
-        dashArray: "8, 6"
-      }).addTo(map);
-
-      map.fitBounds(currentRoutePolyline.getBounds(), { padding: [50, 50] });
-
-      if (statusEl) {
-        statusEl.innerHTML = `🚨 <strong>Emergency Road Corridor:</strong> ${distanceKm} km to ${hospName} • <strong>Live Highway ETA: ~${durationMins} mins</strong>`;
-      }
-    }
-  } catch (err) {
-    console.warn("OSRM public router unreachable:", err);
-  }
-}
-
-// Pan & Focus Camera to Specific Hospital
-window.focusHospital = function (lat, lng, name) {
-  if (map && lat && lng) {
-    map.setView([lat, lng], 15);
-    const targetMarker = hospitalMarkers.find((m) => {
-      const p = m.getLatLng();
-      return Math.abs(p.lat - lat) < 0.0001 && Math.abs(p.lng - lng) < 0.0001;
-    });
-    if (targetMarker) targetMarker.openPopup();
-
-    drawRoadRouteToHospital(lat, lng, name);
-
-    const mapEl = document.getElementById("hospitalMap");
-    if (mapEl) {
-      window.scrollTo({ top: mapEl.offsetTop - 80, behavior: "smooth" });
-    }
-  }
-};
-
-// -------------------------------------------------------------
-// 5. RENDER HOSPITALS MATRIX & MAP PINS
+// 4. RENDER HOSPITALS MATRIX & MAP PINS
 // -------------------------------------------------------------
 function recalculateAndRenderHospitals(filterType = "all", searchQuery = "") {
   const container = document.getElementById("hospitalsContainer");
@@ -179,11 +112,13 @@ function recalculateAndRenderHospitals(filterType = "all", searchQuery = "") {
     return;
   }
 
+  // Clear previous pins on map
   if (map) {
     hospitalMarkers.forEach((m) => map.removeLayer(m));
     hospitalMarkers = [];
   }
 
+  // Calculate distance for all facilities
   allHospitals.forEach((h) => {
     if (h.lat && h.lng) {
       h.distanceKm = parseFloat(calculateDistance(userCoords.lat, userCoords.lng, h.lat, h.lng));
@@ -192,13 +127,16 @@ function recalculateAndRenderHospitals(filterType = "all", searchQuery = "") {
     }
   });
 
+  // Sort nearest first
   allHospitals.sort((a, b) => a.distanceKm - b.distanceKm);
 
+  // Sync nearest hospital into emergency modal
   const nearestModal = document.getElementById("nearestHospitalModal");
   if (nearestModal && allHospitals[0]) {
     nearestModal.textContent = `${allHospitals[0].name} (${allHospitals[0].distanceKm} km away)`;
   }
 
+  // Filter items
   const filtered = allHospitals.filter((h) => {
     const matchesSearch =
       h.name.toLowerCase().includes(searchQuery) ||
@@ -219,6 +157,7 @@ function recalculateAndRenderHospitals(filterType = "all", searchQuery = "") {
   }
 
   filtered.forEach((h) => {
+    // Add Marker on Leaflet Map
     if (h.lat && h.lng && map) {
       const marker = L.marker([h.lat, h.lng])
         .addTo(map)
@@ -236,6 +175,7 @@ function recalculateAndRenderHospitals(filterType = "all", searchQuery = "") {
       hospitalMarkers.push(marker);
     }
 
+    // Render Hospital Card HTML
     const card = document.createElement("div");
     card.className = "hospital-card";
     card.innerHTML = `
@@ -260,15 +200,32 @@ function recalculateAndRenderHospitals(filterType = "all", searchQuery = "") {
 
       <div style="display:flex; gap:0.5rem;">
         <a href="tel:${h.phone}" class="btn btn-primary" style="flex:1; text-align:center; padding:0.55rem 0; font-size:0.88rem; text-decoration:none; font-weight:600;">📞 Call Emergency</a>
-        <button onclick="focusHospital(${h.lat}, ${h.lng}, '${h.name.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding:0.55rem 0.85rem; font-size:0.88rem; cursor:pointer;">📍 View Route</button>
+        <button onclick="focusHospital(${h.lat}, ${h.lng}, '${h.name.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding:0.55rem 0.85rem; font-size:0.88rem; cursor:pointer;">📍 View Map</button>
       </div>
     `;
     container.appendChild(card);
   });
 }
 
+// Pan & Focus Camera to Specific Hospital
+window.focusHospital = function (lat, lng, name) {
+  if (map && lat && lng) {
+    map.setView([lat, lng], 15);
+    const targetMarker = hospitalMarkers.find((m) => {
+      const p = m.getLatLng();
+      return Math.abs(p.lat - lat) < 0.0001 && Math.abs(p.lng - lng) < 0.0001;
+    });
+    if (targetMarker) targetMarker.openPopup();
+
+    const mapEl = document.getElementById("hospitalMap");
+    if (mapEl) {
+      window.scrollTo({ top: mapEl.offsetTop - 80, behavior: "smooth" });
+    }
+  }
+};
+
 // -------------------------------------------------------------
-// 6. FETCH HOSPITALS (RENDER API + VERIFIED FALLBACK)
+// 5. FETCH HOSPITALS (RENDER API + 26 KANPUR/ROOMA FALLBACK)
 // -------------------------------------------------------------
 async function loadHospitals() {
   try {
@@ -303,7 +260,7 @@ async function loadHospitals() {
 }
 
 // -------------------------------------------------------------
-// 7. FETCH & RENDER BLOOD BANKS
+// 6. FETCH & RENDER BLOOD BANKS
 // -------------------------------------------------------------
 async function loadBloodBanks() {
   const container = document.getElementById("bloodBanksContainer");
@@ -360,7 +317,7 @@ async function loadBloodBanks() {
 }
 
 // -------------------------------------------------------------
-// 8. SPEECH SYNTHESIS ENGINE (FIRST-AID VOICE ADVISORY)
+// 7. SPEECH SYNTHESIS ENGINE (FIRST-AID VOICE ADVISORY)
 // -------------------------------------------------------------
 function speakFirstAid(text) {
   if ('speechSynthesis' in window && text) {
@@ -376,81 +333,12 @@ function speakFirstAid(text) {
 }
 
 // -------------------------------------------------------------
-// 9. CPR METRONOME (WEB AUDIO API @ 110 BPM)
-// -------------------------------------------------------------
-function playBeep() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.09);
-
-  const circle = document.getElementById("cprPulseCircle");
-  if (circle) {
-    circle.style.transform = "scale(1.25)";
-    setTimeout(() => (circle.style.transform = "scale(1)"), 90);
-  }
-}
-
-function toggleCprMetronome() {
-  const btn = document.getElementById("cprToggleBtn");
-  if (!isCprActive) {
-    isCprActive = true;
-    if (btn) btn.textContent = "⏹️ Stop Metronome";
-    playBeep();
-    cprInterval = setInterval(playBeep, 545);
-  } else {
-    isCprActive = false;
-    clearInterval(cprInterval);
-    if (btn) btn.textContent = "🔊 Start 110 BPM Metronome";
-  }
-}
-
-// -------------------------------------------------------------
-// 10. DIGITAL ER PRE-ADMISSION GATE PASS MODAL
-// -------------------------------------------------------------
-function generateDigitalGatePass(hospName, symptom) {
-  const tokenBox = document.getElementById("gatePassModal");
-  const tokenNum = document.getElementById("passTokenNumber");
-  const hospEl = document.getElementById("passHospitalName");
-
-  const randCode = Math.floor(1000 + Math.random() * 9000);
-  const passId = `#JS-EM-KAN-2026-${randCode}`;
-
-  if (tokenNum) tokenNum.textContent = passId;
-  if (hospEl) hospEl.textContent = hospName || "SPM Trauma Center & Research";
-  if (tokenBox) tokenBox.style.display = "flex";
-}
-
-// -------------------------------------------------------------
-// 11. EVENT LISTENERS & LIFECYCLE
+// 8. EVENT LISTENERS & LIFECYCLE
 // -------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   getUserLocation();
   loadHospitals();
   loadBloodBanks();
-
-  // CPR Button Triggers
-  document.getElementById("cprToggleBtn")?.addEventListener("click", toggleCprMetronome);
-  document.getElementById("closeCprBtn")?.addEventListener("click", () => {
-    if (isCprActive) toggleCprMetronome();
-    document.getElementById("cprAssistantBox")?.classList.add("hidden");
-  });
-
-  // Digital Gate Pass Close
-  document.getElementById("closeGatePassBtn")?.addEventListener("click", () => {
-    const tokenBox = document.getElementById("gatePassModal");
-    if (tokenBox) tokenBox.style.display = "none";
-  });
 
   // Voice advisory button trigger
   document.getElementById("speakAdvisoryBtn")?.addEventListener("click", () => {
@@ -559,16 +447,6 @@ document.addEventListener("DOMContentLoaded", () => {
             dontsUl.innerHTML = data.donts.map(item => `<li>${item}</li>`).join('');
           }
 
-          // Show CPR Assistant if cardiac/chest condition
-          const cprBox = document.getElementById("cprAssistantBox");
-          if (cprBox) {
-            if (symptom.toLowerCase().includes("chest") || symptom.toLowerCase().includes("heart") || symptom.toLowerCase().includes("unconscious")) {
-              cprBox.classList.remove("hidden");
-            } else {
-              cprBox.classList.add("hidden");
-            }
-          }
-
           // Trigger Voice Speech Advisory
           latestVoiceSpeech = data.voice_speech || data.advice || "Mariz ko sthir rakhein. Kripya ambulance ka intezar karein.";
           speakFirstAid(latestVoiceSpeech);
@@ -601,15 +479,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Pre-Triage Bed & Dispatch Handshake -> Generates Digital Gate Pass
+  // Pre-Triage Bed & Dispatch Handshake
   const triageConfirmBtn = document.getElementById("triageConfirmAction");
   if (triageConfirmBtn) {
     triageConfirmBtn.addEventListener("click", async () => {
-      const symptom = document.getElementById("primarySymptom")?.value || "Critical Emergency";
+      const symptom =
+        document.getElementById("primarySymptom")?.value || "Critical Emergency";
       const age = document.getElementById("patientAge")?.value || "Unknown";
 
       triageConfirmBtn.disabled = true;
-      triageConfirmBtn.textContent = "Reserving ICU Bed & Generating Gate Pass...";
+      triageConfirmBtn.textContent = "Reserving ICU Bed & Dispatching ALS...";
 
       try {
         const res = await fetch(`${API_BASE}/emergency/create`, {
@@ -623,16 +502,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const data = await res.json();
-        const nearestName = allHospitals[0]?.name || "SPM Trauma Center & Research";
-        
-        generateDigitalGatePass(nearestName, symptom);
-
-        triageConfirmBtn.textContent = `✓ Bed Reserved (${data.incident_id || 'OK'})`;
-        triageConfirmBtn.style.background = "#16a34a";
+        if (res.ok) {
+          alert(
+            `🚨 ICU Bed Reserved Successfully!\nIncident Ticket: ${data.incident_id}\nEstimated ALS Ambulance ETA: ${data.eta}\nAttending ER Desk notified.`
+          );
+          triageConfirmBtn.textContent = `✓ Reserved (${data.incident_id})`;
+          triageConfirmBtn.style.background = "#16a34a";
+        } else {
+          alert("Bed reservation dispatch sent to regional emergency queue.");
+        }
       } catch (err) {
         console.warn("Offline buffer dispatch:", err);
-        const nearestName = allHospitals[0]?.name || "SPM Trauma Center & Research";
-        generateDigitalGatePass(nearestName, symptom);
+        alert("Emergency dispatch alert triggered via local telemetry.");
       } finally {
         triageConfirmBtn.disabled = false;
       }
@@ -645,7 +526,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const symptomDropdown = document.getElementById("primarySymptom");
 
   if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.lang = "hi-IN";
@@ -653,7 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
     voiceBtn?.addEventListener("click", () => {
       try {
         recognition.start();
-        voiceStatus.textContent = "🎙️️ Listening... Bolna shuru kijiye (Hindi/English)";
+        voiceStatus.textContent = "🎙️ Listening... Bolna shuru kijiye (Hindi/English)";
         voiceStatus.style.color = "#dc2626";
         voiceBtn.style.background = "#dc2626";
         voiceBtn.style.color = "#fff";

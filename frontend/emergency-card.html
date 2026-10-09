@@ -3,95 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Emergency Clinical Summary | JeevanSetu AI</title>
+  <title>Emergency Medical ID | JeevanSetu AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
   <style>
-    body { background-color: #0b1329; color: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; padding: 1.5rem; display: flex; justify-content: center; }
-    .card-wrap { max-width: 480px; width: 100%; background: #132240; border: 2px solid #ef4444; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e3a5f; padding-bottom: 1rem; margin-bottom: 1.25rem; }
-    .alert-tag { background: #7f1d1d; color: #fca5a5; font-size: 0.75rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 6px; letter-spacing: 0.5px; }
-
-    .patient-title h1 { margin: 0; font-size: 1.5rem; color: #fff; }
-    .patient-title small { color: #94a3b8; font-size: 0.85rem; }
-
-    .blood-highlight { background: #7f1d1d; border: 1px solid #ef4444; border-radius: 10px; padding: 1rem; margin: 1.25rem 0; display: flex; justify-content: space-between; align-items: center; }
-    .blood-highlight span { font-size: 0.9rem; color: #fecaca; }
-    .blood-highlight strong { font-size: 2rem; color: #fff; }
-
-    .meta-box { background: #0b1329; border: 1px solid #1e293b; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-size: 0.9rem; }
-    .meta-label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.25rem; font-weight: 700; }
-    .meta-val { color: #f1f5f9; font-weight: 600; }
-
-    .call-guardian-btn { display: block; text-align: center; background: #dc2626; color: #fff; text-decoration: none; padding: 0.85rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-top: 1.5rem; transition: background 0.2s; }
-    .call-guardian-btn:hover { background: #b91c1c; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .card-wrap { background: #1e293b; border: 2px solid #dc2626; border-radius: 16px; max-width: 420px; width: 100%; padding: 1.75rem; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 1rem; }
+    .card-top h1 { font-size: 1.2rem; margin: 0; color: #f87171; display: flex; align-items: center; gap: 0.5rem; }
+    .blood-badge { background: #dc2626; color: #fff; font-size: 1.2rem; font-weight: 800; padding: 0.4rem 0.8rem; border-radius: 8px; }
+    .data-group { margin-bottom: 1rem; }
+    .data-group label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.2rem; }
+    .data-group p { font-size: 1rem; font-weight: 600; margin: 0; color: #f1f5f9; }
+    .call-btn { display: block; text-align: center; background: #dc2626; color: #fff; text-decoration: none; padding: 0.75rem; border-radius: 8px; font-weight: 700; margin-top: 1.5rem; }
   </style>
 </head>
 <body>
 
   <div class="card-wrap">
-    <div class="header-bar">
-      <span style="font-weight: 800; color: #38bdf8;">+ JEEVANSETU AI</span>
-      <span class="alert-tag">FIRST RESPONDER ACCESS</span>
+    <div class="card-top">
+      <h1>⚠️️ Emergency Medical ID</h1>
+      <span class="blood-badge" id="bloodBadge">--</span>
     </div>
 
-    <div class="patient-title">
-      <h1 id="cardName">Loading...</h1>
-      <small id="cardDemographics">Clinical triage pass</small>
+    <div class="data-group">
+      <label>Patient Full Name</label>
+      <p id="patientName">Loading...</p>
     </div>
 
-    <div class="blood-highlight">
-      <span>BLOOD GROUP</span>
-      <strong id="cardBlood">--</strong>
+    <div class="data-group">
+      <label>Chronic Medical Conditions</label>
+      <p id="conditions">None reported</p>
     </div>
 
-    <div class="meta-box">
-      <div class="meta-label">Severe Drug / Substance Allergies</div>
-      <div class="meta-val" id="cardAllergies" style="color: #f87171;">None Reported</div>
+    <div class="data-group">
+      <label>Known Drug Allergies</label>
+      <p id="allergies" style="color: #fca5a5;">None</p>
     </div>
 
-    <div class="meta-box">
-      <div class="meta-label">Chronic Health Conditions</div>
-      <div class="meta-val" id="cardConditions">None Reported</div>
+    <div class="data-group">
+      <label>Primary Emergency Contact</label>
+      <p id="guardianContact">--</p>
     </div>
 
-    <div class="meta-box">
-      <div class="meta-label">Emergency Guardian</div>
-      <div class="meta-val" id="cardGuardian">Not Specified</div>
-    </div>
-
-    <a href="tel:108" id="cardCallBtn" class="call-guardian-btn">📞 Call Emergency Contact</a>
+    <a href="#" id="callGuardianBtn" class="call-btn">📞 Call Emergency Contact</a>
   </div>
 
   <script>
-    async function loadCard() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('user_id') || 1;
+    // URL parameters se data decode karein (e.g. ?name=...&blood=O%2B&phone=...)
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('n') || 'Citizen';
+    const blood = params.get('b') || 'O+';
+    const cond = params.get('c') || 'Hypertension / Asthma';
+    const alg = params.get('a') || 'Penicillin Allergy';
+    const phone = params.get('p') || '108';
 
-      try {
-        const res = await fetch(`/api/patient/profile/${userId}`);
-        const data = await res.json();
-        const p = data.profile;
-
-        document.getElementById('cardName').innerText = p.full_name || 'Emergency Casualty';
-        document.getElementById('cardDemographics').innerText = `Age: ${p.age || 'N/A'} • Gender: ${p.gender || 'N/A'}`;
-        document.getElementById('cardBlood').innerText = p.blood_group || 'UNKNOWN';
-        document.getElementById('cardAllergies').innerText = p.medical_allergies || 'No allergies recorded';
-        document.getElementById('cardConditions').innerText = p.chronic_conditions || 'No chronic conditions recorded';
-        
-        if (p.emergency_contact_name && p.emergency_contact_phone) {
-          document.getElementById('cardGuardian').innerText = `${p.emergency_contact_name} (${p.emergency_contact_phone})`;
-          const btn = document.getElementById('cardCallBtn');
-          btn.href = `tel:${p.emergency_contact_phone}`;
-          btn.innerText = `📞 Call Guardian (${p.emergency_contact_name})`;
-        }
-      } catch (err) {
-        console.error('Failed to load card:', err);
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', loadCard);
+    document.getElementById('patientName').textContent = decodeURIComponent(name);
+    document.getElementById('bloodBadge').textContent = decodeURIComponent(blood);
+    document.getElementById('conditions').textContent = decodeURIComponent(cond);
+    document.getElementById('allergies').textContent = decodeURIComponent(alg);
+    document.getElementById('guardianContact').textContent = decodeURIComponent(phone);
+    
+    const callBtn = document.getElementById('callGuardianBtn');
+    callBtn.href = `tel:${phone}`;
+    callBtn.textContent = `📞 Call Guardian (${phone})`;
   </script>
 </body>
 </html>

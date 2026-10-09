@@ -1,541 +1,489 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JeevanSetu AI (जीवनसेतु) | Emergency Healthcare Command Center</title>
+  <title>JeevanSetu AI | Smart Emergency & Healthcare Network</title>
+  <meta name="description" content="JeevanSetu AI provides real-time emergency healthcare, ambulance tracking, and hospital bed availability." />
+  <meta name="keywords" content="JeevanSetu, Jeevan Setu AI, emergency ambulance tracking, hospital beds, healthcare AI" />
+  <meta name="author" content="Dhruv Sahu" />
+
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#dc2626" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet Map CSS for Live GPS Tracking -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    :root {
-      --bg-deep: #07111F;
-      --bg-slate: #0D1B2A;
-      --card-bg: #12263A;
-      --teal: #14B8A6;
-      --sky: #38BDF8;
-      --text-white: #F8FAFC;
-      --text-muted: #94A3B8;
-      --success: #22C55E;
-      --warning: #F59E0B;
-      --danger: #EF4444;
-      --border: #20364A;
-      --font-mono: 'JetBrains Mono', monospace;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: var(--bg-deep);
-      color: var(--text-white);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-    }
-
-    header {
-      background: var(--bg-slate);
-      border-bottom: 1px solid var(--border);
-      padding: 0.85rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-    .brand-group { display: flex; align-items: center; gap: 0.75rem; }
-    .brand-badge {
-      background: var(--danger);
-      color: #fff;
-      font-weight: 800;
-      padding: 0.35rem 0.65rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      letter-spacing: 0.5px;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-    }
-    .brand-title { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.5px; }
-    .brand-subtitle { font-size: 0.75rem; color: var(--text-muted); }
-
-    .nav-links { display: flex; gap: 0.5rem; align-items: center; }
-    .nav-item {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 0.45rem 0.85rem;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-    .nav-item:hover { color: #fff; background: rgba(56, 189, 248, 0.1); }
-    .nav-vault {
-      border: 1px solid var(--border);
-      color: var(--teal);
-      background: rgba(20, 184, 166, 0.08);
-    }
-    .nav-vault:hover { background: rgba(20, 184, 166, 0.2); color: #fff; }
-
-    .command-container {
-      display: grid;
-      grid-template-columns: 420px 1fr;
-      flex: 1;
-      height: calc(100vh - 65px);
-    }
-    @media (max-width: 1024px) {
-      .command-container { grid-template-columns: 1fr; height: auto; }
-    }
-
-    .control-deck {
-      background: var(--bg-slate);
-      border-right: 1px solid var(--border);
-      padding: 1.5rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .status-hud {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--bg-deep);
-      border: 1px solid var(--border);
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-    }
-    .pulse-indicator { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 700; color: var(--success); }
-    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-
-    .sos-panel {
-      background: linear-gradient(180deg, rgba(239, 68, 68, 0.15) 0%, rgba(18, 38, 58, 0.9) 100%);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      border-radius: 12px;
-      padding: 1.25rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    .sos-btn {
-      width: 100%;
-      background: var(--danger);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 1rem;
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
-      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-      transition: all 0.2s;
-    }
-    .sos-btn:hover { background: #dc2626; transform: translateY(-1px); }
-    .sos-btn:active { transform: translateY(0); }
-
-    .input-field {
-      width: 100%;
-      background: var(--bg-deep);
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 0.65rem 0.85rem;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 0.85rem;
-      margin-top: 0.65rem;
-    }
-    .input-field:focus { outline: none; border-color: var(--sky); }
-
-    .deck-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.1rem;
-    }
-    .deck-card-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--sky);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.75rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .cpr-hud { display: flex; align-items: center; justify-content: space-between; }
-    .cpr-rhythm-box {
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      background: var(--bg-deep);
-      border: 2px solid var(--teal);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      color: var(--teal);
-      transition: all 0.08s;
-    }
-    .cpr-rhythm-box.flash { background: var(--teal); color: var(--bg-deep); transform: scale(1.08); box-shadow: 0 0 15px var(--teal); }
-    .cpr-btn {
-      background: rgba(20, 184, 166, 0.15);
-      border: 1px solid var(--teal);
-      color: var(--teal);
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .cpr-btn:hover { background: var(--teal); color: var(--bg-deep); }
-
-    .operations-deck {
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-deep);
-      position: relative;
-    }
-    #map { flex: 1; min-height: 400px; z-index: 10; }
-
-    .telemetry-strip {
-      background: var(--bg-slate);
-      border-top: 1px solid var(--border);
-      padding: 1rem 1.5rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      z-index: 20;
-    }
-    .telem-cell {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 0.85rem;
-      border-radius: 8px;
-    }
-    .telem-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 0.35rem; }
-    .telem-val { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; justify-content: space-between; align-items: baseline; }
-
-    .dispatch-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(7, 17, 31, 0.85);
-      backdrop-filter: blur(8px);
-      z-index: 2000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-    .dispatch-modal {
-      background: var(--bg-slate);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      max-width: 580px;
-      width: 100%;
-      padding: 2rem;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    }
-    .gate-token {
-      background: var(--bg-deep);
-      border: 1px dashed var(--teal);
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1.25rem 0;
-      font-family: var(--font-mono);
-      font-size: 1.1rem;
-      color: var(--teal);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <header>
-    <div class="brand-group">
-      <div class="brand-badge">EMERGENCY</div>
-      <div>
-        <div class="brand-title">JEEVANSETU AI <span style="font-weight:400; color:var(--text-muted); font-size:0.9rem;">(जीवनसेतु)</span></div>
-        <div class="brand-subtitle">Kanpur Regional Corridor • ABDM Pre-Arrival Triage</div>
-      </div>
+  <aside class="emergency-ribbon" role="alert">
+    <div class="ribbon-container">
+      <span class="pulse-indicator"></span>
+      <p>Critical Emergency Hotline: <strong>108 / 112</strong> | JeevanSetu Instant Dispatch: <strong>1800-JEEVAN-AI</strong></p>
+      <button class="ribbon-btn" id="quickEmergencyTrigger">SOS Dispatch</button>
     </div>
-    <nav class="nav-links">
-      <a href="frontend/hospital-dashboard.html" class="nav-item">Hospital Hub</a>
-      <a href="frontend/ambulance-tracking.html" class="nav-item">Fleet Telemetry</a>
-      <a href="frontend/customer-dashboard.html" class="nav-item nav-vault">Citizen Vault</a>
-      <a href="frontend/login.html" class="nav-item" style="color:var(--text-muted); font-size:0.8rem;">Portal Sign In</a>
+  </aside>
+
+  <header class="site-header">
+    <nav class="navbar container">
+      <a href="#hero" class="logo">
+        <span class="logo-mark">+</span>
+        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI Grid</span></span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle Navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="nav-menu" id="navMenu">
+        <ul class="nav-links">
+          <li><a href="#hospitals">Find Hospitals</a></li>
+          <li><a href="#blood-banks">Blood Bank</a></li>
+          <li><a href="#triage">AI Triage</a></li>
+          <li><a href="#ambulance">Ambulance</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-ghost">Hospital Login</a>
+          <a href="#hospitals" class="btn btn-primary">Find Care Now</a>
+        </div>
+      </div>
     </nav>
   </header>
 
-  <main class="command-container">
-    
-    <section class="control-deck">
-      <div class="status-hud">
-        <div class="pulse-indicator">
-          <span class="pulse-dot"></span>
-          GRID ACTIVE (NH-19 / GSVM)
-        </div>
-        <small style="font-family:var(--font-mono); color:var(--text-muted); font-size:0.75rem;" id="gpsCoords">26.4499° N, 80.3319° E</small>
-      </div>
-
-      <div class="sos-panel">
-        <button class="sos-btn" id="sosTriggerBtn" onclick="triggerEmergencyDispatch()">
-          <span>🚨</span> TRIGGER EMERGENCY SOS
-        </button>
-        <input type="text" id="patientNameInput" class="input-field" placeholder="Patient / Casualty Name (or Anonymous)" value="Emergency Casualty" />
-        <input type="text" id="symptomsInput" class="input-field" placeholder="Symptoms (e.g. Acute chest pain, trauma, unconscious)" value="Severe Road Accident / Multi-Trauma" />
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
-          <label style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
-            <input type="checkbox" id="icuReqCheck" checked /> Requires ICU Ventilator
-          </label>
-          <button onclick="startVoiceTriage()" style="background:transparent; border:none; color:var(--sky); cursor:pointer; font-size:0.75rem; font-weight:700;">🎙️ Voice Triage</button>
-        </div>
-      </div>
-
-      <div class="deck-card">
-        <div class="deck-card-title">
-          <span>⚡ 110 BPM CPR Metronome</span>
-          <small style="color:var(--teal); font-weight:600;">AHA Guidelines</small>
-        </div>
-        <div class="cpr-hud">
-          <div class="cpr-rhythm-box" id="cprBox">110</div>
-          <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
-            Rhythmic chest compressions<br><strong style="color:var(--text-white);">Push hard & fast at center</strong>
+  <main>
+    <section class="hero" id="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="status-chip">
+            <span class="live-dot"></span> Live Tele-Triage & Bed Tracking Active
           </div>
-          <button class="cpr-btn" id="cprToggleBtn" onclick="toggleCPRMetronome()">START</button>
+          <h1>Seconds Save Lives. Find Verified ICU Beds & Ambulances Fast.</h1>
+          <p>
+            India's unified, AI-orchestrated critical care network connecting emergency patients to real-time hospital beds, oxygen availability, and GPS-dispatched cardiac ambulances.
+          </p>
+          <div class="hero-cta-group">
+            <button class="btn btn-danger btn-lg" id="heroSosBtn">
+              <span class="btn-icon">&#x26A0;</span> Request SOS Ambulance
+            </button>
+            <a href="#triage" class="btn btn-secondary btn-lg">
+              Start AI Symptom Check &rarr;
+            </a>
+          </div>
+          <div class="trust-metrics">
+            <div class="metric-item">
+              <span class="metric-val">120+</span>
+              <span class="metric-lbl">Partner Hospitals</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val">&lt; 8 min</span>
+              <span class="metric-lbl">Avg. Ambulance Dispatch</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val">99.4%</span>
+              <span class="metric-lbl">Bed Verification Accuracy</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="deck-card">
-        <div class="deck-card-title">
-          <span>⚠️ Immediate First-Aid DOs & DON'Ts</span>
-          <button onclick="speakFirstAidInstructions()" style="background:transparent; border:none; color:var(--teal); cursor:pointer; font-size:0.8rem;">🔊 Listen</button>
-        </div>
-        <div style="font-size:0.8rem; line-height:1.5; color:var(--text-muted);">
-          <div style="margin-bottom:0.4rem;"><strong style="color:var(--success);">DO:</strong> Apply firm pressure on active bleed with clean cloth. Keep casualty warm and still.</div>
-          <div><strong style="color:var(--danger);">DON'T:</strong> Do not remove embedded penetrating objects. Do not give water to unconscious patients.</div>
-        </div>
-      </div>
+        <div class="hero-card-wrapper">
+          <div class="triage-card" id="triage">
+            <div class="card-header">
+              <span class="card-tag">AI Intake Assistant</span>
+              <h3>Instant Triage Evaluation</h3>
+              <p>Assess urgency level and auto-match suitable emergency departments.</p>
+            </div>
+            <form id="triageQuickForm" class="triage-form">
+              <div class="form-group">
+                <label for="primarySymptom">Primary Concern / Symptom</label>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <select id="primarySymptom" style="flex:1;" required>
+                    <option value="" disabled selected>Select emergency condition</option>
+                    <option value="Severe chest pain and shortness of breath">Severe Chest Pain / Shortness of Breath</option>
+                    <option value="Snakebite with pain and swelling">Snakebite / Saap ne kaata hai</option>
+                    <option value="Severe head trauma and unconsciousness">Severe Head Trauma / Unconsciousness</option>
+                    <option value="High persistent fever with delirium">High Persistent Fever with Delirium</option>
+                    <option value="Acute bone fracture and heavy bleeding">Severe Fracture / Acute Physical Trauma</option>
+                    <option value="Sudden facial droop and slurred speech">Sudden Facial Droop / Slurred Speech (FAST)</option>
+                  </select>
+                  <button type="button" id="voiceTriageBtn" title="Speak in Hindi/English" style="background:#fee2e2; border:1px solid #dc2626; color:#dc2626; padding:0.6rem 0.9rem; border-radius:8px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
+                    🎤
+                  </button>
+                </div>
+                <small id="voiceStatus" style="display:block; color:#64748b; font-size:0.78rem; margin-top:0.3rem;">Tap 🎤 to speak your emergency symptoms</small>
+              </div>
 
-      <div class="deck-card">
-        <div class="deck-card-title">
-          <span>🩸 Rare Blood Reserves</span>
-          <small style="color:var(--sky);">Kanpur Component Labs</small>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.85rem;" id="bloodStockRow">
-          <div><strong style="color:var(--danger);">O-</strong>: 4 Units</div>
-          <div><strong style="color:var(--danger);">AB-</strong>: 6 Units</div>
-          <div><strong style="color:var(--danger);">B+</strong>: 28 Units</div>
-          <div><strong style="color:var(--danger);">O+</strong>: 31 Units</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="patientAge">Patient Age</label>
+                  <input type="number" id="patientAge" placeholder="e.g. 48" min="1" max="115" required />
+                </div>
+                <div class="form-group">
+                  <label for="mobilityStatus">Mobility</label>
+                  <select id="mobilityStatus">
+                    <option value="bedridden">Stretcher Required</option>
+                    <option value="wheelchair">Wheelchair Required</option>
+                    <option value="walking">Ambulatory (Can Walk)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block">Analyze Urgency & Get Life-Saving Advisory</button>
+            </form>
+
+            <!-- FIRST AID DOs & DONTs PRECAUTION RESULT BOX -->
+            <div id="triageResultBox" class="triage-result hidden" style="background:#fff; border:2px solid #dc2626; border-radius:12px; padding:1.25rem; margin-top:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <div class="result-badge" id="resultBadge" style="background:#dc2626; color:#fff; font-size:0.8rem; font-weight:700; padding:0.25rem 0.6rem; border-radius:6px;">Critical Priority (Tier 1)</div>
+                <button type="button" id="speakAdvisoryBtn" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer; font-size:0.85rem; font-weight:600;">🔊 AI Bol Kar Bataye</button>
+              </div>
+
+              <h4 id="resultTitle" style="margin:0 0 0.4rem 0; font-size:1.15rem; color:#0f172a;">Immediate Attention Required</h4>
+              <p id="resultAdvice" style="font-size:0.88rem; color:#475569; margin-bottom:1rem;">Follow life-saving actions while ambulance is en route:</p>
+
+              <!-- DOs & DONTs GRID -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
+                <!-- KYA KAREIN (DOs) -->
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:0.75rem;">
+                  <strong style="color:#16a34a; font-size:0.85rem; display:flex; align-items:center; gap:0.3rem; margin-bottom:0.4rem;">
+                    ✅ KYA KAREIN (DOs)
+                  </strong>
+                  <ul id="dosList" style="margin:0; padding-left:1.1rem; font-size:0.82rem; color:#166534; line-height:1.4;">
+                    <li>Kaate hue ang ko dil se neeche rakhein.</li>
+                    <li>Patient ko bilkul sthir (still) rakhein.</li>
+                  </ul>
+                </div>
+
+                <!-- KYA NA KAREIN (DONTs) -->
+                <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.75rem;">
+                  <strong style="color:#dc2626; font-size:0.85rem; display:flex; align-items:center; gap:0.3rem; margin-bottom:0.4rem;">
+                    ❌ KYA NA KAREIN (DON'Ts)
+                  </strong>
+                  <ul id="dontsList" style="margin:0; padding-left:1.1rem; font-size:0.82rem; color:#991b1b; line-height:1.4;">
+                    <li>Ghaav par cheer/cut na lagayein.</li>
+                    <li>Muh se zehar choosne ki koshish na karein.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <button class="btn btn-danger btn-block" id="triageConfirmAction">Lock ICU Bed & Dispatch ALS Ambulance</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="operations-deck">
-      <div id="map"></div>
+    <!-- HOSPITALS & LIVE GPS MAP SECTION -->
+    <section class="section hospitals-section" id="hospitals">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Real-Time Verification</span>
+          <h2>Verified Hospital Facilities & Bed Matrix</h2>
+          <p>Real-time capacity verified across major medical hubs in Kanpur & Rooma corridor.</p>
+        </div>
 
-      <div class="telemetry-strip">
-        <div class="telem-cell">
-          <div class="telem-label">Apex Trauma Center (Civil Lines)</div>
-          <div class="telem-val">
-            <span id="apexIcuBeds">8</span> <small style="font-size:0.75rem; color:var(--teal);">ICU Available</small>
+        <div class="filter-controls">
+          <div class="search-input-group">
+            <input type="text" id="hospitalSearchInput" placeholder="Search by hospital name, locality, or specialty..." />
+          </div>
+          <div class="filter-pills" id="filterPills">
+            <button class="filter-pill active" data-filter="all">All Facilities</button>
+            <button class="filter-pill" data-filter="icu">ICU Beds Available</button>
+            <button class="filter-pill" data-filter="oxygen">Oxygen Ready</button>
+            <button class="filter-pill" data-filter="trauma">Level 1 Trauma</button>
           </div>
         </div>
-        <div class="telem-cell">
-          <div class="telem-label">Hallet / GSVM Medical Hub</div>
-          <div class="telem-val">
-            <span id="halletIcuBeds">14</span> <small style="font-size:0.75rem; color:var(--teal);">ICU Available</small>
+
+        <!-- Live GPS Tracker Status Bar -->
+        <div class="gps-banner" style="background:#e0f2fe; padding:0.75rem 1.25rem; border-radius:8px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; border:1px solid #bae6fd;">
+          <span id="gpsStatus" style="font-size:0.9rem; color:#0369a1;">📍 <strong>GPS Tracker:</strong> Fetching your live coordinates...</span>
+          <button id="recenterBtn" type="button" style="background:#0284c7; color:#fff; border:none; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600;">Locate Me</button>
+        </div>
+
+        <!-- Interactive Leaflet Live Map -->
+        <div id="hospitalMap" style="height: 380px; width: 100%; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #cbd5e1; z-index: 1;"></div>
+
+        <!-- Dynamic Hospital Cards Grid -->
+        <div class="hospitals-grid" id="hospitalsContainer">
+          <!-- Loaded dynamically via script.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOOD BANK & CRITICAL DONOR MATRIX -->
+    <section class="section blood-section" id="blood-banks" style="background:#fff; padding:3rem 0; border-top:1px solid #e2e8f0;">
+      <div class="container">
+        <div class="section-header" style="text-align:center; margin-bottom:2rem;">
+          <span class="section-subtitle" style="color:#dc2626; font-weight:700; font-size:0.85rem; text-transform:uppercase;">Critical Hemotherapy</span>
+          <h2 style="font-size:1.8rem; margin:0.3rem 0;">Regional Blood Bank Inventory & Donor Matrix</h2>
+          <p style="color:#64748b;">Live verified units across Kanpur & Rooma highway trauma points.</p>
+        </div>
+
+        <div id="bloodBanksContainer" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+          <!-- Loaded dynamically via script.js -->
+        </div>
+      </div>
+    </section>
+
+    <section class="section how-it-works" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Intelligent Coordination</span>
+          <h2>How JeevanSetu AI Bridges Critical Gaps</h2>
+          <p>Eliminating delays in emergency care delivery through automated real-time workflows.</p>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-num">01</div>
+            <h3>Symptom & GPS Intake</h3>
+            <p>One-tap emergency call or instant questionnaire extracts symptoms, geo-coordinates, and basic patient vitals.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">02</div>
+            <h3>Predictive Hospital Matching</h3>
+            <p>Algorithms cross-examine real-time ventilator counts, cath lab availability, specialist duty rosters, and traffic ETA.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">03</div>
+            <h3>Direct Resource Reservation</h3>
+            <p>The selected hospital receives patient telemetry and pre-books the ICU or ER bay before patient arrival.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">04</div>
+            <h3>Coordinated Ambulance Hand-off</h3>
+            <p>Ambulance crew communicates vitals directly to attending doctors via continuous digital telemetry.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section ambulance-section" id="ambulance">
+      <div class="container ambulance-card-banner">
+        <div class="ambulance-content">
+          <span class="section-subtitle light">24/7 Rapid Transit</span>
+          <h2>Need Emergency Transport Right Now?</h2>
+          <p>Select your required vehicle type. Verified ALS (Advanced Life Support) and BLS fleets ready to deploy.</p>
+          
+          <div class="fleet-options">
+            <div class="fleet-chip">
+              <strong>ALS Ambulance</strong>
+              <span>Ventilator & Paramedic Onboard</span>
+            </div>
+            <div class="fleet-chip">
+              <strong>BLS Ambulance</strong>
+              <span>Oxygen Support & Basic Vitals</span>
+            </div>
+            <div class="fleet-chip">
+              <strong>Neonatal Transport</strong>
+              <span>Incubator & Pediatric Specialist</span>
+            </div>
+          </div>
+
+          <div class="ambulance-actions">
+            <button class="btn btn-danger btn-lg" id="ambulanceDispatchBtn">Deploy Nearest Fleet Unit</button>
+            <span class="eta-note">Current network median arrival: <strong>7.8 mins</strong></span>
           </div>
         </div>
-        <div class="telem-cell">
-          <div class="telem-label">Regency Critical Care (Govind Nagar)</div>
-          <div class="telem-val">
-            <span id="regencyIcuBeds">6</span> <small style="font-size:0.75rem; color:var(--teal);">ICU Available</small>
+      </div>
+    </section>
+
+    <section class="section features-section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">System Capabilities</span>
+          <h2>Engineered for High-Stakes Reliability</h2>
+          <p>Built to handle crisis situations where fragmented communication costs precious moments.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F6A8;</div>
+            <h3>Unified Emergency Pipeline</h3>
+            <p>Zero wait time routing directly to triage nurses, bypassing redundant call center transfer delays.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F916;</div>
+            <h3>Clinical Triage Logic</h3>
+            <p>Standardized algorithmic risk scoring prioritizes heart attack, trauma, and stroke protocols automatically.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4BE;</div>
+            <h3>Zero-Retention Privacy</h3>
+            <p>Compliant with health data privacy guidelines. Personal identity remains confidential and encrypted.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4CB;</div>
+            <h3>Digital Pre-Admission</h3>
+            <p>Hospital registration forms are generated in transit, saving 20 to 30 minutes at the reception desk.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F4CD;</div>
+            <h3>Live Telemetry Sharing</h3>
+            <p>On-route ambulance monitors transmit ECG and SpO2 readings directly to waiting emergency physicians.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">&#x1F514;</div>
+            <h3>Family Guardian Alerts</h3>
+            <p>Automated SMS and WhatsApp dispatch notifications sent to family emergency contacts with live tracking links.</p>
           </div>
         </div>
-        <div class="telem-cell">
-          <div class="telem-label">Fleet Rapid Standby</div>
-          <div class="telem-val">
-            <span style="color:var(--success);">ALS-01 / ALS-02</span>
-            <small style="font-size:0.75rem; color:var(--text-muted);">Active GPS</small>
+      </div>
+    </section>
+
+    <section class="section faq-section" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Common Questions</span>
+          <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-accordion" id="faqAccordion">
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is JeevanSetu AI a hospital or an aggregator?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>JeevanSetu AI is an integrated technology platform connecting verified hospitals, ambulances, and citizens onto a single synchronized emergency response network.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>How are bed counts and ICU capacities verified?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>Partner hospitals interface with JeevanSetu via real-time control desks where emergency staff update capacities immediately on admission and discharge.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>What should I do in an immediate life-threatening emergency?</span>
+              <span class="faq-chevron">&plus;</span>
+            </button>
+            <div class="faq-answer">
+              <p>Immediately tap the red "SOS Dispatch" button or dial 108/112. JeevanSetu simultaneously calculates the nearest open trauma facility and dispatches ambulance telemetry.</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <div class="dispatch-overlay" id="dispatchModal">
-    <div class="dispatch-modal">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
-        <strong style="color:var(--danger); font-size:1.1rem;">🚨 DISPATCH DISPATCHED • CORRIDOR RESERVED</strong>
-        <button onclick="closeDispatchModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+  <div class="modal-backdrop" id="emergencyModal">
+    <div class="modal-card">
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+      <div class="modal-alert-icon">&#x26A0;</div>
+      <h3>Emergency Response Triggered</h3>
+      <p>Initiating automated triage & locating nearest available Advanced Life Support unit.</p>
+      
+      <div class="modal-status-box">
+        <div class="status-row">
+          <span>GPS Location:</span>
+          <strong id="userLocationDisplay">Fetching live coordinates...</strong>
+        </div>
+        <div class="status-row">
+          <span>Nearest Trauma Center:</span>
+          <strong id="nearestHospitalModal">Locating nearest center...</strong>
+        </div>
+        <div class="status-row">
+          <span>Estimated Response Time:</span>
+          <strong class="text-danger">6 - 8 Minutes</strong>
+        </div>
       </div>
 
-      <div class="gate-token">
-        <span>GATE TOKEN:</span>
-        <strong id="tokenNumber">#JS-EM-KAN-2026</strong>
+      <div class="modal-actions">
+        <button class="btn btn-danger btn-block" id="callHotlineBtn">Call 108 Emergency Control</button>
+        <button class="btn btn-secondary btn-block" id="whatsappGuardianBtn" style="background:#25D366; color:#fff; border:none; margin-top:0.5rem; font-weight:700; cursor:pointer; padding:0.75rem;">
+          📲 Send WhatsApp SOS with Live GPS
+        </button>
+        <button class="btn btn-ghost btn-block" id="cancelSosBtn" style="margin-top:0.4rem;">Cancel Trigger</button>
       </div>
-
-      <div style="font-size:0.9rem; line-height:1.6; color:var(--text-muted);">
-        <div><strong>Allocated Trauma Center:</strong> <span style="color:#fff;" id="dispFacility">Apex Emergency Institute</span></div>
-        <div><strong>Assigned Ambulance:</strong> <span style="color:#fff;" id="dispAmbulance">UP-78-AG-1021</span> (Driver: Ramesh Kumar)</div>
-        <div><strong>Transit ETA:</strong> <span style="color:var(--success); font-weight:700;" id="dispEta">4 Mins</span></div>
-        <div style="margin-top:0.5rem; color:var(--teal);">✓ 1 ICU Bed locked atomically in database. Zero casualty desk delay.</div>
-      </div>
-
-      <button onclick="closeDispatchModal()" style="width:100%; background:var(--teal); color:var(--bg-deep); border:none; border-radius:8px; padding:0.8rem; font-weight:700; margin-top:1.5rem; cursor:pointer;">ACKNOWLEDGE & MONITOR TELEMETRY</button>
     </div>
   </div>
 
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-col brand-col">
+        <a href="#hero" class="logo">
+          <span class="logo-mark">+</span>
+          <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI</span></span>
+        </a>
+        <p>Intelligent emergency healthcare coordination. Connecting citizens, hospitals, and emergency fleets when every second counts.</p>
+        <div class="compliance-badge">&#x1F6E1; Healthcare Data Security Compliant</div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Critical Portals</h4>
+        <ul>
+          <li><a href="#hospitals">Hospital Directory</a></li>
+          <li><a href="#blood-banks">Blood Bank Matrix</a></li>
+          <li><a href="#ambulance">Ambulance Network</a></li>
+          <li><a href="#triage">AI Urgency Triage</a></li>
+          <li><a href="login.html">Hospital HMS Login</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Emergency Numbers</h4>
+        <ul class="emergency-numbers">
+          <li><strong>National Emergency:</strong> 112</li>
+          <li><strong>Ambulance:</strong> 108 / 102</li>
+          <li><strong>Disaster Management:</strong> 1078</li>
+          <li><strong>JeevanSetu Central Desk:</strong> 1800-JEEVAN-AI</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Platform Status</h4>
+        <div class="system-status-indicator">
+          <span class="live-dot"></span> All Systems Operational
+        </div>
+        <p class="status-subtext">Network monitoring across verified regional health districts.</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container bottom-content">
+        <p>&copy; 2026 JeevanSetu AI Platform. Dedicated to emergency preparedness and patient advocacy.</p>
+        <div class="footer-legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Care</a>
+          <a href="#">Emergency Protocol</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet Map JS Library & Core Script -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/script.js"></script>
+
+  <!-- Offline PWA Service Worker Registration -->
   <script>
-    const map = L.map('map', { zoomControl: true }).setView([26.4650, 80.3400], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-    }).addTo(map);
-
-    const hospitals = [
-      { name: "Apex Emergency & Trauma", lat: 26.4735, lng: 80.3506, beds: 8 },
-      { name: "Hallet GSVM Hospital", lat: 26.4810, lng: 80.3200, beds: 14 },
-      { name: "Regency Healthcare", lat: 26.4420, lng: 80.3080, beds: 6 }
-    ];
-
-    hospitals.forEach(h => {
-      L.marker([h.lat, h.lng]).addTo(map).bindPopup(`<strong>${h.name}</strong><br>ICU Beds: ${h.beds}`);
-    });
-
-    let audioCtx = null;
-    let metronomeTimer = null;
-    let isMetronomeRunning = false;
-
-    function toggleCPRMetronome() {
-      const btn = document.getElementById('cprToggleBtn');
-      const box = document.getElementById('cprBox');
-
-      if (!isMetronomeRunning) {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        isMetronomeRunning = true;
-        btn.innerText = "STOP";
-        btn.style.background = "var(--danger)";
-        btn.style.color = "#fff";
-
-        metronomeTimer = setInterval(() => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = 880;
-          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.08);
-
-          box.classList.add('flash');
-          setTimeout(() => box.classList.remove('flash'), 120);
-        }, 545);
-      } else {
-        clearInterval(metronomeTimer);
-        isMetronomeRunning = false;
-        btn.innerText = "START";
-        btn.style.background = "rgba(20, 184, 166, 0.15)";
-        btn.style.color = "var(--teal)";
-      }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('JeevanSetu Offline PWA Engine Active'))
+          .catch((err) => console.warn('PWA registration failed:', err));
+      });
     }
-
-    function speakFirstAidInstructions() {
-      if ('speechSynthesis' in window) {
-        const text = "Emergency alert: Apply firm pressure on wounds with a clean cloth. Do not move spinal trauma victims. Keep patient calm while ambulance is en route.";
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.95;
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-
-    function startVoiceTriage() {
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert("Speech recognition not supported in this browser.");
-        return;
-      }
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'hi-IN';
-      recognition.onstart = () => {
-        document.getElementById('symptomsInput').placeholder = "Listening... बोलिए क्या इमरजेंसी है...";
-      };
-      recognition.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        document.getElementById('symptomsInput').value = text;
-      };
-      recognition.start();
-    }
-
-    async function triggerEmergencyDispatch() {
-      const btn = document.getElementById('sosTriggerBtn');
-      btn.disabled = true;
-      btn.innerText = "COORDINATING TRIAGE CORRIDOR...";
-
-      const payload = {
-        patient_name: document.getElementById('patientNameInput').value,
-        symptom: document.getElementById('symptomsInput').value,
-        latitude: 26.4710,
-        longitude: 80.3490,
-        requires_icu: document.getElementById('icuReqCheck').checked
-      };
-
-      try {
-        const res = await fetch('/api/dispatch/triage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById('tokenNumber').innerText = `#JS-EM-KAN-2026-${data.incident_id}`;
-          document.getElementById('dispFacility').innerText = data.assigned_hospital.name;
-          document.getElementById('dispAmbulance').innerText = `${data.assigned_ambulance.vehicle_number} (${data.assigned_ambulance.driver})`;
-          document.getElementById('dispEta').innerText = `${data.assigned_ambulance.eta_minutes} Mins`;
-          document.getElementById('dispatchModal').style.display = 'flex';
-          loadLiveBedCounters();
-        } else {
-          alert(`Dispatch failed: ${data.message}`);
-        }
-      } catch (err) {
-        alert("Server unreachable. Please check backend status.");
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "🚨 TRIGGER EMERGENCY SOS";
-      }
-    }
-
-    function closeDispatchModal() {
-      document.getElementById('dispatchModal').style.display = 'none';
-    }
-
-    async function loadLiveBedCounters() {
-      try {
-        const res = await fetch('/api/hospitals');
-        const data = await res.json();
-        (data.hospitals || []).forEach(h => {
-          if (h.id === 1) document.getElementById('apexIcuBeds').innerText = h.icu_available ?? '--';
-          if (h.id === 2) document.getElementById('halletIcuBeds').innerText = h.icu_available ?? '--';
-          if (h.id === 3) document.getElementById('regencyIcuBeds').innerText = h.icu_available ?? '--';
-        });
-      } catch (e) {}
-    }
-
-    document.addEventListener('DOMContentLoaded', loadLiveBedCounters);
   </script>
 </body>
 </html>
-Copy-Item index.html frontend\index.html -Force

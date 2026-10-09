@@ -3,196 +3,163 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JeevanSetu AI | Unified Grid Access</title>
+  <title>Sign In | JeevanSetu AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    body { background-color: #0b1329; color: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .auth-card { background: #132240; border: 1px solid #1e3a5f; border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-    .brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem; justify-content: center; }
-    .brand-icon { background: #2563eb; color: #fff; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-    h1 { font-size: 1.4rem; text-align: center; margin: 0 0 0.5rem 0; color: #f1f5f9; }
-    p.sub { font-size: 0.85rem; color: #94a3b8; text-align: center; margin: 0 0 1.5rem 0; }
-    
-    .tab-row { display: flex; background: #0b1329; border-radius: 8px; padding: 4px; margin-bottom: 1.5rem; border: 1px solid #1e3a5f; }
-    .tab-btn { flex: 1; background: transparent; border: none; color: #94a3b8; padding: 0.6rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-    .tab-btn.active { background: #2563eb; color: #fff; }
-
-    .form-group { margin-bottom: 1.1rem; }
-    label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.35rem; font-weight: 600; text-transform: uppercase; }
-    input, select { width: 100%; box-sizing: border-box; background: #0b1329; border: 1px solid #1e3a5f; color: #fff; padding: 0.75rem; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
-    input:focus, select:focus { outline: none; border-color: #38bdf8; }
-
-    .submit-btn { background: #2563eb; color: #fff; border: none; font-weight: 700; padding: 0.85rem; border-radius: 8px; cursor: pointer; width: 100%; font-size: 0.95rem; margin-top: 0.75rem; transition: background 0.2s; }
-    .submit-btn:hover { background: #1d4ed8; }
-
-    .alert-box { padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; }
-    .alert-err { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
-    .alert-ok { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
+    .auth-wrapper {
+      min-height: calc(100vh - 4.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+      background: var(--bg-body, #f8fafc);
+    }
+    .auth-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: var(--radius-lg, 12px);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h2 { font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+    .auth-header p { color: #64748b; font-size: 0.9rem; margin-top: 0.3rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #334155; }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: #2563eb; }
+    .status-msg {
+      display: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .status-msg.error { background: #fee2e2; color: #dc2626; display: block; }
+    .status-msg.info { background: #e0f2fe; color: #0284c7; display: block; }
+    .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: #64748b; }
+    .auth-footer a { color: #2563eb; text-decoration: none; font-weight: 600; }
   </style>
 </head>
 <body>
+  <header class="site-header">
+    <nav class="navbar container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark">+</span>
+        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">AI Grid</span></span>
+      </a>
+      <div><a href="register.html" class="btn btn-secondary btn-sm">Register</a></div>
+    </nav>
+  </header>
 
-  <div class="auth-card">
-    <div class="brand">
-      <div class="brand-icon">+</div>
-      <strong style="font-size:1.2rem; letter-spacing:0.5px;">JeevanSetu AI</strong>
+  <main class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h2>Sign In to JeevanSetu</h2>
+        <p>Access your health profile or response console</p>
+      </div>
+
+      <div id="statusAlert" class="status-msg"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="staff@hospital.com" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">Sign In</button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="register.html">Register here</a>
+      </div>
     </div>
-    <h1 id="titleText">Access Healthcare Grid</h1>
-    <p class="sub" id="subText">Authenticate with your Kanpur regional credentials</p>
-
-    <div class="tab-row">
-      <button class="tab-btn active" id="loginTabBtn" onclick="switchMode('LOGIN')">Sign In</button>
-      <button class="tab-btn" id="regTabBtn" onclick="switchMode('REGISTER')">New Registration</button>
-    </div>
-
-    <div class="alert-box alert-err" id="errorBox"></div>
-    <div class="alert-box alert-ok" id="successBox"></div>
-
-    <form id="authForm" onsubmit="handleAuth(event)">
-      <!-- Registration Fields -->
-      <div class="form-group" id="nameGroup" style="display: none;">
-        <label>Full Legal Name</label>
-        <input type="text" id="authName" placeholder="e.g. Dhruv Sahu" />
-      </div>
-
-      <div class="form-group">
-        <label id="identLabel">Email or Mobile Number</label>
-        <input type="text" id="authIdentifier" placeholder="name@example.com or 10-digit mobile" required />
-      </div>
-
-      <div class="form-group" id="emailGroup" style="display: none;">
-        <label>Registered Email Address</label>
-        <input type="email" id="authEmail" placeholder="you@example.com" />
-      </div>
-
-      <div class="form-group" id="roleGroup" style="display: none;">
-        <label>System Role Access</label>
-        <select id="authRole">
-          <option value="PATIENT">Citizen / Patient Vault</option>
-          <option value="HOSPITAL_ADMIN">Hospital Administrator (ER Control)</option>
-          <option value="FIRST_RESPONDER">Ambulance Fleet First Responder</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="authPassword" placeholder="••••••••" required />
-      </div>
-
-      <button type="submit" class="submit-btn" id="actionBtn">Sign In to Command Grid</button>
-    </form>
-
-    <div style="text-align:center; margin-top:1.5rem;">
-      <a href="/" style="color:#94a3b8; text-decoration:none; font-size:0.85rem;">← Back to Emergency SOS Triage</a>
-    </div>
-  </div>
+  </main>
 
   <script>
-    let mode = 'LOGIN';
+    const API_BASE = "https://jeevansetu-ai-7e5y.onrender.com/api";
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const statusAlert = document.getElementById('statusAlert');
 
-    function switchMode(newMode) {
-      mode = newMode;
-      document.getElementById('errorBox').style.display = 'none';
-      document.getElementById('successBox').style.display = 'none';
-
-      if (mode === 'LOGIN') {
-        document.getElementById('loginTabBtn').classList.add('active');
-        document.getElementById('regTabBtn').classList.remove('active');
-        document.getElementById('titleText').innerText = "Access Healthcare Grid";
-        document.getElementById('subText').innerText = "Authenticate with your Kanpur regional credentials";
-        document.getElementById('identLabel').innerText = "Email or Mobile Number";
-        document.getElementById('nameGroup').style.display = 'none';
-        document.getElementById('emailGroup').style.display = 'none';
-        document.getElementById('roleGroup').style.display = 'none';
-        document.getElementById('actionBtn').innerText = "Sign In to Command Grid";
-      } else {
-        document.getElementById('loginTabBtn').classList.remove('active');
-        document.getElementById('regTabBtn').classList.add('active');
-        document.getElementById('titleText').innerText = "Create Grid Profile";
-        document.getElementById('subText').innerText = "Register your identity to sync live medical telemetry";
-        document.getElementById('identLabel').innerText = "Mobile Number";
-        document.getElementById('nameGroup').style.display = 'block';
-        document.getElementById('emailGroup').style.display = 'block';
-        document.getElementById('roleGroup').style.display = 'block';
-        document.getElementById('actionBtn').innerText = "Complete Registration";
-      }
+    function showStatus(text, type = 'error') {
+      statusAlert.textContent = text;
+      statusAlert.className = `status-msg ${type}`;
     }
 
-    async function handleAuth(e) {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const errBox = document.getElementById('errorBox');
-      const okBox = document.getElementById('successBox');
-      const actionBtn = document.getElementById('actionBtn');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
 
-      errBox.style.display = 'none';
-      okBox.style.display = 'none';
-      actionBtn.disabled = true;
-
-      const password = document.getElementById('authPassword').value;
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Connecting to Cloud...';
+      showStatus('Waking cloud server & verifying credentials... Please wait (may take 20s if asleep).', 'info');
 
       try {
-        if (mode === 'LOGIN') {
-          const identifier = document.getElementById('authIdentifier').value;
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identifier, password })
-          });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for Render cold start
 
-          const data = await res.json();
-          if (res.ok) {
-            okBox.innerText = `Welcome, ${data.user.name}. Redirecting...`;
-            okBox.style.display = 'block';
-            
-            // Persist session to local storage
-            localStorage.setItem('jeevan_user', JSON.stringify(data.user));
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-            setTimeout(() => {
-              if (data.user.role === 'HOSPITAL_ADMIN') {
-                window.location.href = 'hospital-dashboard.html';
-              } else if (data.user.role === 'FIRST_RESPONDER') {
-                window.location.href = 'ambulance-tracking.html';
-              } else {
-                window.location.href = 'customer-dashboard.html';
-              }
-            }, 1000);
-          } else {
-            errBox.innerText = data.message || "Invalid credentials provided.";
-            errBox.style.display = 'block';
-          }
+        const data = await res.json();
+
+        if (res.ok) {
+          showStatus('Login successful! Redirecting...', 'info');
+          localStorage.setItem('user', JSON.stringify(data.user));
+          if (data.token) localStorage.setItem('token', data.token);
+
+          // Role matching check (Hospital, Staff, Ambulance, Citizen)
+          const role = (data.user?.role || '').toUpperCase();
+          setTimeout(() => {
+            if (role === 'HOSPITAL' || role === 'STAFF' || role === 'HOSPITAL_STAFF') {
+              window.location.href = 'hospital-dashboard.html';
+            } else if (role === 'AMBULANCE') {
+              window.location.href = 'ambulance-tracking.html';
+            } else {
+              window.location.href = 'customer-dashboard.html';
+            }
+          }, 600);
         } else {
-          // Register
-          const full_name = document.getElementById('authName').value;
-          const phone = document.getElementById('authIdentifier').value;
-          const email = document.getElementById('authEmail').value;
-          const role = document.getElementById('authRole').value;
-
-          const res = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ full_name, email, phone, password, role })
-          });
-
-          const data = await res.json();
-          if (res.ok) {
-            okBox.innerText = "Account registered successfully! Please log in.";
-            okBox.style.display = 'block';
-            setTimeout(() => switchMode('LOGIN'), 1200);
-          } else {
-            errBox.innerText = data.message || "Registration failed.";
-            errBox.style.display = 'block';
-          }
+          showStatus(data.error || data.message || 'Invalid email or password.');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Sign In';
         }
       } catch (err) {
-        errBox.innerText = "Network failure communicating with auth engine.";
-        errBox.style.display = 'block';
-      } finally {
-        actionBtn.disabled = false;
+        if (err.name === 'AbortError') {
+          showStatus('Connection timed out. Render backend took too long to wake up. Please retry.');
+        } else {
+          showStatus('Server unreachable. Checking backend connection...');
+        }
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In';
       }
-    }
+    });
   </script>
 </body>
 </html>

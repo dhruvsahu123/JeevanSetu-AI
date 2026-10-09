@@ -1,18 +1,18 @@
 const CACHE_NAME = 'jeevansetu-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/frontend/index.html',
-  '/frontend/customer-dashboard.html',
-  '/frontend/emergency-card.html',
-  '/frontend/hospital-dashboard.html',
-  '/frontend/ambulance-tracking.html',
-  '/frontend/login.html',
-  '/frontend/css/style.css',
-  '/frontend/manifest.json'
+  './index.html',
+  './login.html',
+  './emergency-card.html',
+  './hospital-dashboard.html',
+  './ambulance-tracking.html',
+  './css/style.css',
+  './js/script.js',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
+self.addEventListener('install', (e) => {
+  e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
@@ -20,25 +20,23 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
       );
     })
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  // Let dynamic API requests pass straight through to network
-  if (event.request.url.includes('/api/')) {
-    return;
-  }
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    fetch(e.request).catch(() => {
+      return caches.match(e.request);
     })
   );
 });
