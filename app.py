@@ -570,5 +570,37 @@ def analyze_crash_feed():
         'timestamp': time.strftime('%H:%M:%S IST')
     })
 
+
+# --- MCI FIELD TRIAGE & EVACUATION MATRIX API ---
+MCI_CASUALTIES = []
+
+@app.route('/api/mci/tags', methods=['GET', 'POST'])
+def handle_mci_tags():
+    if request.method == 'POST':
+        data = request.get_json() or {}
+        tag_color = data.get('triage_tag', 'RED')
+        victim_id = f"MCI-KAN-{len(MCI_CASUALTIES) + 101}"
+        record = {
+            'tag_id': victim_id,
+            'color': tag_color,
+            'injury_notes': data.get('injury_notes', 'Poly-trauma crush injury'),
+            'assigned_facility': data.get('facility', 'LLR Hospital Apex Trauma'),
+            'timestamp': time.strftime('%H:%M:%S IST'),
+            'status': 'EVACUATION_PENDING' if tag_color in ['RED', 'YELLOW'] else 'FIELD_STABILIZED'
+        }
+        MCI_CASUALTIES.insert(0, record)
+        return jsonify({'status': 'success', 'record': record})
+
+    return jsonify({
+        'status': 'success',
+        'active_casualties': MCI_CASUALTIES,
+        'tag_counts': {
+            'RED': sum(1 for c in MCI_CASUALTIES if c['color'] == 'RED'),
+            'YELLOW': sum(1 for c in MCI_CASUALTIES if c['color'] == 'YELLOW'),
+            'GREEN': sum(1 for c in MCI_CASUALTIES if c['color'] == 'GREEN'),
+            'BLACK': sum(1 for c in MCI_CASUALTIES if c['color'] == 'BLACK')
+        }
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

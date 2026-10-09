@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | MCI Field Triage & START Evacuation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --danger: #EF4444;
+      --yellow: #F59E0B;
+      --green: #22C55E;
+      --dark: #0F172A;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1100px; margin: 0 auto; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+    .matrix-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .matrix-card { border-radius: 10px; padding: 1.25rem; text-align: center; border: 1px solid var(--border); }
+    .m-count { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 800; margin-top: 0.35rem; }
+
+    .m-red { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); color: var(--danger); }
+    .m-yellow { background: rgba(245, 158, 11, 0.15); border-color: var(--yellow); color: var(--yellow); }
+    .m-green { background: rgba(34, 197, 94, 0.15); border-color: var(--green); color: var(--green); }
+    .m-black { background: rgba(148, 163, 184, 0.1); border-color: var(--muted); color: var(--muted); }
+
+    .triage-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; text-transform: uppercase; }
+    select, input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem 0.9rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem; outline: none; }
+    select:focus, input:focus { border-color: var(--teal); }
+
+    .btn-tag { background: var(--teal); color: #07111F; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 800; font-size: 0.95rem; cursor: pointer; width: 100%; }
+    .btn-tag:hover { background: #0d9488; }
+
+    .log-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .log-table th, .log-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .log-table th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
+    .badge-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header-bar">
+      <div>
+        <h2 style="font-size: 1.6rem;">🏷️ Mass Casualty START Triage & Evacuation Board</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Kanpur Incident Command Post (ICP) field tagging & hospital load balancing</p>
+      </div>
+      <a href="../index.html">← Citizen Portal</a>
+    </div>
+
+    <!-- Live Triage Counts -->
+    <div class="matrix-strip">
+      <div class="matrix-card m-red">
+        <small style="font-weight:700;">RED (IMMEDIATE)</small>
+        <div class="m-count" id="cntRed">0</div>
+      </div>
+      <div class="matrix-card m-yellow">
+        <small style="font-weight:700;">YELLOW (DELAYED)</small>
+        <div class="m-count" id="cntYellow">0</div>
+      </div>
+      <div class="matrix-card m-green">
+        <small style="font-weight:700;">GREEN (MINOR)</small>
+        <div class="m-count" id="cntGreen">0</div>
+      </div>
+      <div class="matrix-card m-black">
+        <small style="font-weight:700;">BLACK (EXPECTANT)</small>
+        <div class="m-count" id="cntBlack">0</div>
+      </div>
+    </div>
+
+    <!-- Input and Algorithm -->
+    <div class="triage-input-grid">
+      <div class="card">
+        <h3 style="font-size:1.05rem; color:var(--sky); margin-bottom:1rem;">START DECISION ENGINE</h3>
+        <label>AMBULATORY STATUS</label>
+        <select id="ambulatory" onchange="autoEvaluateTag()">
+          <option value="no">Non-Ambulatory (Cannot Walk)</option>
+          <option value="yes">Ambulatory (Walking Wounded)</option>
+        </select>
+
+        <label>SPONTANEOUS BREATHING</label>
+        <select id="breathing" onchange="autoEvaluateTag()">
+          <option value="normal">Present (10 - 29 breaths/min)</option>
+          <option value="rapid">Rapid (> 30 breaths/min)</option>
+          <option value="absent_open">Present ONLY after Airway Positioned</option>
+          <option value="absent_none">Apneic (Absent even after Jaw Thrust)</option>
+        </select>
+
+        <label>RADIAL PULSE / PERFUSION</label>
+        <select id="perfusion" onchange="autoEvaluateTag()">
+          <option value="palpable">Radial Pulse Palpable (Cap Refill < 2s)</option>
+          <option value="absent">Radial Pulse Absent (Cap Refill > 2s)</option>
+        </select>
+
+        <label>MENTAL STATUS</label>
+        <select id="mental" onchange="autoEvaluateTag()">
+          <option value="follows">Follows Simple Commands</option>
+          <option value="fails">Unresponsive / Disoriented</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:1.05rem; color:var(--sky); margin-bottom:1rem;">TAG REQUISITION & DISPATCH</h3>
+        <label>RECOMMENDED TRIAGE COLOR</label>
+        <select id="tagColor">
+          <option value="RED">RED - Immediate Life Threat</option>
+          <option value="YELLOW">YELLOW - Serious / Delayed</option>
+          <option value="GREEN">GREEN - Minor / Minimal</option>
+          <option value="BLACK">BLACK - Expectant / Deceased</option>
+        </select>
+
+        <label>INJURY OBSERVATION</label>
+        <input type="text" id="injNotes" value="Severe thoracic crush, paradoxical breathing, compound tibia fracture">
+
+        <label>ALLOCATED RECEPTION TRAUMA FACILITY</label>
+        <select id="targetHosp">
+          <option value="LLR Hospital Apex Trauma (Hallet)">LLR Hospital Apex Trauma (Hallet)</option>
+          <option value="SPM Hospital Research & Trauma (Rooma)">SPM Hospital Trauma (Rooma)</option>
+          <option value="Regency Super-Specialty ER">Regency Super-Specialty ER</option>
+          <option value="Ursula District Hospital">Ursula District Hospital</option>
+        </select>
+
+        <button class="btn-tag" onclick="submitTriageTag()">🏷️ ASSIGN TAG & BROADCAST TO FACILITY</button>
+      </div>
+    </div>
+
+    <!-- Active Field Logs -->
+    <div class="card">
+      <h3 style="font-size:1.05rem; color:var(--sky);">ACTIVE SCENE EVACUATION REGISTER</h3>
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Tag ID</th>
+            <th>Triage Category</th>
+            <th>Clinical Assessment</th>
+            <th>Destination Facility</th>
+            <th>Time Logged</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function autoEvaluateTag() {
+      var canWalk = document.getElementById('ambulatory').value === 'yes';
+      var resp = document.getElementById('breathing').value;
+      var pulse = document.getElementById('perfusion').value;
+      var mental = document.getElementById('mental').value;
+      var tagSelect = document.getElementById('tagColor');
+
+      if (canWalk) {
+        tagSelect.value = 'GREEN';
+      } else if (resp === 'absent_none') {
+        tagSelect.value = 'BLACK';
+      } else if (resp === 'rapid' || resp === 'absent_open' || pulse === 'absent' || mental === 'fails') {
+        tagSelect.value = 'RED';
+      } else {
+        tagSelect.value = 'YELLOW';
+      }
+    }
+
+    function loadMciBoard() {
+      fetch('/api/mci/tags')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          document.getElementById('cntRed').textContent = data.tag_counts.RED;
+          document.getElementById('cntYellow').textContent = data.tag_counts.YELLOW;
+          document.getElementById('cntGreen').textContent = data.tag_counts.GREEN;
+          document.getElementById('cntBlack').textContent = data.tag_counts.BLACK;
+
+          var tbody = document.getElementById('logBody');
+          tbody.innerHTML = '';
+          var list = data.active_casualties || [];
+
+          for (var i = 0; i < list.length; i++) {
+            var c = list[i];
+            var tr = document.createElement('tr');
+            var colorStyle = c.color === 'RED' ? 'background:rgba(239,68,68,0.2); color:var(--danger);' :
+                             (c.color === 'YELLOW' ? 'background:rgba(245,158,11,0.2); color:var(--yellow);' :
+                             (c.color === 'GREEN' ? 'background:rgba(34,197,94,0.2); color:var(--green);' : 'background:rgba(148,163,184,0.2); color:var(--muted);'));
+
+            tr.innerHTML = [
+              '<td style="font-family:monospace; font-weight:700;">' + c.tag_id + '</td>',
+              '<td><span class="badge-tag" style="' + colorStyle + '">' + c.color + '</span></td>',
+              '<td style="color:var(--text);">' + c.injury_notes + '</td>',
+              '<td style="color:var(--sky);">' + c.assigned_facility + '</td>',
+              '<td style="color:var(--muted); font-family:monospace;">' + c.timestamp + '</td>'
+            ].join('');
+            tbody.appendChild(tr);
+          }
+        });
+    }
+
+    function submitTriageTag() {
+      var payload = {
+        triage_tag: document.getElementById('tagColor').value,
+        injury_notes: document.getElementById('injNotes').value,
+        facility: document.getElementById('targetHosp').value
+      };
+
+      fetch('/api/mci/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function() {
+        loadMciBoard();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      autoEvaluateTag();
+      loadMciBoard();
+    });
+  </script>
+</body>
+</html>
