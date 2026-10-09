@@ -27,13 +27,14 @@
     .main-layout { display: flex; flex: 1; height: calc(100vh - 65px); }
     .sidebar { width: 380px; background: var(--card); border-right: 1px solid var(--border); padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
     #map { flex: 1; height: 100%; background: #0b1523; }
+    .corridor-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--sky); border-radius: 8px; padding: 0.85rem; font-size: 0.85rem; }
+    .eta-box { background: #07111F; border: 1px solid var(--teal); border-radius: 8px; padding: 1rem; text-align: center; }
+    .eta-title { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
+    .eta-val { font-size: 1.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--teal); }
     .fleet-card { background: #07111F; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; cursor: pointer; transition: 0.2s; }
     .fleet-card:hover { border-color: var(--sky); }
-    .fleet-card.active { border-color: var(--teal); background: #0e2238; }
-    .status-badge { font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
-    .status-available { background: rgba(20, 184, 166, 0.2); color: var(--teal); }
-    .status-busy { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-    .corridor-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--sky); border-radius: 8px; padding: 0.85rem; font-size: 0.85rem; }
+    .status-badge { font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; background: rgba(20, 184, 166, 0.2); color: var(--teal); }
+    .status-transit { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
   </style>
 </head>
 <body>
@@ -51,11 +52,17 @@
   <div class="main-layout">
     <div class="sidebar">
       <div class="corridor-banner">
-        <strong>🟢 NH-19 Green Corridor Sync</strong>
-        <p style="color:var(--muted); font-size:0.8rem; margin-top:0.25rem;">Active traffic signal preemption enabled for critical transit routes.</p>
+        <strong>🟢 NH-19 Green Corridor Active</strong>
+        <p style="color:var(--muted); font-size:0.8rem; margin-top:0.25rem;">Live telemetry synchronized with traffic signal dispatch node.</p>
       </div>
 
-      <h3 style="font-size:1rem; font-weight:700; color:var(--muted);">ACTIVE UNITS (<span id="unitCount">0</span>)</h3>
+      <div class="eta-box">
+        <div class="eta-title">TARGET ETA (HALLET HOSPITAL)</div>
+        <div class="eta-val" id="liveEta">-- MINS</div>
+        <div style="font-size:0.8rem; color:var(--sky); margin-top:0.25rem;">Speed: <span id="liveSpeed">54.5</span> km/h | Mode: Siren Active</div>
+      </div>
+
+      <h3 style="font-size:1rem; font-weight:700; color:var(--muted);">ACTIVE FLEET UNITS</h3>
       <div id="fleetList" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
     </div>
 
@@ -63,82 +70,88 @@
   </div>
 
   <script>
-    const map = L.map('map').setView([26.4350, 80.3550], 12);
+    var map = L.map('map').setView([26.4350, 80.3550], 12);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
-    let markers = {};
-
-    // Kanpur Rooma to LLR Hospital Corridor Waypoints
-    const corridorPath = [
-      [26.3785, 80.4421], // SPM Hospital Rooma
-      [26.4082, 80.3456], // Naubasta Bypass
-      [26.4310, 80.3870], // Ramadevi Chauraha
-      [26.4450, 80.3100], // Govind Nagar Flyover
-      [26.4835, 80.3150]  // Hallet / LLR Hospital
+    var corridorPath = [
+      [26.3785, 80.4421], // Rooma
+      [26.3920, 80.4150], // Chakeri
+      [26.4082, 80.3456], // Naubasta
+      [26.4310, 80.3870], // Ramadevi
+      [26.4450, 80.3100], // Govind Nagar
+      [26.4650, 80.3120], // Harsh Nagar
+      [26.4835, 80.3150]  // Hallet Hospital
     ];
 
-    const corridorLine = L.polyline(corridorPath, {
+    L.polyline(corridorPath, {
       color: '#10B981',
       weight: 4,
       dashArray: '8, 8',
       opacity: 0.8
     }).addTo(map);
 
-    async function loadAmbulances() {
-      try {
-        const res = await fetch('/api/ambulances');
-        const data = await res.json();
-        const ambulances = data.ambulances || [];
+    var markers = {};
 
-        document.getElementById('unitCount').textContent = ambulances.length;
-        const list = document.getElementById('fleetList');
-        list.innerHTML = '';
+    function updateLiveTelemetry() {
+      fetch('/api/ambulances/live-telemetry')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          document.getElementById('liveEta').textContent = data.eta_minutes + ' MINS';
+          document.getElementById('liveSpeed').textContent = data.speed_kmh;
 
-        ambulances.forEach((a, idx) => {
-          // Render Sidebar Item
-          const card = document.createElement('div');
-          card.className = 'fleet-card' + (idx === 0 ? ' active' : '');
-          card.innerHTML = 
-            <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-              <strong style="color:#fff; font-family:'JetBrains Mono';"></strong>
-              <span class="status-badge status-available"></span>
-            </div>
-            <div style="font-size:0.85rem; color:var(--muted);">Pilot: </div>
-            <div style="font-size:0.8rem; color:var(--sky); margin-top:0.25rem;">📞 </div>
-          ;
-          card.onclick = () => focusVehicle(a.id, a.current_latitude, a.current_longitude);
-          list.appendChild(card);
+          var ambulances = data.ambulances || [];
+          var list = document.getElementById('fleetList');
+          list.innerHTML = '';
 
-          // Render Marker on Map
-          if (!markers[a.id]) {
-            const m = L.circleMarker([a.current_latitude, a.current_longitude], {
-              radius: 8,
-              fillColor: '#38BDF8',
-              color: '#ffffff',
-              weight: 2,
-              fillOpacity: 1
-            }).addTo(map);
+          for (var i = 0; i < ambulances.length; i++) {
+            var a = ambulances[i];
+            var card = document.createElement('div');
+            card.className = 'fleet-card';
 
-            m.bindPopup('<b>' + a.vehicle_number + '</b><br>Type: ' + a.fleet_type + '<br>Pilot: ' + a.driver_name);
-            markers[a.id] = m;
-          } else {
-            markers[a.id].setLatLng([a.current_latitude, a.current_longitude]);
+            var isLive = (a.id === 1);
+            var statusBadge = isLive 
+              ? '<span class="status-badge status-transit">TRANSIT (EMERGENCY)</span>'
+              : '<span class="status-badge">AVAILABLE</span>';
+
+            card.innerHTML = [
+              '<div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">',
+                '<strong style="color:#fff; font-family:monospace;">' + a.vehicle_number + '</strong>',
+                statusBadge,
+              '</div>',
+              '<div style="font-size:0.85rem; color:var(--muted);">Pilot: ' + a.driver_name + '</div>',
+              '<div style="font-size:0.8rem; color:var(--sky); margin-top:0.25rem;">📞 ' + a.driver_phone + '</div>'
+            ].join('');
+
+            list.appendChild(card);
+
+            if (!markers[a.id]) {
+              var m = L.circleMarker([a.current_latitude, a.current_longitude], {
+                radius: isLive ? 10 : 8,
+                fillColor: isLive ? '#EF4444' : '#38BDF8',
+                color: '#ffffff',
+                weight: 2,
+                fillOpacity: 1
+              }).addTo(map);
+
+              m.bindPopup('<b>' + a.vehicle_number + '</b><br>Type: ' + a.fleet_type + '<br>Pilot: ' + a.driver_name);
+              markers[a.id] = m;
+            } else {
+              markers[a.id].setLatLng([a.current_latitude, a.current_longitude]);
+              if (isLive) {
+                markers[a.id].setStyle({ fillColor: '#EF4444' });
+              }
+            }
           }
-        });
-      } catch (e) {
-        console.error(e);
-      }
+        })
+        .catch(function(err) { console.error(err); });
     }
 
-    function focusVehicle(id, lat, lng) {
-      map.flyTo([lat, lng], 14);
-      if (markers[id]) markers[id].openPopup();
-    }
-
-    loadAmbulances();
+    // Har 2 second me live telemetry update
+    updateLiveTelemetry();
+    setInterval(updateLiveTelemetry, 2000);
   </script>
 </body>
 </html>

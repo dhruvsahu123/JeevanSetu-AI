@@ -1,352 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hospital Operations Console | JeevanSetu AI</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | 26 Kanpur Hospital Trauma Bed Grid</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    .hosp-layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      min-height: calc(100vh - 4.5rem);
-      background: var(--bg-body);
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --red: #EF4444;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
     }
-    .hosp-sidebar {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 1.75rem 1.25rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .hosp-badge {
-      background: #1e293b;
-      padding: 1rem;
-      border-radius: var(--radius-md);
-      border: 1px solid #334155;
-      margin-bottom: 2rem;
-    }
-    .hosp-badge h3 { font-size: 1rem; color: #38bdf8; }
-    .hosp-badge p { font-size: 0.78rem; color: #94a3b8; margin-top: 0.2rem; }
-    .admin-menu { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
-    .admin-link {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      color: #cbd5e1;
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-md);
-      transition: all var(--transition-fast);
-    }
-    .admin-link:hover, .admin-link.active {
-      background: var(--primary);
-      color: #ffffff;
-    }
-    .hosp-main { padding: 2.5rem; overflow-y: auto; }
-    .grid-counter {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2.5rem;
-    }
-    .counter-card {
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-    }
-    .counter-card span {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .counter-display {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin: 0.75rem 0 1rem;
-    }
-    .counter-num { font-size: 2.2rem; font-weight: 800; color: var(--text-main); }
-    .counter-controls { display: flex; gap: 0.5rem; }
-    .counter-btn {
-      flex: 1;
-      padding: 0.4rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      border: 1px solid var(--border-color);
-      background: var(--bg-subtle);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-    }
-    .counter-btn:hover { background: #e2e8f0; }
-    .emergency-stream {
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: 1.75rem;
-      box-shadow: var(--shadow-sm);
-    }
-    .stream-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    .stream-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .stream-table th {
-      padding: 0.75rem 1rem;
-      background: var(--bg-subtle);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .stream-table td {
-      padding: 1rem;
-      font-size: 0.9rem;
-      border-bottom: 1px solid var(--border-color);
-      vertical-align: middle;
-    }
-    .status-pulse {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--danger);
-      margin-right: 0.4rem;
-      animation: pulse-ring 1.5s infinite;
-    }
-    @media (max-width: 900px) {
-      .hosp-layout { grid-template-columns: 1fr; }
-      .hosp-sidebar { display: none; }
-      .hosp-main { padding: 1.5rem; }
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
+    .wrapper { max-width: 1200px; margin: 0 auto; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+    .top-nav a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+    
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+    .stat-card h3 { font-size: 1.8rem; font-family: 'JetBrains Mono', monospace; color: var(--teal); margin-top: 0.25rem; }
+
+    .search-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+    .search-row input { flex: 1; background: var(--card); border: 1px solid var(--border); color: #fff; padding: 0.85rem 1.2rem; border-radius: 8px; font-size: 1rem; outline: none; }
+    .search-row input:focus { border-color: var(--sky); }
+
+    .hospital-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.25rem; }
+    .hosp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
+    .hosp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+    .trauma-badge { font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: var(--sky); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
+    
+    .bed-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background: #07111F; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; margin: 1rem 0; }
+    .bed-counter { display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem; }
+    .btn-step { background: #1E354F; color: #fff; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: 800; cursor: pointer; }
+    .btn-step:hover { background: var(--teal); color: #000; }
+
+    .card-actions { display: flex; gap: 0.75rem; }
+    .btn-call { flex: 1; background: rgba(20, 184, 166, 0.15); border: 1px solid var(--teal); color: var(--teal); text-decoration: none; padding: 0.5rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-align: center; }
+    .btn-call:hover { background: var(--teal); color: var(--bg); }
   </style>
 </head>
 <body>
-
-  <header class="site-header">
-    <nav class="navbar container">
-      <a href="index.html" class="logo">
-        <span class="logo-mark">+</span>
-        <span class="logo-text">Jeevan<strong>Setu</strong><span class="ai-badge">Hospital HMS</span></span>
-      </a>
-      <div style="display: flex; gap: 1rem; align-items: center;">
-        <span class="system-status-indicator"><span class="live-dot"></span> Socket Live</span>
-        <a href="login.html" class="btn btn-ghost btn-sm">Sign Out</a>
-      </div>
-    </nav>
-  </header>
-
-  <div class="hosp-layout">
-    <aside class="hosp-sidebar">
+  <div class="wrapper">
+    <div class="top-nav">
       <div>
-        <div class="hosp-badge">
-          <h3>Apex Emergency & Trauma</h3>
-          <p>ID: #HOSP-KAN-019 • Level 1 Hub</p>
-        </div>
-        <ul class="admin-menu">
-          <li><a href="#" class="admin-link active">⚡ Emergency Bay</a></li>
-          <li><a href="#" class="admin-link">🛏️ Bed & Ward Grid</a></li>
-          <li><a href="#" class="admin-link">🚑 Inbound ALS Fleets</a></li>
-          <li><a href="#" class="admin-link">👨‍⚕️ Specialist Roster</a></li>
-        </ul>
+        <h2 style="font-size: 1.6rem;">🏥 Kanpur Trauma Bed Inventory Grid</h2>
+        <p style="color: var(--muted); font-size: 0.85rem;">Real-time telemetry across 26 verified emergency facilities</p>
       </div>
-      <div style="font-size: 0.75rem; color: #64748b; border-top: 1px solid #1e293b; padding-top: 1rem;">
-        JeevanSetu Unified Node v2.4
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <span style="color:var(--muted); font-size:0.8rem;">TOTAL FACILITIES</span>
+        <h3 id="totalHosp">26</h3>
       </div>
-    </aside>
-
-    <main class="hosp-main">
-      <div style="margin-bottom: 2rem;">
-        <h2>Hospital Operations & Triage Center</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Real-time inventory broadcasted directly to emergency dispatchers.</p>
+      <div class="stat-card">
+        <span style="color:var(--muted); font-size:0.8rem;">AVAILABLE ICU BEDS</span>
+        <h3 id="availIcu" style="color:var(--teal);">--</h3>
       </div>
-
-      <div class="grid-counter">
-        <div class="counter-card">
-          <span>AVAILABLE ICU BEDS</span>
-          <div class="counter-display">
-            <div class="counter-num" id="icuCounter">4</div>
-            <div style="color: var(--text-muted); font-size: 0.85rem;">/ 16 Total</div>
-          </div>
-          <div class="counter-controls">
-            <button class="counter-btn" onclick="updateBed('icu', -1)">-</button>
-            <button class="counter-btn" onclick="updateBed('icu', 1)">+</button>
-          </div>
-        </div>
-
-        <div class="counter-card">
-          <span>OXYGEN VENTILATOR BEDS</span>
-          <div class="counter-display">
-            <div class="counter-num" id="oxyCounter">12</div>
-            <div style="color: var(--text-muted); font-size: 0.85rem;">/ 24 Total</div>
-          </div>
-          <div class="counter-controls">
-            <button class="counter-btn" onclick="updateBed('oxy', -1)">-</button>
-            <button class="counter-btn" onclick="updateBed('oxy', 1)">+</button>
-          </div>
-        </div>
-
-        <div class="counter-card">
-          <span>TRAUMA BAY CASUALTY</span>
-          <div class="counter-display">
-            <div class="counter-num" id="traumaCounter">2</div>
-            <div style="color: var(--text-muted); font-size: 0.85rem;">/ 8 Total</div>
-          </div>
-          <div class="counter-controls">
-            <button class="counter-btn" onclick="updateBed('trauma', -1)">-</button>
-            <button class="counter-btn" onclick="updateBed('trauma', 1)">+</button>
-          </div>
-        </div>
-
-        <div class="counter-card">
-          <span>O-NEGATIVE BLOOD UNITS</span>
-          <div class="counter-display">
-            <div class="counter-num" style="color: var(--danger);" id="bloodCounter">6</div>
-            <div style="color: var(--text-muted); font-size: 0.85rem;">Bags</div>
-          </div>
-          <div class="counter-controls">
-            <button class="counter-btn" onclick="updateBed('blood', -1)">-</button>
-            <button class="counter-btn" onclick="updateBed('blood', 1)">+</button>
-          </div>
-        </div>
+      <div class="stat-card">
+        <span style="color:var(--muted); font-size:0.8rem;">AVAILABLE OXYGEN BEDS</span>
+        <h3 id="availOxy" style="color:var(--sky);">--</h3>
       </div>
+    </div>
 
-      <div class="emergency-stream">
-        <div class="stream-header">
-          <div>
-            <h3 style="font-size: 1.2rem; font-weight: 700;">
-              <span class="status-pulse"></span>Live Inbound Emergency Pipeline
-            </h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Incoming patients routed via JeevanSetu dispatch.</p>
-          </div>
-        </div>
+    <div class="search-row">
+      <input type="text" id="hospSearch" placeholder="Search hospital name, locality (Rooma, Barra, Kakadeo, Swaroop Nagar)..." oninput="filterHospitals()">
+    </div>
 
-        <div style="overflow-x: auto;">
-          <table class="stream-table">
-            <thead>
-              <tr>
-                <th>Incident ID</th>
-                <th>Patient / Age</th>
-                <th>Triage Priority</th>
-                <th>Assigned Unit</th>
-                <th>Telemetry ETA</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>#JS-EM-408</strong></td>
-                <td>Rahul S. (48M)<br><span style="font-size: 0.75rem; color: var(--text-muted);">Severe Cardiac / STEMI</span></td>
-                <td><span class="badge-tag" style="background: var(--danger-light); color: var(--danger); font-weight: 700;">Code Red</span></td>
-                <td>ALS Unit #0921</td>
-                <td><strong class="text-danger">5 mins</strong></td>
-                <td><button class="btn btn-primary btn-sm" onclick="acceptCase(this, 'Rahul S.')">Reserve Bay</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </main>
+    <div class="hospital-grid" id="hospGrid"></div>
   </div>
 
   <script>
-    const API_BASE = "http://127.0.0.1:5000/api";
-    const CURRENT_HOSPITAL_ID = 1;
+    var hospitalData = [];
 
-    async function fetchLiveBeds() {
-      try {
-        const res = await fetch(`${API_BASE}/hospitals`);
-        const hospitals = await res.json();
-        const current = hospitals.find(h => h.id === CURRENT_HOSPITAL_ID);
-        if (current) {
-          document.getElementById('icuCounter').textContent = current.icuAvailable;
-          document.getElementById('oxyCounter').textContent = current.oxygenBeds;
+    function updateStats() {
+      var icu = 0, oxy = 0;
+      for (var i = 0; i < hospitalData.length; i++) {
+        icu += (hospitalData[i].icu_available || 0);
+        oxy += (hospitalData[i].oxygen_available || 0);
+      }
+      document.getElementById('totalHosp').textContent = hospitalData.length;
+      document.getElementById('availIcu').textContent = icu;
+      document.getElementById('availOxy').textContent = oxy;
+    }
+
+    function renderGrid(list) {
+      var grid = document.getElementById('hospGrid');
+      grid.innerHTML = '';
+      if (!list || list.length === 0) {
+        grid.innerHTML = '<p style="color:var(--muted);">No trauma facilities matching criteria.</p>';
+        return;
+      }
+
+      for (var i = 0; i < list.length; i++) {
+        var h = list[i];
+        var card = document.createElement('div');
+        card.className = 'hosp-card';
+
+        var content = [
+          '<div>',
+            '<div class="hosp-header">',
+              '<h4 style="font-size:1.05rem; max-width:70%;">' + h.name + '</h4>',
+              '<span class="trauma-badge">' + h.trauma_level + '</span>',
+            '</div>',
+            '<p style="color:var(--muted); font-size:0.82rem; margin-bottom:0.25rem;">📍 ' + h.locality + '</p>',
+            '<p style="color:var(--sky); font-size:0.8rem; font-family:monospace;">Distance: ~' + h.distance_km + ' km</p>',
+            '<div class="bed-meters">',
+              '<div>',
+                '<small style="color:var(--muted); font-size:0.75rem;">ICU BEDS</small>',
+                '<div class="bed-counter">',
+                  '<strong style="color:var(--teal); font-family:monospace;" id="icu-' + h.id + '">' + (h.icu_available || 0) + ' / ' + (h.icu_total || 0) + '</strong>',
+                  '<div>',
+                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', -1, 0)">-</button> ',
+                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', 1, 0)">+</button>',
+                  '</div>',
+                '</div>',
+              '</div>',
+              '<div>',
+                '<small style="color:var(--muted); font-size:0.75rem;">O2 BEDS</small>',
+                '<div class="bed-counter">',
+                  '<strong style="color:var(--sky); font-family:monospace;" id="oxy-' + h.id + '">' + (h.oxygen_available || 0) + ' / ' + (h.oxygen_total || 0) + '</strong>',
+                  '<div>',
+                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', 0, -1)">-</button> ',
+                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', 0, 1)">+</button>',
+                  '</div>',
+                '</div>',
+              '</div>',
+            '</div>',
+          '</div>',
+          '<div class="card-actions">',
+            '<a href="tel:' + h.phone + '" class="btn-call">📞 Emergency Desk (' + h.phone + ')</a>',
+          '</div>'
+        ].join('');
+
+        card.innerHTML = content;
+        grid.appendChild(card);
+      }
+    }
+
+    function filterHospitals() {
+      var q = document.getElementById('hospSearch').value.toLowerCase();
+      var filtered = [];
+      for (var i = 0; i < hospitalData.length; i++) {
+        var h = hospitalData[i];
+        if (h.name.toLowerCase().indexOf(q) !== -1 ||
+            h.locality.toLowerCase().indexOf(q) !== -1 ||
+            h.trauma_level.toLowerCase().indexOf(q) !== -1) {
+          filtered.push(h);
         }
-      } catch (err) {
-        console.error("Failed to fetch hospital stats:", err);
       }
+      renderGrid(filtered);
     }
 
-    async function fetchLiveEmergencies() {
-      try {
-        const res = await fetch(`${API_BASE}/emergencies`);
-        const list = await res.json();
-        const tbody = document.querySelector('.stream-table tbody');
-        if (!tbody || list.length === 0) return;
-
-        tbody.innerHTML = '';
-        list.forEach(item => {
-          const tr = document.createElement('tr');
-          const rowHtml = '<td><strong>' + item.ticket + '</strong></td>' +
-            '<td>' + item.patient_name + '<br><span style="font-size: 0.75rem; color: var(--text-muted);">' + item.symptom + '</span></td>' +
-            '<td><span class="badge-tag" style="background: var(--danger-light); color: var(--danger); font-weight: 700;">' + item.priority + '</span></td>' +
-            '<td>ALS Unit #0921</td>' +
-            '<td><strong class="text-danger">5 mins</strong></td>' +
-            '<td><button class="btn btn-primary btn-sm" onclick="acceptCase(this, \'' + item.patient_name + '\')">Reserve Bay</button></td>';
-          tr.innerHTML = rowHtml;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        console.error("Failed to fetch emergencies:", err);
-      }
-    }
-
-    async function updateBed(type, change) {
-      if (type === 'icu') {
-        const icuEl = document.getElementById('icuCounter');
-        let currentVal = parseInt(icuEl.textContent, 10);
-        if (currentVal + change < 0) return;
-
-        try {
-          const res = await fetch(`${API_BASE}/hospitals/${CURRENT_HOSPITAL_ID}/beds`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ icu_change: change })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            icuEl.textContent = data.icu_available;
+    function adjustBed(hospId, deltaIcu, deltaOxy) {
+      fetch('/api/hospitals/' + hospId + '/beds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ delta_icu: deltaIcu, delta_oxy: deltaOxy })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.status === 'success') {
+          for (var i = 0; i < hospitalData.length; i++) {
+            if (hospitalData[i].id === hospId) {
+              hospitalData[i].icu_available = data.icu_available;
+              hospitalData[i].oxygen_available = data.oxygen_available;
+              document.getElementById('icu-' + hospId).textContent = data.icu_available + ' / ' + hospitalData[i].icu_total;
+              document.getElementById('oxy-' + hospId).textContent = data.oxygen_available + ' / ' + hospitalData[i].oxygen_total;
+              updateStats();
+              break;
+            }
           }
-        } catch (err) {
-          console.error("Failed to update bed count:", err);
         }
-      } else {
-        const map = {
-          oxy: document.getElementById('oxyCounter'),
-          trauma: document.getElementById('traumaCounter'),
-          blood: document.getElementById('bloodCounter')
-        };
-        const el = map[type];
-        if (el) {
-          let val = parseInt(el.textContent, 10) + change;
-          if (val >= 0) el.textContent = val;
-        }
-      }
+      })
+      .catch(function(err) { console.error(err); });
     }
 
-    function acceptCase(btn, patientName) {
-      btn.disabled = true;
-      btn.textContent = 'Bay Prepped ✓';
-      btn.classList.remove('btn-primary');
-      btn.classList.add('btn-secondary');
-      alert('ICU Trauma Bed reserved for ' + patientName + '. Telemetry line connected to ambulance crew.');
+    function fetchHospitals() {
+      fetch('/api/hospitals')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          hospitalData = data.hospitals || [];
+          updateStats();
+          renderGrid(hospitalData);
+        })
+        .catch(function(err) { console.error(err); });
     }
 
-    fetchLiveBeds();
-    fetchLiveEmergencies();
-    setInterval(fetchLiveEmergencies, 3000);
+    document.addEventListener('DOMContentLoaded', fetchHospitals);
   </script>
 </body>
 </html>

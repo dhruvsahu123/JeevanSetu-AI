@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Emergency Symptom Triage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111F;
+      --card: #0D1B2A;
+      --border: #1E354F;
+      --teal: #14B8A6;
+      --sky: #38BDF8;
+      --red: #EF4444;
+      --yellow: #F59E0B;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 2rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; font-weight: 600; }
+    input, textarea, select { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: 8px; font-size: 0.95rem; margin-bottom: 1rem; outline: none; }
+    input:focus, textarea:focus { border-color: var(--sky); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .btn-triage { width: 100%; background: var(--teal); color: #07111F; border: none; padding: 0.9rem; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+    .btn-triage:hover { background: #0d9488; }
+    .result-box { display: none; margin-top: 1.5rem; }
+    .triage-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h2>🩺 AI Clinical Triage & Assessment</h2>
+        <p style="color:var(--muted); font-size:0.85rem;">Kanpur Emergency Trauma Grid Pre-Arrival Evaluation</p>
+      </div>
+      <a href="../index.html" style="color:var(--sky); text-decoration:none; font-weight:700;">← Back to Home</a>
+    </div>
+
+    <div class="card">
+      <label>PRIMARY SYMPTOMS / CASUALTY DESCRIPTION</label>
+      <textarea id="symptoms" rows="3" placeholder="Describe symptoms (e.g. severe chest pain radiating to left arm, shortness of breath, sudden collapse)..."></textarea>
+
+      <div class="grid-3">
+        <div>
+          <label>AGE</label>
+          <input type="number" id="age" value="45">
+        </div>
+        <div>
+          <label>PULSE (BPM)</label>
+          <input type="number" id="pulse" value="95">
+        </div>
+        <div>
+          <label>SpO2 (%)</label>
+          <input type="number" id="spo2" value="93">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label>SYSTOLIC BP (mmHg)</label>
+          <input type="number" id="bp_sys" value="110">
+        </div>
+        <div>
+          <label>CONSCIOUSNESS STATUS</label>
+          <select id="consciousness">
+            <option value="ALERT">Alert & Responsive</option>
+            <option value="DROWSY">Drowsy / Confused</option>
+            <option value="UNRESPONSIVE">Completely Unresponsive</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-triage" onclick="runTriage()">RUN CLINICAL TRIAGE ANALYSIS</button>
+    </div>
+
+    <div class="card result-box" id="resultBox">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 id="triageTitle">TRIAGE LEVEL: EVALUATING...</h3>
+        <span class="triage-badge" id="triageBadge"></span>
+      </div>
+      <p id="actionProtocol" style="font-size:0.95rem; margin-bottom:1.25rem;"></p>
+
+      <h4 style="margin-bottom:0.5rem; color:var(--sky); font-size:0.9rem;">SUSPECTED CLINICAL MATCHES (ICD-10):</h4>
+      <div id="conditionsList" style="margin-bottom:1.25rem;"></div>
+
+      <div style="border-top:1px solid var(--border); padding-top:1rem;">
+        <h4 style="margin-bottom:0.25rem; font-size:0.9rem; color:var(--teal);">ASSIGNED DESTINATION FACILITY:</h4>
+        <p id="hospitalName" style="font-weight:700;"></p>
+        <p id="hospitalMeta" style="font-size:0.85rem; color:var(--muted);"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function runTriage() {
+      const symptoms = document.getElementById('symptoms').value;
+      const age = parseInt(document.getElementById('age').value);
+      const pulse = parseInt(document.getElementById('pulse').value);
+      const spo2 = parseInt(document.getElementById('spo2').value);
+      const bp_sys = parseInt(document.getElementById('bp_sys').value);
+
+      const res = await fetch('/api/triage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptoms, age, pulse, spo2, bp_sys })
+      });
+      const data = await res.json();
+
+      const box = document.getElementById('resultBox');
+      box.style.display = 'block';
+
+      const badge = document.getElementById('triageBadge');
+      badge.textContent = data.triage_level + ' PRIORITY';
+      badge.style.background = data.triage_color;
+      badge.style.color = '#fff';
+
+      document.getElementById('triageTitle').textContent = 'TRIAGE LEVEL: ' + data.triage_level;
+      document.getElementById('actionProtocol').textContent = data.action_protocol;
+
+      const condList = document.getElementById('conditionsList');
+      condList.innerHTML = '';
+      if (data.suspected_conditions && data.suspected_conditions.length) {
+        data.suspected_conditions.forEach(c => {
+          condList.innerHTML += '<div style="background:#07111F; border:1px solid var(--border); border-radius:6px; padding:0.6rem; margin-bottom:0.5rem;">' +
+            '<strong>' + c.disease_name + '</strong> (' + (c.icd_code || 'ICD-GEN') + ') - ' +
+            '<span style="color:var(--teal); font-size:0.85rem;">' + c.recommended_specialist + '</span>' +
+          '</div>';
+        });
+      } else {
+        condList.innerHTML = '<p style="color:var(--muted); font-size:0.85rem;">No specific ICD-10 keywords matched. General ER assessment required.</p>';
+      }
+
+      if (data.assigned_hospital) {
+        document.getElementById('hospitalName').textContent = data.assigned_hospital.name;
+        document.getElementById('hospitalMeta').textContent = data.assigned_hospital.locality + ' | ' + data.assigned_hospital.trauma_level + ' | Ph: ' + data.assigned_hospital.phone;
+      }
+    }
+  </script>
+</body>
+</html>
