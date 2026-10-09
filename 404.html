@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | Redirecting...</title>
+  <style>
+    body { background: #07111F; color: #F8FAFC; font-family: sans-serif; text-align: center; padding: 4rem 1.5rem; }
+    h1 { color: #38BDF8; font-size: 2rem; }
+    p { color: #94A3B8; margin-top: 1rem; }
+    a { display: inline-block; margin-top: 2rem; background: #14B8A6; color: #07111F; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🚑 JeevanSetu AI - Golden Hour Grid</h1>
+  <p>Page redirecting to home portal...</p>
+  <a href="index.html">Go to Home Portal</a>
+  <script>
+    // Smart redirect agar koi nested folder link se aaye
+    var path = window.location.pathname;
+    if (path.includes('/frontend/frontend/')) {
+      window.location.href = path.replace('/frontend/frontend/', '/frontend/');
+    } else {
+      setTimeout(function() { window.location.href = 'index.html'; }, 2000);
+    }
+  </script>
+</body>
+</html>
