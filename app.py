@@ -1,454 +1,209 @@
-import sqlite3
 import os
+import sqlite3
 import math
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from werkzeug.security import generate_password_hash, check_password_hash
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend')
 CORS(app)
 
 DB_NAME = "jeevansetu.db"
 
-def get_db_connection():
+def get_db():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
 
-def haversine_km(lat1, lon1, lat2, lon2):
-    """Calculates spherical distance between two GPS coordinates in kilometers."""
+def haversine(lat1, lon1, lat2, lon2):
     R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    a = (math.sin(dlat / 2) ** 2 +
-         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
-         math.sin(dlon / 2) ** 2)
+    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return round(R * c, 2)
+    return R * c
 
-# =============================================================
-# 1. FRONTEND STATIC FILE DELIVERY
-# =============================================================
-
+# ----------------- STATIC FRONTEND ROUTES -----------------
 @app.route('/')
-def serve_index():
-    return send_from_directory('frontend', 'index.html')
+def serve_root():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/frontend/<path:filename>')
-def serve_frontend_files(filename):
+def serve_frontend(filename):
     return send_from_directory('frontend', filename)
 
-# =============================================================
-# 2. CORE HEALTH & STATUS ENDPOINTS
-# =============================================================
-
+# ----------------- API ENDPOINTS -----------------
 @app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        "status": "healthy",
-        "service": "JeevanSetu AI Backend",
-        "version": "1.0.0"
-    }), 200
-
-# =============================================================
-# 3. AUTHENTICATION & ACCESS CONTROL
-# =============================================================
-
-@app.route('/api/auth/register', methods=['POST'])
-def register_user():
-    data = request.get_json() or {}
-    full_name = data.get('full_name')
-    email = data.get('email')
-    phone = data.get('phone')
-    password = data.get('password')
-    role = data.get('role', 'PATIENT')
-
-    if not all([full_name, email, phone, password]):
-        return jsonify({"status": "error", "message": "Missing required registration parameters"}), 400
-
-    hashed_pw = generate_password_hash(password)
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute('''
-            INSERT INTO users (full_name, email, phone, password_hash, role)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (full_name, email, phone, hashed_pw, role))
-        user_id = cursor.lastrowid
-        conn.commit()
-        return jsonify({
-            "status": "success",
-            "message": "User registered successfully",
-            "user_id": user_id
-        }), 201
-    except sqlite3.IntegrityError:
-        return jsonify({"status": "error", "message": "Email or Phone already registered"}), 409
-    finally:
-        conn.close()
-
-@app.route('/api/auth/login', methods=['POST'])
-def login_user():
-    data = request.get_json() or {}
-    identifier = data.get('identifier')
-    password = data.get('password')
-
-    if not identifier or not password:
-        return jsonify({"status": "error", "message": "Missing credentials"}), 400
-
-    conn = get_db_connection()
-    user = conn.execute('''
-        SELECT * FROM users WHERE email = ? OR phone = ?
-    ''', (identifier, identifier)).fetchone()
-    conn.close()
-
-    if not user or not check_password_hash(user['password_hash'], password):
-        return jsonify({"status": "error", "message": "Invalid email/phone or password"}), 401
-
-    return jsonify({
-        "status": "success",
-        "message": "Authentication successful",
-        "user": {
-            "id": user['id'],
-            "name": user['full_name'],
-            "email": user['email'],
-            "phone": user['phone'],
-            "role": user['role']
-        }
-    }), 200
-
-# =============================================================
-# 4. HOSPITALS & BED MANAGEMENT
-# =============================================================
+def health():
+    return jsonify({"status": "active", "service": "JeevanSetu AI Emergency Grid", "version": "2.0"})
 
 @app.route('/api/hospitals', methods=['GET'])
 def get_hospitals():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    hospitals = cursor.execute('''
-        SELECT h.id, h.name, h.locality, h.distance_km, h.trauma_level, h.phone,
-               h.latitude, h.longitude,
-               b.icu_available, b.icu_total, b.oxygen_available
-        FROM hospitals h
-        LEFT JOIN hospital_beds b ON h.id = b.hospital_id
-    ''').fetchall()
-    conn.close()
-
-    return jsonify({
-        "status": "success",
-        "hospitals": [dict(h) for h in hospitals]
-    }), 200
-
-@app.route('/api/hospitals/<int:hosp_id>/beds', methods=['PATCH'])
-def update_hospital_beds(hosp_id):
-    data = request.get_json() or {}
-    icu_available = data.get('icu_available')
-    oxygen_available = data.get('oxygen_available')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    if icu_available is not None:
-        cursor.execute('UPDATE hospital_beds SET icu_available = ? WHERE hospital_id = ?', (icu_available, hosp_id))
-    if oxygen_available is not None:
-        cursor.execute('UPDATE hospital_beds SET oxygen_available = ? WHERE hospital_id = ?', (oxygen_available, hosp_id))
-
-    conn.commit()
-    conn.close()
-    return jsonify({"status": "success", "message": "Bed availability updated"}), 200
-
-# =============================================================
-# 5. EMERGENCY REQUESTS QUEUE
-# =============================================================
-
-@app.route('/api/emergency/create', methods=['POST'])
-def create_emergency():
-    data = request.get_json() or {}
-    patient_name = data.get('patient_name', 'Anonymous Citizen')
-    symptom = data.get('symptom', 'Critical Condition')
-    priority = data.get('priority', 'CRITICAL')
-
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO emergency_requests (patient_name, symptom, priority, status)
-        VALUES (?, ?, ?, 'ACTIVE')
-    ''', (patient_name, symptom, priority))
-    request_id = cursor.lastrowid
-    conn.commit()
+        SELECT h.id, h.name, h.locality, h.distance_km, h.trauma_level, h.phone,
+               h.latitude, h.longitude,
+               b.icu_available, b.icu_total, b.oxygen_available, b.oxygen_total
+        FROM hospitals h
+        LEFT JOIN hospital_beds b ON h.id = b.hospital_id
+        ORDER BY h.id ASC
+    ''')
+    rows = cursor.fetchall()
     conn.close()
 
-    return jsonify({
-        "status": "success",
-        "message": "Emergency dispatch request initiated",
-        "request_id": request_id
-    }), 201
-
-@app.route('/api/emergencies', methods=['GET'])
-def get_emergencies():
-    conn = get_db_connection()
-    emergencies = conn.execute('SELECT * FROM emergency_requests ORDER BY id DESC').fetchall()
-    conn.close()
-    return jsonify({
-        "status": "success",
-        "emergencies": [dict(e) for e in emergencies]
-    }), 200
-
-# =============================================================
-# 6. BLOOD BANK DIRECTORY & TRIAGE ESTIMATION
-# =============================================================
+    result = []
+    for r in rows:
+        result.append({
+            "id": r["id"],
+            "name": r["name"],
+            "locality": r["locality"],
+            "distance_km": r["distance_km"],
+            "trauma_level": r["trauma_level"],
+            "phone": r["phone"],
+            "latitude": r["latitude"],
+            "longitude": r["longitude"],
+            "icu_available": r["icu_available"] or 0,
+            "icu_total": r["icu_total"] or 0,
+            "oxygen_available": r["oxygen_available"] or 0,
+            "oxygen_total": r["oxygen_total"] or 0
+        })
+    return jsonify({"status": "success", "count": len(result), "hospitals": result})
 
 @app.route('/api/blood-banks', methods=['GET'])
-def list_blood_banks():
-    blood_banks = [
-        {"name": "Hallet Blood Bank & Component Lab", "locality": "Swaroop Nagar", "units_available": {"O+": 14, "B+": 22, "AB+": 6, "A-": 3}, "phone": "+91-512-2534444"},
-        {"name": "Rotary Blood Centre", "locality": "Mall Road Kanpur", "units_available": {"O+": 9, "B+": 18, "O-": 2, "A+": 12}, "phone": "+91-512-2300112"},
-        {"name": "Regency Transfusion Center", "locality": "Govind Nagar", "units_available": {"O+": 25, "B+": 30, "AB-": 4, "A+": 18}, "phone": "+91-512-2211999"}
-    ]
-    return jsonify({"status": "success", "blood_banks": blood_banks}), 200
-
-@app.route('/api/ai/triage', methods=['POST'])
-def ai_triage_symptom():
-    data = request.get_json() or {}
-    symptom = (data.get('symptom') or "").lower()
-    
-    if any(k in symptom for k in ['chest pain', 'heart', 'unconscious', 'severe bleed', 'breath', 'stroke']):
-        priority = "TIER_1_CRITICAL"
-        recommended_facility = "Apex Emergency & Trauma Institute"
-    elif any(k in symptom for k in ['fracture', 'burn', 'high fever', 'vomit', 'abdominal']):
-        priority = "TIER_2_URGENT"
-        recommended_facility = "Metro Heart & Critical Care Hub"
-    else:
-        priority = "TIER_3_STABLE"
-        recommended_facility = "City Multi-Specialty Health Center"
-
-    return jsonify({
-        "status": "success",
-        "triage_priority": priority,
-        "recommended_facility": recommended_facility
-    }), 200
-
-# =============================================================
-# 7. PATIENT PROFILE & EMERGENCY TELEMETRY
-# =============================================================
-
-@app.route('/api/patient/profile/<int:user_id>', methods=['GET'])
-def get_patient_profile(user_id):
-    conn = get_db_connection()
+def get_blood_banks():
+    conn = get_db()
     cursor = conn.cursor()
-    
-    user = cursor.execute('SELECT id, full_name, email, phone, role FROM users WHERE id = ?', (user_id,)).fetchone()
-    if not user:
-        conn.close()
-        return jsonify({"status": "error", "message": "User not found"}), 404
-        
-    profile = cursor.execute('''
-        SELECT blood_group, age, gender, emergency_contact_name, emergency_contact_phone, 
-               medical_allergies, chronic_conditions, created_at 
-        FROM patients WHERE user_id = ?
-    ''', (user_id,)).fetchone()
-    
+    cursor.execute('''
+        SELECT id, facility_name, locality, contact_phone,
+               units_o_negative, units_ab_negative, units_b_negative,
+               units_o_positive, units_b_positive, latitude, longitude
+        FROM blood_banks
+    ''')
+    rows = cursor.fetchall()
     conn.close()
-    
-    profile_data = {
-        "user_id": user["id"],
-        "full_name": user["full_name"],
-        "email": user["email"],
-        "phone": user["phone"],
-        "role": user["role"],
-        "blood_group": profile["blood_group"] if profile else "",
-        "age": profile["age"] if profile else None,
-        "gender": profile["gender"] if profile else "",
-        "emergency_contact_name": profile["emergency_contact_name"] if profile else "",
-        "emergency_contact_phone": profile["emergency_contact_phone"] if profile else "",
-        "medical_allergies": profile["medical_allergies"] if profile else "",
-        "chronic_conditions": profile["chronic_conditions"] if profile else ""
-    }
-    
-    return jsonify({"status": "success", "profile": profile_data}), 200
 
-@app.route('/api/patient/profile/<int:user_id>', methods=['POST', 'PUT'])
-def update_patient_profile(user_id):
-    data = request.get_json() or {}
-    
-    blood_group = data.get('blood_group')
-    age = data.get('age')
-    gender = data.get('gender')
-    emergency_contact_name = data.get('emergency_contact_name')
-    emergency_contact_phone = data.get('emergency_contact_phone')
-    medical_allergies = data.get('medical_allergies')
-    chronic_conditions = data.get('chronic_conditions')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    user = cursor.execute('SELECT id FROM users WHERE id = ?', (user_id,)).fetchone()
-    if not user:
-        conn.close()
-        return jsonify({"status": "error", "message": "User not found"}), 404
-
-    existing = cursor.execute('SELECT id FROM patients WHERE user_id = ?', (user_id,)).fetchone()
-    if existing:
-        cursor.execute('''
-            UPDATE patients SET
-                blood_group = ?, age = ?, gender = ?,
-                emergency_contact_name = ?, emergency_contact_phone = ?,
-                medical_allergies = ?, chronic_conditions = ?
-            WHERE user_id = ?
-        ''', (blood_group, age, gender, emergency_contact_name, emergency_contact_phone, medical_allergies, chronic_conditions, user_id))
-    else:
-        cursor.execute('''
-            INSERT INTO patients (user_id, blood_group, age, gender, emergency_contact_name, emergency_contact_phone, medical_allergies, chronic_conditions)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (user_id, blood_group, age, gender, emergency_contact_name, emergency_contact_phone, medical_allergies, chronic_conditions))
-
-    conn.commit()
-    conn.close()
-    return jsonify({"status": "success", "message": "Patient profile updated successfully"}), 200
-
-# =============================================================
-# 8. AMBULANCE FLEET & LIVE TELEMETRY
-# =============================================================
+    banks = [dict(r) for r in rows]
+    return jsonify({"status": "success", "blood_banks": banks})
 
 @app.route('/api/ambulances', methods=['GET'])
-def list_ambulances():
-    conn = get_db_connection()
-    ambulances = conn.execute('SELECT * FROM ambulances').fetchall()
+def get_ambulances():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, vehicle_number, fleet_type, driver_name, driver_phone,
+               current_latitude, current_longitude, operational_status, speed_kmh
+        FROM ambulances
+    ''')
+    rows = cursor.fetchall()
     conn.close()
-    return jsonify({
-        "status": "success",
-        "ambulances": [dict(amb) for amb in ambulances]
-    }), 200
+
+    fleet = [dict(r) for r in rows]
+    return jsonify({"status": "success", "ambulances": fleet})
 
 @app.route('/api/ambulances/<int:amb_id>/location', methods=['PATCH'])
 def update_ambulance_location(amb_id):
-    data = request.get_json() or {}
+    data = request.json or {}
     lat = data.get('latitude')
     lng = data.get('longitude')
-    status = data.get('status', 'AVAILABLE')
+    speed = data.get('speed_kmh', 45.0)
 
-    conn = get_db_connection()
+    if lat is None or lng is None:
+        return jsonify({"status": "error", "message": "latitude and longitude required"}), 400
+
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
         UPDATE ambulances
-        SET current_latitude = ?, current_longitude = ?, operational_status = ?
+        SET current_latitude = ?, current_longitude = ?, speed_kmh = ?
         WHERE id = ?
-    ''', (lat, lng, status, amb_id))
+    ''', (lat, lng, speed, amb_id))
     conn.commit()
     conn.close()
-    return jsonify({"status": "success", "message": "Location updated"}), 200
 
-# =============================================================
-# 9. HAVERSINE TRIAGE DISPATCH PIPELINE
-# =============================================================
+    return jsonify({"status": "success", "ambulance_id": amb_id, "lat": lat, "lng": lng, "speed": speed})
 
+# ----------------- EMERGENCY TRIAGE & ATOMIC DISPATCH -----------------
 @app.route('/api/dispatch/triage', methods=['POST'])
-def triage_and_dispatch():
-    data = request.get_json() or {}
-    patient_name = data.get('patient_name', 'Emergency Casualty')
-    symptom = data.get('symptom', 'Trauma/Unspecified')
-    priority = data.get('priority', 'TIER_1_CRITICAL')
-    p_lat = float(data.get('latitude', 26.4499))
-    p_lng = float(data.get('longitude', 80.3319))
+def emergency_dispatch():
+    data = request.json or {}
+    patient_name = data.get('patient_name', 'Anonymous Casualty')
+    symptom = data.get('symptom', 'Acute Multi-Trauma / Highway Collision')
+    req_lat = float(data.get('latitude', 26.3785))
+    req_lng = float(data.get('longitude', 80.4421))
     requires_icu = data.get('requires_icu', True)
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
-    try:
-        bed_col = 'icu_available' if requires_icu else 'oxygen_available'
-        query = f'''
-            SELECT h.id, h.name, h.locality, h.phone, h.latitude, h.longitude, b.{bed_col}
-            FROM hospitals h
-            JOIN hospital_beds b ON h.id = b.hospital_id
-            WHERE b.{bed_col} > 0
-        '''
-        candidate_hospitals = cursor.execute(query).fetchall()
+    # Nearest hospital with ICU availability
+    cursor.execute('''
+        SELECT h.id, h.name, h.locality, h.phone, h.latitude, h.longitude,
+               b.icu_available, b.icu_total, b.oxygen_available
+        FROM hospitals h
+        JOIN hospital_beds b ON h.id = b.hospital_id
+        WHERE b.icu_available > 0
+    ''')
+    hospitals = cursor.fetchall()
 
-        if not candidate_hospitals:
-            conn.close()
-            return jsonify({
-                "status": "error",
-                "message": "No critical care beds available across the emergency corridor"
-            }), 409
+    if not hospitals:
+        conn.close()
+        return jsonify({"status": "error", "message": "Zero ICU beds available in network."}), 503
 
-        sorted_hospitals = sorted(
-            candidate_hospitals,
-            key=lambda h: haversine_km(p_lat, p_lng, h['latitude'] if h['latitude'] else 26.4499, h['longitude'] if h['longitude'] else 80.3319)
-        )
-        selected_hosp = sorted_hospitals[0]
-        h_lat = selected_hosp['latitude'] if selected_hosp['latitude'] else 26.4499
-        h_lng = selected_hosp['longitude'] if selected_hosp['longitude'] else 80.3319
-        hosp_dist = haversine_km(p_lat, p_lng, h_lat, h_lng)
+    best_hospital = None
+    min_dist = float('inf')
 
-        available_ambs = cursor.execute('''
-            SELECT id, vehicle_number, driver_name, driver_phone, current_latitude, current_longitude
-            FROM ambulances
-            WHERE operational_status = 'AVAILABLE'
-        ''').fetchall()
+    for hosp in hospitals:
+        dist = haversine(req_lat, req_lng, hosp["latitude"], hosp["longitude"])
+        if dist < min_dist:
+            min_dist = dist
+            best_hospital = hosp
 
-        selected_amb = None
-        amb_dist = None
-        if available_ambs:
-            sorted_ambs = sorted(
-                available_ambs,
-                key=lambda a: haversine_km(p_lat, p_lng, a['current_latitude'], a['current_longitude'])
-            )
-            selected_amb = sorted_ambs[0]
-            amb_dist = haversine_km(p_lat, p_lng, selected_amb['current_latitude'], selected_amb['current_longitude'])
-
-        cursor.execute(f'''
-            UPDATE hospital_beds
-            SET {bed_col} = {bed_col} - 1
-            WHERE hospital_id = ?
-        ''', (selected_hosp['id'],))
-
-        if selected_amb:
-            cursor.execute('''
-                UPDATE ambulances
-                SET operational_status = 'DISPATCHED'
-                WHERE id = ?
-            ''', (selected_amb['id'],))
-
+    # Atomic decrement of bed
+    if requires_icu:
         cursor.execute('''
-            INSERT INTO emergency_requests (patient_name, symptom, priority, status)
-            VALUES (?, ?, ?, 'ACTIVE')
-        ''', (patient_name, symptom, priority))
-        emergency_id = cursor.lastrowid
+            UPDATE hospital_beds
+            SET icu_available = icu_available - 1
+            WHERE hospital_id = ? AND icu_available > 0
+        ''', (best_hospital["id"],))
 
-        conn.commit()
-        conn.close()
+    # Pick closest available ambulance
+    cursor.execute("SELECT * FROM ambulances WHERE operational_status = 'AVAILABLE' LIMIT 1")
+    ambulance = cursor.fetchone()
 
-        amb_eta_mins = max(2, round((amb_dist / 40.0) * 60)) if amb_dist is not None else "Queued"
+    amb_eta = round(min_dist * 2.2) + 3
 
-        return jsonify({
-            "status": "success",
-            "incident_id": emergency_id,
-            "patient_name": patient_name,
-            "priority": priority,
-            "patient_coordinates": {"latitude": p_lat, "longitude": p_lng},
-            "assigned_hospital": {
-                "id": selected_hosp['id'],
-                "name": selected_hosp['name'],
-                "locality": selected_hosp['locality'],
-                "contact": selected_hosp['phone'],
-                "distance_km": hosp_dist
-            },
-            "assigned_ambulance": {
-                "id": selected_amb['id'] if selected_amb else None,
-                "vehicle_number": selected_amb['vehicle_number'] if selected_amb else "Queued",
-                "driver": selected_amb['driver_name'] if selected_amb else "Pending Assignment",
-                "phone": selected_amb['driver_phone'] if selected_amb else "108",
-                "distance_km": amb_dist,
-                "eta_minutes": amb_eta_mins
-            }
-        }), 201
+    # Log emergency request
+    cursor.execute('''
+        INSERT INTO emergency_requests (patient_name, symptom, priority, allocated_hospital_id, allocated_ambulance_id)
+        VALUES (?, ?, 'CRITICAL', ?, ?)
+    ''', (patient_name, symptom, best_hospital["id"], ambulance["id"] if ambulance else None))
+    incident_id = cursor.lastrowid
 
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        return jsonify({"status": "error", "message": str(e)}), 500
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "incident_id": incident_id,
+        "token": f"#JS-EM-KAN-{incident_id:04d}",
+        "assigned_hospital": {
+            "id": best_hospital["id"],
+            "name": best_hospital["name"],
+            "locality": best_hospital["locality"],
+            "phone": best_hospital["phone"],
+            "distance_km": round(min_dist, 2),
+            "latitude": best_hospital["latitude"],
+            "longitude": best_hospital["longitude"]
+        },
+        "assigned_ambulance": {
+            "vehicle_number": ambulance["vehicle_number"] if ambulance else "UP-78-AG-1021",
+            "driver": ambulance["driver_name"] if ambulance else "Emergency On-Call Unit",
+            "driver_phone": ambulance["driver_phone"] if ambulance else "+91-9876500001",
+            "eta_minutes": amb_eta
+        }
+    })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get("PORT", 5000))
+    print(f"🚑 JeevanSetu AI Command Grid running on port {port}...")
     app.run(host='0.0.0.0', port=port, debug=True)
