@@ -854,5 +854,41 @@ def process_fast_ultrasound():
         'timestamp': time.strftime('%H:%M:%S IST')
     })
 
+
+# --- INTER-HOSPITAL TRAUMA REFERRAL & HANDSHAKE API ---
+ACTIVE_REFERRALS = []
+
+@app.route('/api/trauma/referral/initiate', methods=['POST'])
+def initiate_trauma_referral():
+    data = request.get_json() or {}
+    ref_id = f"REF-KAN-{len(ACTIVE_REFERRALS) + 501}"
+    
+    referral_record = {
+        'referral_token': ref_id,
+        'source_hospital': data.get('source_hospital', 'SPM Hospital Trauma Unit (Rooma)'),
+        'target_hospital': data.get('target_hospital', 'LLR Hospital Apex Trauma (Hallet)'),
+        'clinical_specialty': data.get('specialty_required', 'NEUROSURGERY_CRANIOTOMY'),
+        'patient_gcs': data.get('gcs_score', 7),
+        'ventilator_reserved': True,
+        'eta_minutes': int(data.get('eta_minutes', 22)),
+        'bed_lock_status': 'HARD_LOCKED',
+        'digital_pass_id': f"PASS-{ref_id}-PRIORITY-A",
+        'timestamp': time.strftime('%H:%M:%S IST')
+    }
+    ACTIVE_REFERRALS.insert(0, referral_record)
+    
+    return jsonify({
+        'status': 'success',
+        'record': referral_record,
+        'handshake_confirmation': f"Trauma ICU bed & Neuro-OT locked at {referral_record['target_hospital']}. Emergency registration cleared for instant bay intake."
+    })
+
+@app.route('/api/trauma/referrals/active', methods=['GET'])
+def get_active_referrals():
+    return jsonify({
+        'status': 'success',
+        'active_transfers': ACTIVE_REFERRALS
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
