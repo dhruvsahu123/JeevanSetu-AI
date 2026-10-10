@@ -103,8 +103,8 @@
       document.getElementById('totalFluid').textContent = totalMl.toLocaleString('en-IN') + ' mL';
       document.getElementById('first8Rate').textContent = Math.round(first8PerHour) + ' mL/hr';
       document.getElementById('first8Vol').textContent = 'Total: ' + Math.round(first8Ml).toLocaleString('en-IN') + ' mL';
-      document.getElementById('next16Rate').textContent = Math.round(next16PerHour) + ' mL/hr';
-      document.getElementById('next16Vol').textContent = 'Total: ' + Math.round(next16Ml).toLocaleString('en-IN') + ' mL';
+      document.getElementById(ext16Rate').textContent = Math.round(next16PerHour) + ' mL/hr';
+      document.getElementById(ext16Vol').textContent = 'Total: ' + Math.round(next16Ml).toLocaleString('en-IN') + ' mL';
     }
 
     document.addEventListener('DOMContentLoaded', calcParkland);
