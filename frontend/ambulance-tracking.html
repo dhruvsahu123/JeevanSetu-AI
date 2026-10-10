@@ -153,5 +153,66 @@
     updateLiveTelemetry();
     setInterval(updateLiveTelemetry, 2000);
   </script>
+
+  <script>
+    // Live Moving Ambulance Telemetry Simulation
+    var routeCoordinates = [
+      [26.3842, 80.4215], // Rooma KM 442
+      [26.4020, 80.4050], // Ahirwan
+      [26.4251, 80.3871], // Ramadevi
+      [26.4485, 80.3542], // Tatmill
+      [26.4764, 80.3120]  // Hallet (LLR) Hospital
+    ];
+
+    if (typeof map !== 'undefined') {
+      var ambIcon = L.divIcon({
+        html: '<div style="font-size:24px; filter:drop-shadow(0 0 6px #10B981);">🚑</div>',
+        className: 'custom-amb-icon',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+
+      var ambMarker = L.marker(routeCoordinates[0], { icon: ambIcon }).addTo(map);
+      var currentStep = 0;
+      var remainingMins = 14;
+
+      function updateTelemetry() {
+        if (currentStep < routeCoordinates.length - 1) {
+          currentStep++;
+          remainingMins = Math.max(2, remainingMins - 3);
+        } else {
+          currentStep = 0;
+          remainingMins = 14;
+        }
+
+        ambMarker.setLatLng(routeCoordinates[currentStep]);
+        var etaElem = document.querySelector('h1, .eta-val, [id*="eta"], div');
+        var etaContainer = document.getElementById('targetEta') || document.querySelector('.card h2');
+        
+        // Update ETA Display
+        var allTextNodes = document.querySelectorAll('*');
+        allTextNodes.forEach(function(node) {
+          if (node.children.length === 0 && node.textContent.includes('-- MINS')) {
+            node.textContent = remainingMins + ' MINS';
+            node.style.color = '#14B8A6';
+          } else if (node.children.length === 0 && node.textContent.includes('MINS') && !isNaN(parseInt(node.textContent))) {
+            node.textContent = remainingMins + ' MINS';
+          }
+        });
+      }
+
+      setInterval(updateTelemetry, 2500);
+      updateTelemetry();
+
+      // Populate Active Fleet Unit Card
+      var fleetContainer = document.getElementById('activeFleet') || document.querySelector('.fleet-list') || document.body;
+      var fleetCard = document.createElement('div');
+      fleetCard.style.cssText = 'background:#0D1B2A; border:1px solid #1E354F; border-radius:8px; padding:12px; margin-top:12px; font-size:13px; color:#F8FAFC;';
+      fleetCard.innerHTML = '<strong>ALS-UP78-AG-1021</strong><br><span style="color:#38BDF8;">Driver:</span> R. K. Yadav | <span style="color:#10B981;">Speed:</span> 58 km/h<br><span style="color:#94A3B8;">Corridor:</span> NH-19 Rooma &rarr; LLR Apex Bay';
+      
+      var sideCol = document.querySelector('.sidebar, .left-panel, div[style*="width"]');
+      if (sideCol) sideCol.appendChild(fleetCard);
+    }
+  </script>
 </body>
 </html>
