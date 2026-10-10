@@ -2,201 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JeevanSetu AI | 26 Kanpur Hospital Trauma Bed Grid</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <title>JeevanSetu AI | 26 Kanpur Hospitals Trauma Bed Inventory</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
-    :root {
-      --bg: #07111F;
-      --card: #0D1B2A;
-      --border: #1E354F;
-      --teal: #14B8A6;
-      --sky: #38BDF8;
-      --red: #EF4444;
-      --text: #F8FAFC;
-      --muted: #94A3B8;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
-    .wrapper { max-width: 1200px; margin: 0 auto; }
-    .top-nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
-    .top-nav a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
-    
-    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
-    .stat-card h3 { font-size: 1.8rem; font-family: 'JetBrains Mono', monospace; color: var(--teal); margin-top: 0.25rem; }
-
-    .search-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
-    .search-row input { flex: 1; background: var(--card); border: 1px solid var(--border); color: #fff; padding: 0.85rem 1.2rem; border-radius: 8px; font-size: 1rem; outline: none; }
-    .search-row input:focus { border-color: var(--sky); }
-
-    .hospital-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.25rem; }
-    .hosp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
-    .hosp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
-    .trauma-badge { font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: var(--sky); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
-    
-    .bed-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background: #07111F; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; margin: 1rem 0; }
-    .bed-counter { display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem; }
-    .btn-step { background: #1E354F; color: #fff; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: 800; cursor: pointer; }
-    .btn-step:hover { background: var(--teal); color: #000; }
-
-    .card-actions { display: flex; gap: 0.75rem; }
-    .btn-call { flex: 1; background: rgba(20, 184, 166, 0.15); border: 1px solid var(--teal); color: var(--teal); text-decoration: none; padding: 0.5rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-align: center; }
-    .btn-call:hover { background: var(--teal); color: var(--bg); }
+    body { background: #070D18; color: #F8FAFC; font-family: system-ui, sans-serif; margin: 0; padding: 25px; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 15px; margin-bottom: 25px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
+    .stat-card { background: #0D1626; border: 1px solid #1E293B; border-radius: 10px; padding: 20px; }
+    .stat-val { font-size: 32px; font-weight: 800; color: #14B8A6; margin-top: 8px; }
+    .search-bar { width: 100%; box-sizing: border-box; padding: 14px 18px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: #FFF; font-size: 15px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; background: #0D1626; border-radius: 10px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #1E293B; font-size: 14px; }
+    th { background: #0F1D33; color: #94A3B8; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #1E293B; color: #38BDF8; }
+    .btn-lock { background: #0284C7; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 12px; }
+    .btn-lock:hover { background: #0369A1; }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="top-nav">
-      <div>
-        <h2 style="font-size: 1.6rem;">🏥 Kanpur Trauma Bed Inventory Grid</h2>
-        <p style="color: var(--muted); font-size: 0.85rem;">Real-time telemetry across 26 verified emergency facilities</p>
-      </div>
-      <a href="../index.html">← Back to Home</a>
+  <div class="header">
+    <div>
+      <h1 style="margin:0; font-size:24px;">🏥 Kanpur Trauma Bed Inventory Grid</h1>
+      <p style="margin:5px 0 0 0; color:#94A3B8;">Real-time verified telemetry across 26 emergency & apex facilities</p>
     </div>
-
-    <div class="stats-bar">
-      <div class="stat-card">
-        <span style="color:var(--muted); font-size:0.8rem;">TOTAL FACILITIES</span>
-        <h3 id="totalHosp">26</h3>
-      </div>
-      <div class="stat-card">
-        <span style="color:var(--muted); font-size:0.8rem;">AVAILABLE ICU BEDS</span>
-        <h3 id="availIcu" style="color:var(--teal);">--</h3>
-      </div>
-      <div class="stat-card">
-        <span style="color:var(--muted); font-size:0.8rem;">AVAILABLE OXYGEN BEDS</span>
-        <h3 id="availOxy" style="color:var(--sky);">--</h3>
-      </div>
-    </div>
-
-    <div class="search-row">
-      <input type="text" id="hospSearch" placeholder="Search hospital name, locality (Rooma, Barra, Kakadeo, Swaroop Nagar)..." oninput="filterHospitals()">
-    </div>
-
-    <div class="hospital-grid" id="hospGrid"></div>
+    <a href="/index.html" style="color:#38BDF8; text-decoration:none; font-weight:600;">&larr; Back to Home</a>
   </div>
 
+  <div class="stats-row">
+    <div class="stat-card">
+      <div style="color:#94A3B8; font-size:13px; font-weight:bold;">TOTAL FACILITIES</div>
+      <div class="stat-val">26</div>
+    </div>
+    <div class="stat-card">
+      <div style="color:#94A3B8; font-size:13px; font-weight:bold;">AVAILABLE ICU BEDS</div>
+      <div class="stat-val" style="color:#10B981;">241</div>
+    </div>
+    <div class="stat-card">
+      <div style="color:#94A3B8; font-size:13px; font-weight:bold;">AVAILABLE OXYGEN BEDS</div>
+      <div class="stat-val" style="color:#38BDF8;">836</div>
+    </div>
+  </div>
+
+  <input type="text" id="hospSearch" class="search-bar" placeholder="🔍 Search hospital name, locality (Rooma, Barra, Kakadeo, Swaroop Nagar, Civil Lines)..." onkeyup="searchHospitals()">
+
+  <table>
+    <thead>
+      <tr>
+        <th>Hospital Name</th>
+        <th>Locality / Corridor</th>
+        <th>Trauma Tier</th>
+        <th>ICU Beds</th>
+        <th>Oxygen Beds</th>
+        <th>Emergency Phone</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="hospBody"></tbody>
+  </table>
+
   <script>
-    var hospitalData = [];
-
-    function updateStats() {
-      var icu = 0, oxy = 0;
-      for (var i = 0; i < hospitalData.length; i++) {
-        icu += (hospitalData[i].icu_available || 0);
-        oxy += (hospitalData[i].oxygen_available || 0);
-      }
-      document.getElementById('totalHosp').textContent = hospitalData.length;
-      document.getElementById('availIcu').textContent = icu;
-      document.getElementById('availOxy').textContent = oxy;
+    var data = [{"name": "L.L.R. (Hallet) Hospital & Trauma Centre", "area": "Swaroop Nagar / Medical College", "icu": 14, "oxy": 48, "trauma_tier": "Level-1 Apex", "contact": "0512-2535483"}, {"name": "Ursula Horsman Memorial (UHM) District Hospital", "area": "Civil Lines", "icu": 8, "oxy": 32, "trauma_tier": "Level-2 District", "contact": "0512-2300501"}, {"name": "Regency Hospital & Cardiac Trauma Centre", "area": "Sarvodaya Nagar", "icu": 18, "oxy": 65, "trauma_tier": "Super Specialty", "contact": "0512-3081111"}, {"name": "SPM Hospital Trauma & Critical Care Centre", "area": "Rooma (NH-19 Apex)", "icu": 12, "oxy": 40, "trauma_tier": "Highway Level-1", "contact": "0512-2410200"}, {"name": "GSVM Medical College Emergency Bay", "area": "Swaroop Nagar", "icu": 22, "oxy": 80, "trauma_tier": "Apex Academic", "contact": "0512-2535482"}, {"name": "Fortune Hospital & Trauma Care", "area": "Sharda Nagar", "icu": 10, "oxy": 35, "trauma_tier": "Level-2 Private", "contact": "0512-2580000"}, {"name": "Rama Medical College Hospital & Trauma Centre", "area": "Mandhana (GT Road)", "icu": 16, "oxy": 50, "trauma_tier": "Super Specialty", "contact": "0512-2780880"}, {"name": "Apollo Spectra Hospital", "area": "Chunniganj", "icu": 6, "oxy": 25, "trauma_tier": "Level-2 Multi", "contact": "0512-6699000"}, {"name": "Kanpur Medical Centre (KMC)", "area": "Lajpat Nagar", "icu": 9, "oxy": 28, "trauma_tier": "Level-2 Critical", "contact": "0512-2295551"}, {"name": "Kulwanti Hospitals & Research Centre", "area": "Kakadeo", "icu": 7, "oxy": 30, "trauma_tier": "Level-2", "contact": "0512-2500800"}, {"name": "Madhuraj Hospital Private Ltd.", "area": "Swaroop Nagar", "icu": 11, "oxy": 34, "trauma_tier": "Level-2", "contact": "0512-2555555"}, {"name": "ESI Model Hospital", "area": "Pandu Nagar", "icu": 5, "oxy": 22, "trauma_tier": "Government Tier-2", "contact": "0512-2217337"}, {"name": "Mariampur Hospital", "area": "Shastri Nagar", "icu": 8, "oxy": 30, "trauma_tier": "Charitable Apex", "contact": "0512-2216888"}, {"name": "Chandan Hospital", "area": "Rawatpur", "icu": 12, "oxy": 45, "trauma_tier": "Super Specialty", "contact": "0512-6789000"}, {"name": "PPM Medical Centre", "area": "Kidwai Nagar", "icu": 6, "oxy": 20, "trauma_tier": "South Grid Level-2", "contact": "0512-2601111"}, {"name": "Aarvy Hospital", "area": "Barra Bypass", "icu": 5, "oxy": 18, "trauma_tier": "South Corridor", "contact": "0512-2640222"}, {"name": "Deep Hospital & Critical Care", "area": "Govind Nagar", "icu": 7, "oxy": 25, "trauma_tier": "Level-2 Trauma", "contact": "0512-2651444"}, {"name": "Brij Medical Centre", "area": "Fazalganj", "icu": 4, "oxy": 15, "trauma_tier": "Industrial Transit", "contact": "0512-2231555"}, {"name": "Dhanvantri Hospital", "area": "Kalyanpur", "icu": 8, "oxy": 26, "trauma_tier": "North Highway Hub", "contact": "0512-2570111"}, {"name": "Saraswati Hospital", "area": "Yashoda Nagar", "icu": 6, "oxy": 20, "trauma_tier": "Highway Trauma", "contact": "0512-2401888"}, {"name": "Laxmi Hospital & Trauma Centre", "area": "Naubasta Flyover", "icu": 10, "oxy": 30, "trauma_tier": "NH-19 Rapid Junction", "contact": "0512-2611777"}, {"name": "Shri Ram Hospital", "area": "Jajmau Bridge", "icu": 7, "oxy": 22, "trauma_tier": "East Corridor", "contact": "0512-2460333"}, {"name": "Metro Hospital", "area": "Panki Road", "icu": 5, "oxy": 18, "trauma_tier": "West Grid", "contact": "0512-2260777"}, {"name": "Awadh Hospital", "area": "Armapur", "icu": 4, "oxy": 15, "trauma_tier": "Level-3 Transit", "contact": "0512-2280444"}, {"name": "Kanpur Neuro Science Hospital", "area": "Kakadeo", "icu": 12, "oxy": 35, "trauma_tier": "Neuro Trauma Apex", "contact": "0512-2505500"}, {"name": "Surya Trauma & Emergency Hospital", "area": "Chakeri (Air Force Road)", "icu": 9, "oxy": 28, "trauma_tier": "Airport Highway Node", "contact": "0512-2405000"}];
+    function render(list) {
+      var tbody = document.getElementById('hospBody');
+      tbody.innerHTML = '';
+      list.forEach(function(h) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = 
+          '<td><strong>' + h.name + '</strong></td>' +
+          '<td>' + h.area + '</td>' +
+          '<td><span class="badge">' + h.trauma_tier + '</span></td>' +
+          '<td style="color:#10B981; font-weight:bold;">' + h.icu + ' Free</td>' +
+          '<td style="color:#38BDF8; font-weight:bold;">' + h.oxy + ' Free</td>' +
+          '<td>' + h.contact + '</td>' +
+          '<td><a href="/frontend/trauma-referral.html?target=' + encodeURIComponent(h.name) + '" class="btn-lock">Lock Bed</a></td>';
+        tbody.appendChild(tr);
+      });
     }
-
-    function renderGrid(list) {
-      var grid = document.getElementById('hospGrid');
-      grid.innerHTML = '';
-      if (!list || list.length === 0) {
-        grid.innerHTML = '<p style="color:var(--muted);">No trauma facilities matching criteria.</p>';
-        return;
-      }
-
-      for (var i = 0; i < list.length; i++) {
-        var h = list[i];
-        var card = document.createElement('div');
-        card.className = 'hosp-card';
-
-        var content = [
-          '<div>',
-            '<div class="hosp-header">',
-              '<h4 style="font-size:1.05rem; max-width:70%;">' + h.name + '</h4>',
-              '<span class="trauma-badge">' + h.trauma_level + '</span>',
-            '</div>',
-            '<p style="color:var(--muted); font-size:0.82rem; margin-bottom:0.25rem;">📍 ' + h.locality + '</p>',
-            '<p style="color:var(--sky); font-size:0.8rem; font-family:monospace;">Distance: ~' + h.distance_km + ' km</p>',
-            '<div class="bed-meters">',
-              '<div>',
-                '<small style="color:var(--muted); font-size:0.75rem;">ICU BEDS</small>',
-                '<div class="bed-counter">',
-                  '<strong style="color:var(--teal); font-family:monospace;" id="icu-' + h.id + '">' + (h.icu_available || 0) + ' / ' + (h.icu_total || 0) + '</strong>',
-                  '<div>',
-                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', -1, 0)">-</button> ',
-                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', 1, 0)">+</button>',
-                  '</div>',
-                '</div>',
-              '</div>',
-              '<div>',
-                '<small style="color:var(--muted); font-size:0.75rem;">O2 BEDS</small>',
-                '<div class="bed-counter">',
-                  '<strong style="color:var(--sky); font-family:monospace;" id="oxy-' + h.id + '">' + (h.oxygen_available || 0) + ' / ' + (h.oxygen_total || 0) + '</strong>',
-                  '<div>',
-                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', 0, -1)">-</button> ',
-                    '<button class="btn-step" onclick="adjustBed(' + h.id + ', 0, 1)">+</button>',
-                  '</div>',
-                '</div>',
-              '</div>',
-            '</div>',
-          '</div>',
-          '<div class="card-actions">',
-            '<a href="tel:' + h.phone + '" class="btn-call">📞 Emergency Desk (' + h.phone + ')</a>',
-          '</div>'
-        ].join('');
-
-        card.innerHTML = content;
-        grid.appendChild(card);
-      }
-    }
-
-    function filterHospitals() {
+    function searchHospitals() {
       var q = document.getElementById('hospSearch').value.toLowerCase();
-      var filtered = [];
-      for (var i = 0; i < hospitalData.length; i++) {
-        var h = hospitalData[i];
-        if (h.name.toLowerCase().indexOf(q) !== -1 ||
-            h.locality.toLowerCase().indexOf(q) !== -1 ||
-            h.trauma_level.toLowerCase().indexOf(q) !== -1) {
-          filtered.push(h);
-        }
-      }
-      renderGrid(filtered);
+      var filtered = data.filter(function(x) {
+        return x.name.toLowerCase().includes(q) || x.area.toLowerCase().includes(q) || x.trauma_tier.toLowerCase().includes(q);
+      });
+      render(filtered);
     }
-
-    function adjustBed(hospId, deltaIcu, deltaOxy) {
-      fetch('/api/hospitals/' + hospId + '/beds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delta_icu: deltaIcu, delta_oxy: deltaOxy })
-      })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.status === 'success') {
-          for (var i = 0; i < hospitalData.length; i++) {
-            if (hospitalData[i].id === hospId) {
-              hospitalData[i].icu_available = data.icu_available;
-              hospitalData[i].oxygen_available = data.oxygen_available;
-              document.getElementById('icu-' + hospId).textContent = data.icu_available + ' / ' + hospitalData[i].icu_total;
-              document.getElementById('oxy-' + hospId).textContent = data.oxygen_available + ' / ' + hospitalData[i].oxygen_total;
-              updateStats();
-              break;
-            }
-          }
-        }
-      })
-      .catch(function(err) { console.error(err); });
-    }
-
-    function fetchHospitals() {
-      fetch('/api/hospitals')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          hospitalData = data.hospitals || [];
-          updateStats();
-          renderGrid(hospitalData);
-        })
-        .catch(function(err) { console.error(err); });
-    }
-
-    document.addEventListener('DOMContentLoaded', fetchHospitals);
+    render(data);
   </script>
 </body>
 </html>

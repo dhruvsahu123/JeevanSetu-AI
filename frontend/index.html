@@ -254,7 +254,7 @@
       <a href="ambulance-tracking.html">Ambulance GPS</a>
       <a href="customer-dashboard.html">Citizen Vault</a>
       <a href="blood-banks.html">Blood Hub</a>
-      <a href="medical-knowledge.html">Clinical Registry</a> 
+      <a href="medical-knowledge.html">Clinical Registry</a> <a href="#" onclick="openDosDonts(); return false;" style="color:#38BDF8; font-weight:600;">Do's & Don'ts</a> 
       <a href="login.html" class="btn-login">Sign In</a>
     </nav>
   </header>
@@ -348,7 +348,18 @@
           <strong id="passToken" style="color:#38BDF8; font-family:monospace; font-size:0.95rem;">JS-EM-KAN-0001</strong>
         </div>
         <div style="margin-bottom:0.4rem;">
-          <span style="color:#94A3B8; font-size:0.8rem;">ASSIGNED TRAUMA DESK:</span>
+          <span style="color:#94A3B8; font-size:0.8rem;">
+        <div style="background:#0F172A; border:1px solid #1E293B; border-radius:8px; padding:12px; margin-top:10px; font-size:12px; text-align:left;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <div><span style="color:#94A3B8;">PATIENT:</span> <strong>Dhruv Sahu (Age: 20)</strong></div>
+            <div><span style="color:#94A3B8;">ABHA ID:</span> <strong>91-8201-9482-1092</strong></div>
+            <div><span style="color:#94A3B8;">BLOOD GROUP:</span> <strong style="color:#EF4444;">O Rh Positive</strong></div>
+            <div><span style="color:#94A3B8;">VITALS:</span> <strong>HR 88 | BP 124/82 | SpO2 98%</strong></div>
+            <div style="grid-column: span 2;"><span style="color:#94A3B8;">KNOWN ALLERGIES:</span> <strong style="color:#F59E0B;">None Known (NKDA)</strong></div>
+          </div>
+        </div>
+        
+ASSIGNED TRAUMA DESK:</span>
           <div id="passHosp" style="color:#F8FAFC; font-weight:700; font-size:0.9rem;">SPM Hospital Trauma Centre (Rooma)</div>
         </div>
         <div>
@@ -417,6 +428,78 @@
       });
     }
   </script>
+
+<!-- AI TRAUMA DOs & DONTs MODAL -->
+<div id="dosDontsModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(2,6,23,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+  <div style="background:#0B132B; border:1px solid #1E293B; border-radius:12px; width:90%; max-width:750px; max-height:85vh; overflow-y:auto; padding:24px; color:#F8FAFC; box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1E293B; padding-bottom:12px; margin-bottom:16px;">
+      <h2 style="margin:0; font-size:20px; color:#38BDF8;">🛡️ AI Trauma Guardrails: Do's & Don'ts</h2>
+      <button onclick="document.getElementById('dosDontsModal').style.display='none'" style="background:transparent; border:none; color:#94A3B8; font-size:24px; cursor:pointer;">&times;</button>
+    </div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <!-- Head & Spine -->
+      <div style="background:rgba(16,185,129,0.08); border:1px solid #059669; border-radius:8px; padding:12px;">
+        <h4 style="margin:0 0 8px 0; color:#34D399;">✅ DO (Immediate Action)</h4>
+        <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;">
+          <li><strong>C-Spine:</strong> Hold cervical spine neutral and inline.</li>
+          <li><strong>Airway:</strong> Use Jaw-Thrust maneuver only.</li>
+          <li><strong>Bleeding:</strong> Apply firm, direct pressure with sterile pads.</li>
+          <li><strong>Burns:</strong> Irrigate with room-temperature water for 15 mins.</li>
+        </ul>
+      </div>
+
+      <div style="background:rgba(239,68,68,0.08); border:1px solid #DC2626; border-radius:8px; padding:12px;">
+        <h4 style="margin:0 0 8px 0; color:#F87171;">❌ DON'T (Strictly Avoid)</h4>
+        <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;">
+          <li><strong>Spine:</strong> Do NOT remove helmet forcibly or tilt neck.</li>
+          <li><strong>Unconscious:</strong> Do NOT give oral water (prevents aspiration).</li>
+          <li><strong>Impaled Rod/Glass:</strong> Do NOT pull out impaled objects!</li>
+          <li><strong>Burns:</strong> Do NOT apply ice, toothpaste, or ghee.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; background:#0F172A; border:1px solid #334155; border-radius:8px; padding:12px; font-size:12px; color:#94A3B8;">
+      💡 <em>Integrated with ICMR / ATLS Level-1 protocols for bystander protection under Indian Good Samaritan Law.</em>
+    </div>
+  </div>
+</div>
+
+<script>
+function openDosDonts() {
+  var m = document.getElementById('dosDontsModal');
+  if(m) m.style.display = 'flex';
+}
+</script>
+
+
+        <!-- WORKING QR MODAL SCRIPT -->
+        <script>
+          function closeEmergencyPass() {
+            var m = document.querySelector('.modal, [id*="modal"], [id*="pass"], [class*="modal"]');
+            var overlay = document.querySelectorAll('div');
+            overlay.forEach(function(el) {
+              if (el.innerHTML.includes('ABDM EMERGENCY PASS') || el.innerHTML.includes('GOLDEN HOUR TIER-1')) {
+                el.style.display = 'none';
+              }
+            });
+            var allModals = document.querySelectorAll('[style*="position: fixed"], [style*="position:fixed"]');
+            allModals.forEach(function(mod) {
+              if (mod.innerText.includes('ABDM EMERGENCY PASS')) mod.style.display = 'none';
+            });
+          }
+          document.addEventListener('DOMContentLoaded', function() {
+            var closeBtns = document.querySelectorAll('button');
+            closeBtns.forEach(function(b) {
+              if (b.innerText.trim().toLowerCase() === 'close') {
+                b.setAttribute('onclick', 'closeEmergencyPass()');
+                b.style.cursor = 'pointer';
+              }
+            });
+          });
+        </script>
+        
 </body>
 
 </html>

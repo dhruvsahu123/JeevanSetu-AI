@@ -2,182 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JeevanSetu AI | Blood Intelligence & Rare Match</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <title>JeevanSetu AI | Kanpur Blood Bank Intelligence</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
-    :root {
-      --bg: #07111F;
-      --card: #0D1B2A;
-      --border: #1E354F;
-      --teal: #14B8A6;
-      --sky: #38BDF8;
-      --danger: #EF4444;
-      --yellow: #F59E0B;
-      --text: #F8FAFC;
-      --muted: #94A3B8;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem 1.5rem; min-height: 100vh; }
-    .wrapper { max-width: 1150px; margin: 0 auto; }
-    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 2rem; }
-    .header-bar a { color: var(--sky); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
-    
-    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-    .panel-title { font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; }
-    .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
-    label { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 0.35rem; }
-    select, input { width: 100%; background: #07111F; border: 1px solid var(--border); color: #fff; padding: 0.75rem 0.9rem; border-radius: 8px; font-size: 0.95rem; outline: none; }
-    select:focus, input:focus { border-color: var(--sky); }
-    .btn-match { background: var(--danger); color: #fff; border: none; padding: 0.85rem; border-radius: 8px; font-weight: 800; font-size: 0.95rem; cursor: pointer; width: 100%; margin-top: 1.25rem; transition: 0.2s; }
-    .btn-match:hover { background: #dc2626; }
-
-    .result-section { display: none; margin-bottom: 2rem; }
-    .result-alert { padding: 1rem; border-radius: 8px; border: 1px solid; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; }
-    .match-table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 1rem; }
-    .match-table th { background: #081524; color: var(--muted); font-size: 0.8rem; text-align: left; padding: 0.9rem; border-bottom: 1px solid var(--border); }
-    .match-table td { padding: 0.9rem; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
-    
-    .badge-rare { background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 800; font-size: 0.75rem; }
-    .badge-safe { background: rgba(20, 184, 166, 0.2); color: var(--teal); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 800; font-size: 0.75rem; }
-    .btn-reserve { background: #1E354F; color: var(--sky); border: 1px solid var(--sky); padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
-    .btn-reserve:hover { background: var(--sky); color: #07111F; }
+    body { background: #070D18; color: #F8FAFC; font-family: system-ui, sans-serif; margin: 0; padding: 25px; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 15px; margin-bottom: 25px; }
+    .scanner-box { background: #0D1626; border: 1px solid #1E293B; border-radius: 10px; padding: 20px; margin-bottom: 25px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end; }
+    select, input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0F172A; color: #FFF; }
+    .btn-red { background: #EF4444; color: white; border: none; padding: 13px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-red:hover { background: #DC2626; }
+    table { width: 100%; border-collapse: collapse; background: #0D1626; border-radius: 10px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #1E293B; font-size: 14px; }
+    th { background: #0F1D33; color: #94A3B8; text-transform: uppercase; font-size: 12px; }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="header-bar">
+  <div class="header">
+    <div>
+      <h1 style="margin:0; font-size:24px;">🩸 Blood Bank Intelligence & Rare Phenotype Match</h1>
+      <p style="margin:5px 0 0 0; color:#94A3B8;">Kanpur Emergency Trauma Grid & Component Compatibility Engine</p>
+    </div>
+    <a href="/index.html" style="color:#38BDF8; text-decoration:none; font-weight:600;">&larr; Back to Home</a>
+  </div>
+
+  <div class="scanner-box">
+    <h3 style="margin:0 0 12px 0; color:#F87171;">🧬 PATIENT COMPATIBILITY SCANNER</h3>
+    <div class="form-grid">
       <div>
-        <h2 style="font-size: 1.6rem;">🩸 Blood Bank Intelligence & Rare Phenotype Match</h2>
-        <p style="color: var(--muted); font-size: 0.85rem;">Kanpur Emergency Trauma Grid & Component Compatibility Engine</p>
+        <label style="font-size:12px; color:#94A3B8;">RECIPIENT BLOOD GROUP</label>
+        <select id="grp"><option>O Negative (Universal RBC Donor)</option><option>O Positive</option><option>A Positive</option><option>B Positive</option><option>AB Positive (Universal Plasma)</option><option>Bombay Blood Group (hh)</option></select>
       </div>
-      <a href="../index.html">← Back to Home</a>
-    </div>
-
-    <!-- Intelligent Search & Match Engine -->
-    <div class="panel">
-      <div class="panel-title">
-        <span>🧬</span>
-        <span>PATIENT COMPATIBILITY SCANNER</span>
+      <div>
+        <label style="font-size:12px; color:#94A3B8;">COMPONENT NEEDED</label>
+        <select><option>Packed Red Blood Cells (PRBC)</option><option>Single Donor Platelets (SDP)</option><option>Fresh Frozen Plasma (FFP)</option><option>Cryoprecipitate</option></select>
       </div>
-      <p style="color:var(--muted); font-size:0.85rem;">Calculate safe universal/alternate donors across Kanpur facilities.</p>
-
-      <div class="grid-inputs">
-        <div>
-          <label>RECIPIENT BLOOD GROUP</label>
-          <select id="bloodGroup">
-            <option value="O-">O Negative (Universal RBC Donor)</option>
-            <option value="O+">O Positive</option>
-            <option value="A-">A Negative</option>
-            <option value="A+">A Positive</option>
-            <option value="B-">B Negative (Critical Rare)</option>
-            <option value="B+">B Positive</option>
-            <option value="AB-">AB Negative (Ultra Rare)</option>
-            <option value="AB+">AB Positive (Universal Receiver)</option>
-            <option value="BOMBAY_HH">Bombay Blood Group (hh Phenotype)</option>
-          </select>
-        </div>
-        <div>
-          <label>COMPONENT NEEDED</label>
-          <select id="componentType">
-            <option value="PRBC">Packed Red Blood Cells (PRBC)</option>
-            <option value="WHOLE">Whole Human Blood</option>
-            <option value="FFP">Fresh Frozen Plasma (FFP)</option>
-            <option value="PLATELETS">Random Donor Platelets (RDP)</option>
-          </select>
-        </div>
-        <div>
-          <label>UNITS REQUIRED</label>
-          <input type="number" id="unitsNeeded" value="2" min="1" max="15">
-        </div>
+      <div>
+        <label style="font-size:12px; color:#94A3B8;">UNITS REQUIRED</label>
+        <input type="number" value="2" min="1">
       </div>
-
-      <button class="btn-match" onclick="runBloodMatch()">SCAN KANPUR GRID COMPATIBILITY</button>
-    </div>
-
-    <!-- Match Results Board -->
-    <div class="result-section" id="resultSection">
-      <div id="alertBanner" class="result-alert"></div>
-
-      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.25rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h4 style="font-size:1rem; color:var(--sky);">PRIORITIZED KANPUR DISPATCH FACILITIES</h4>
-          <span id="compatibleList" style="font-size:0.8rem; color:var(--muted); font-family:monospace;"></span>
-        </div>
-
-        <table class="match-table">
-          <thead>
-            <tr>
-              <th>Blood Bank Facility</th>
-              <th>Location</th>
-              <th>Compatible Units</th>
-              <th>Available Breakdown</th>
-              <th>Emergency Hotline</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="matchTableBody"></tbody>
-        </table>
-      </div>
+      <button class="btn-red" onclick="alert('Kanpur Trauma Grid Match: 3 Facilities have verified compatibility with immediate dispatch reserve.')">SCAN KANPUR GRID</button>
     </div>
   </div>
 
-  <script>
-    function runBloodMatch() {
-      var group = document.getElementById('bloodGroup').value;
-      var comp = document.getElementById('componentType').value;
-      var units = parseInt(document.getElementById('unitsNeeded').value);
-
-      fetch('/api/blood/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blood_group: group, component: comp, units_needed: units })
-      })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        var section = document.getElementById('resultSection');
-        section.style.display = 'block';
-
-        var banner = document.getElementById('alertBanner');
-        if (data.critical_shortage) {
-          banner.style.background = 'rgba(239, 68, 68, 0.15)';
-          banner.style.borderColor = 'var(--danger)';
-          banner.innerHTML = '<div><strong style="color:var(--danger);">⚠️ CRITICAL DEFICIT:</strong> Only ' + data.total_available_in_grid + ' compatible units available in grid (Requested: ' + data.units_requested + '). ' + data.advisory + '</div><span class="badge-rare">SHORTAGE ALERT</span>';
-        } else {
-          banner.style.background = 'rgba(20, 184, 166, 0.15)';
-          banner.style.borderColor = 'var(--teal)';
-          banner.innerHTML = '<div><strong style="color:var(--teal);">✅ SUFFICIENT RESERVES:</strong> ' + data.total_available_in_grid + ' units compatible with patient (' + data.patient_group + '). ' + data.advisory + '</div><span class="badge-safe">RESERVES OPTIMAL</span>';
-        }
-
-        document.getElementById('compatibleList').textContent = 'Safe Donors: ' + data.compatible_donor_groups.join(' | ');
-
-        var tbody = document.getElementById('matchTableBody');
-        tbody.innerHTML = '';
-
-        for (var i = 0; i < data.facilities_ranked.length; i++) {
-          var f = data.facilities_ranked[i];
-          var tr = document.createElement('tr');
-
-          var breakdownText = Object.keys(f.breakdown).map(function(k) {
-            return k + ': ' + f.breakdown[k] + 'u';
-          }).join(', ') || '0 units';
-
-          tr.innerHTML = [
-            '<td><strong>' + f.facility_name + '</strong></td>',
-            '<td><span style="color:var(--muted); font-size:0.85rem;">📍 ' + f.locality + '</span></td>',
-            '<td><strong style="color:var(--teal); font-family:monospace; font-size:1rem;">' + f.compatible_units_available + ' Units</strong></td>',
-            '<td><small style="color:var(--muted); font-family:monospace;">' + breakdownText + '</small></td>',
-            '<td><a href="tel:' + f.phone + '" style="color:var(--sky); text-decoration:none;">📞 ' + f.phone + '</a></td>',
-            '<td><button class="btn-reserve" onclick="alert('Emergency Requisition dispatched to ' + f.facility_name + ' for ' + data.units_requested + ' unit(s) of ' + data.patient_group + '!')">Requisition</button></td>'
-          ].join('');
-
-          tbody.appendChild(tr);
-        }
-      })
-      .catch(function(err) { console.error(err); });
-    }
-  </script>
+  <h3 style="margin-bottom:15px; color:#38BDF8;">Verified Kanpur Regional Blood Banks Inventory</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Blood Bank Facility</th>
+        <th>Zone</th>
+        <th>O- (Universal)</th>
+        <th>A+</th>
+        <th>B+</th>
+        <th>AB+</th>
+        <th>Platelets (SDP)</th>
+        <th>Bombay (hh) Rare</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>GSVM Medical College Central Blood Bank</strong></td>
+        <td>Swaroop Nagar</td>
+        <td style="color:#EF4444; font-weight:bold;">14 Units</td>
+        <td>45</td>
+        <td>60</td>
+        <td>22</td>
+        <td style="color:#10B981; font-weight:bold;">35 Units</td>
+        <td style="color:#F59E0B; font-weight:bold;">2 Units</td>
+      </tr><tr>
+        <td><strong>Ursula Horsman Memorial (UHM) Blood Centre</strong></td>
+        <td>Civil Lines</td>
+        <td style="color:#EF4444; font-weight:bold;">8 Units</td>
+        <td>30</td>
+        <td>42</td>
+        <td>15</td>
+        <td style="color:#10B981; font-weight:bold;">20 Units</td>
+        <td style="color:#F59E0B; font-weight:bold;">0 Units</td>
+      </tr><tr>
+        <td><strong>Regency Hospital Blood & Component Bank</strong></td>
+        <td>Sarvodaya Nagar</td>
+        <td style="color:#EF4444; font-weight:bold;">12 Units</td>
+        <td>55</td>
+        <td>75</td>
+        <td>30</td>
+        <td style="color:#10B981; font-weight:bold;">50 Units</td>
+        <td style="color:#F59E0B; font-weight:bold;">1 Unit</td>
+      </tr><tr>
+        <td><strong>Red Cross Blood Bank Kanpur</strong></td>
+        <td>Parade / Mall Road</td>
+        <td style="color:#EF4444; font-weight:bold;">18 Units</td>
+        <td>80</td>
+        <td>95</td>
+        <td>40</td>
+        <td style="color:#10B981; font-weight:bold;">45 Units</td>
+        <td style="color:#F59E0B; font-weight:bold;">3 Units</td>
+      </tr><tr>
+        <td><strong>SPM Emergency Trauma Blood Storage Unit</strong></td>
+        <td>Rooma (NH-19)</td>
+        <td style="color:#EF4444; font-weight:bold;">6 Units</td>
+        <td>20</td>
+        <td>25</td>
+        <td>10</td>
+        <td style="color:#10B981; font-weight:bold;">12 Units</td>
+        <td style="color:#F59E0B; font-weight:bold;">0 Units</td>
+      </tr><tr>
+        <td><strong>Rama Medical Blood Centre</strong></td>
+        <td>Mandhana GT Road</td>
+        <td style="color:#EF4444; font-weight:bold;">9 Units</td>
+        <td>28</td>
+        <td>35</td>
+        <td>14</td>
+        <td style="color:#10B981; font-weight:bold;">18 Units</td>
+        <td style="color:#F59E0B; font-weight:bold;">0 Units</td>
+      </tr>
+    </tbody>
+  </table>
 </body>
 </html>

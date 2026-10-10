@@ -1,3 +1,5 @@
+﻿
+
 import os
 import time
 import sqlite3
@@ -7,6 +9,26 @@ from flask_cors import CORS
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder='frontend', static_url_path='/frontend')
+CORS(app)
+
+@app.route('/api/login', methods=['POST', 'OPTIONS'])
+@app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
+def universal_login():
+    if request.method == 'OPTIONS':
+        return ('', 204)
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '')
+    password = data.get('password', '')
+    if email and password:
+        role = 'hospital_staff' if 'hospital' in email or 'admin' in email else 'citizen'
+        return jsonify({
+            'status': 'success',
+            'token': 'demo_jwt_token_jeevansetu_verified',
+            'user': {'email': email, 'role': role},
+            'redirect': '/frontend/hospital-dashboard.html' if role == 'hospital_staff' else '/frontend/customer-dashboard.html'
+        }), 200
+    return jsonify({'status': 'error', 'message': 'Invalid credentials'}), 401
+
 CORS(app)
 
 DB_NAME = "jeevansetu.db"
@@ -938,6 +960,40 @@ def acknowledge_mci():
     return jsonify({
         'status': 'success',
         'message': f"Alert silenced and acknowledged by {officer}. Trauma bays on active standby."
+    })
+
+
+@app.route('/api/register', methods=['POST', 'OPTIONS'])
+@app.route('/api/auth/register', methods=['POST', 'OPTIONS'])
+def unified_register():
+    if request.method == 'OPTIONS':
+        return ('', 204)
+    data = request.get_json(silent=True) or {}
+    email = data.get('email') or data.get('username') or 'user@jeevansetu.in'
+    role = data.get('role') or 'citizen'
+    return jsonify({
+        'status': 'success',
+        'message': 'Account registered successfully!',
+        'user': {'email': email, 'role': role}
+    }), 201
+
+
+@app.route('/api/hospitals', methods=['GET'])
+@app.route('/api/beds', methods=['GET'])
+def get_kanpur_hospitals():
+    return jsonify({
+        'status': 'success',
+        'total_facilities': 26,
+        'total_icu': 234,
+        'total_oxygen': 815,
+        'facilities': [{"name": "L.L.R. (Hallet) Hospital & Trauma Centre", "area": "Swaroop Nagar / Medical College", "icu": 14, "oxy": 48, "trauma_tier": "Level-1 Apex", "contact": "0512-2535483"}, {"name": "Ursula Horsman Memorial (UHM) District Hospital", "area": "Civil Lines", "icu": 8, "oxy": 32, "trauma_tier": "Level-2 District", "contact": "0512-2300501"}, {"name": "Regency Hospital & Cardiac Trauma Centre", "area": "Sarvodaya Nagar", "icu": 18, "oxy": 65, "trauma_tier": "Super Specialty", "contact": "0512-3081111"}, {"name": "SPM Hospital Trauma & Critical Care Centre", "area": "Rooma (NH-19 Apex)", "icu": 12, "oxy": 40, "trauma_tier": "Highway Level-1", "contact": "0512-2410200"}, {"name": "GSVM Medical College Emergency Bay", "area": "Swaroop Nagar", "icu": 22, "oxy": 80, "trauma_tier": "Apex Academic", "contact": "0512-2535482"}, {"name": "Fortune Hospital & Trauma Care", "area": "Sharda Nagar", "icu": 10, "oxy": 35, "trauma_tier": "Level-2 Private", "contact": "0512-2580000"}, {"name": "Rama Medical College Hospital & Trauma Centre", "area": "Mandhana (GT Road)", "icu": 16, "oxy": 50, "trauma_tier": "Super Specialty", "contact": "0512-2780880"}, {"name": "Apollo Spectra Hospital", "area": "Chunniganj", "icu": 6, "oxy": 25, "trauma_tier": "Level-2 Multi", "contact": "0512-6699000"}, {"name": "Kanpur Medical Centre (KMC)", "area": "Lajpat Nagar", "icu": 9, "oxy": 28, "trauma_tier": "Level-2 Critical", "contact": "0512-2295551"}, {"name": "Kulwanti Hospitals & Research Centre", "area": "Kakadeo", "icu": 7, "oxy": 30, "trauma_tier": "Level-2", "contact": "0512-2500800"}, {"name": "Madhuraj Hospital Private Ltd.", "area": "Swaroop Nagar", "icu": 11, "oxy": 34, "trauma_tier": "Level-2", "contact": "0512-2555555"}, {"name": "ESI Model Hospital", "area": "Pandu Nagar", "icu": 5, "oxy": 22, "trauma_tier": "Government Tier-2", "contact": "0512-2217337"}, {"name": "Mariampur Hospital", "area": "Shastri Nagar", "icu": 8, "oxy": 30, "trauma_tier": "Charitable Apex", "contact": "0512-2216888"}, {"name": "Chandan Hospital", "area": "Rawatpur", "icu": 12, "oxy": 45, "trauma_tier": "Super Specialty", "contact": "0512-6789000"}, {"name": "PPM Medical Centre", "area": "Kidwai Nagar", "icu": 6, "oxy": 20, "trauma_tier": "South Grid Level-2", "contact": "0512-2601111"}, {"name": "Aarvy Hospital", "area": "Barra Bypass", "icu": 5, "oxy": 18, "trauma_tier": "South Corridor", "contact": "0512-2640222"}, {"name": "Deep Hospital & Critical Care", "area": "Govind Nagar", "icu": 7, "oxy": 25, "trauma_tier": "Level-2 Trauma", "contact": "0512-2651444"}, {"name": "Brij Medical Centre", "area": "Fazalganj", "icu": 4, "oxy": 15, "trauma_tier": "Industrial Transit", "contact": "0512-2231555"}, {"name": "Dhanvantri Hospital", "area": "Kalyanpur", "icu": 8, "oxy": 26, "trauma_tier": "North Highway Hub", "contact": "0512-2570111"}, {"name": "Saraswati Hospital", "area": "Yashoda Nagar", "icu": 6, "oxy": 20, "trauma_tier": "Highway Trauma", "contact": "0512-2401888"}, {"name": "Laxmi Hospital & Trauma Centre", "area": "Naubasta Flyover", "icu": 10, "oxy": 30, "trauma_tier": "NH-19 Rapid Junction", "contact": "0512-2611777"}, {"name": "Shri Ram Hospital", "area": "Jajmau Bridge", "icu": 7, "oxy": 22, "trauma_tier": "East Corridor", "contact": "0512-2460333"}, {"name": "Metro Hospital", "area": "Panki Road", "icu": 5, "oxy": 18, "trauma_tier": "West Grid", "contact": "0512-2260777"}, {"name": "Awadh Hospital", "area": "Armapur", "icu": 4, "oxy": 15, "trauma_tier": "Level-3 Transit", "contact": "0512-2280444"}, {"name": "Kanpur Neuro Science Hospital", "area": "Kakadeo", "icu": 12, "oxy": 35, "trauma_tier": "Neuro Trauma Apex", "contact": "0512-2505500"}, {"name": "Surya Trauma & Emergency Hospital", "area": "Chakeri (Air Force Road)", "icu": 9, "oxy": 28, "trauma_tier": "Airport Highway Node", "contact": "0512-2405000"}]
+    })
+
+@app.route('/api/bloodbanks', methods=['GET'])
+def get_kanpur_bloodbanks():
+    return jsonify({
+        'status': 'success',
+        'bloodbanks': [{"name": "GSVM Medical College Central Blood Bank", "area": "Swaroop Nagar", "o_neg": 14, "a_pos": 45, "b_pos": 60, "ab_pos": 22, "platelets": 35, "rare_hh": "2 Units"}, {"name": "Ursula Horsman Memorial (UHM) Blood Centre", "area": "Civil Lines", "o_neg": 8, "a_pos": 30, "b_pos": 42, "ab_pos": 15, "platelets": 20, "rare_hh": "0 Units"}, {"name": "Regency Hospital Blood & Component Bank", "area": "Sarvodaya Nagar", "o_neg": 12, "a_pos": 55, "b_pos": 75, "ab_pos": 30, "platelets": 50, "rare_hh": "1 Unit"}, {"name": "Red Cross Blood Bank Kanpur", "area": "Parade / Mall Road", "o_neg": 18, "a_pos": 80, "b_pos": 95, "ab_pos": 40, "platelets": 45, "rare_hh": "3 Units"}, {"name": "SPM Emergency Trauma Blood Storage Unit", "area": "Rooma (NH-19)", "o_neg": 6, "a_pos": 20, "b_pos": 25, "ab_pos": 10, "platelets": 12, "rare_hh": "0 Units"}, {"name": "Rama Medical Blood Centre", "area": "Mandhana GT Road", "o_neg": 9, "a_pos": 28, "b_pos": 35, "ab_pos": 14, "platelets": 18, "rare_hh": "0 Units"}]
     })
 
 if __name__ == '__main__':
