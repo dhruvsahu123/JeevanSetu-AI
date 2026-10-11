@@ -1063,5 +1063,22 @@ def list_v2_conditions():
     data = db_service.fetch_conditions(search_query=q if q else None, category=cat if cat else None, page=page, limit=limit)
     return jsonify({"status": "success", "data": data})
 
+
+# Auto-seed in production environment if database is unpopulated
+try:
+    import db_service
+    stats = db_service.get_dashboard_summary()
+    if stats.get('total_facilities', 0) == 0:
+        print("[BOOT] Unpopulated database detected. Running idempotent synthetic seeder...")
+        import seed_synthetic_data
+        conn = seed_synthetic_data.get_connection()
+        seed_synthetic_data.run_migrations(conn)
+        seed_synthetic_data.init_schema(conn)
+        seed_synthetic_data.seed_all(conn)
+        conn.close()
+        print("[BOOT] Synthetic database auto-provisioned successfully.")
+except Exception as e:
+    print(f"[BOOT WARNING] Auto-seed check bypassed: {e}")
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
