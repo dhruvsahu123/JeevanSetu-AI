@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .env
 .vscode/
+
+database.db
+database.db.backup_*
+*.pyc
+__pycache__/

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeevanSetu AI | 1,000+ Clinical Emergency Protocols</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #070D18; color: #F8FAFC; font-family: system-ui, sans-serif; margin: 0; padding: 25px; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 15px; margin-bottom: 25px; }
+    .controls { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+    .search-box { flex: 1; min-width: 300px; padding: 14px 18px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: #FFF; font-size: 16px; }
+    .cat-select { padding: 14px 18px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: #FFF; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+    .card { background: #0D1626; border: 1px solid #1E293B; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-title { font-size: 17px; font-weight: 700; color: #38BDF8; margin: 0 0 8px 0; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #1E293B; color: #94A3B8; margin-bottom: 12px; }
+    .badge-demo { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B; margin-left: 6px; }
+    .dos { background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10B981; padding: 10px 12px; border-radius: 4px; margin-bottom: 10px; }
+    .donts { background: rgba(239, 68, 68, 0.08); border-left: 3px solid #EF4444; padding: 10px 12px; border-radius: 4px; margin-bottom: 15px; }
+    .section-h { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+    .dos .section-h { color: #34D399; }
+    .donts .section-h { color: #F87171; }
+    ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; color: #CBD5E1; }
+    .btn-sos { background: #DC2626; color: #FFF; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 13px; }
+    .btn-sos:hover { background: #B91C1C; }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div>
+      <h1 style="margin:0; font-size:24px;">🩺 JeevanSetu 1,000+ Clinical Emergency Protocols</h1>
+      <p style="margin:5px 0 0 0; color:#94A3B8; font-size:14px;">Evidence-based 4 DOs & 4 DON'Ts with Rapid 1-Click SOS Dispatch</p>
+    </div>
+    <a href="/index.html" style="color:#38BDF8; text-decoration:none; font-weight:600;">&larr; Back to Portal</a>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchQuery" class="search-box" placeholder="🔍 Search symptom or trauma (e.g., Headache, Trauma, Chest Pain, Burn, Stroke)..." oninput="onSearchInput()">
+    <select id="categorySelect" class="cat-select" onchange="loadConditions(1)">
+      <option value="">All Clinical Departments</option>
+      <option value="Trauma & Resuscitation">Trauma & Resuscitation</option>
+      <option value="Cardiovascular Crisis">Cardiovascular Crisis</option>
+      <option value="Neurotrauma & CVA">Neurotrauma & CVA</option>
+      <option value="Thermal & Chemical Burns">Thermal & Chemical Burns</option>
+      <option value="Toxicology & Envenomation">Toxicology & Envenomation</option>
+      <option value="Pediatric Resuscitation">Pediatric Resuscitation</option>
+    </select>
+  </div>
+
+  <div class="grid" id="registryGrid">
+    <div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94A3B8;">Loading emergency protocol index...</div>
+  </div>
+
+  <script>
+    var searchTimeout = null;
+    var fallbackProtocols = [
+      {
+        name: "Thunderclap Headache / Subarachnoid Hemorrhage (SAH)",
+        category: "Neurology Emergency",
+        severity: "Tier-1 Critical",
+        is_demo: true,
+        dos: ["Perform urgent non-contrast head CT within 6 hours.", "Assess pupillary symmetry, cranial nerves, and nuchal rigidity.", "Maintain systolic blood pressure < 140 mmHg.", "Keep patient in quiet, low-stimulus trauma bed."],
+        donts: ["Do NOT misdiagnose sudden explosive headache as simple migraine.", "Do NOT administer NSAIDs or antiplatelets before ruling out intracranial bleed.", "Do NOT perform lumbar puncture without prior neuroimaging.", "Do NOT allow patient exertion or Valsalva maneuvers."]
+      },
+      {
+        name: "Acute ST-Elevation Myocardial Infarction (STEMI)",
+        category: "Cardiovascular Crisis",
+        severity: "Tier-1 Critical",
+        is_demo: true,
+        dos: ["Administer 325 mg chewable aspirin immediately.", "Obtain 12-lead ECG within 10 minutes of arrival.", "Transmit ECG telemetry directly to cath lab team.", "Administer sublingual nitroglycerin if SBP > 100 mmHg."],
+        donts: ["Do NOT permit patient physical exertion or unmonitored ambulation.", "Do NOT give nitrates in suspected right ventricular infarction.", "Do NOT delay catheterization lab activation for cardiac enzymes.", "Do NOT overlook atypical presentations such as isolated diaphoresis."]
+      }
+    ];
+
+    function loadConditions(page) {
+      var q = document.getElementById('searchQuery').value.trim();
+      var cat = document.getElementById('categorySelect').value;
+      var url = '/api/v2/conditions?page=' + (page || 1) + '&limit=24&q=' + encodeURIComponent(q) + '&category=' + encodeURIComponent(cat);
+
+      fetch(url)
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if(data.status === 'success' && data.data.items && data.data.items.length > 0) {
+            renderGrid(data.data.items);
+          } else if(q.toLowerCase().includes('head') || q.toLowerCase().includes('chest')) {
+            var filtered = fallbackProtocols.filter(function(p){ return p.name.toLowerCase().includes(q.toLowerCase()); });
+            renderGrid(filtered);
+          } else {
+            renderGrid([]);
+          }
+        }).catch(function(err){
+          var filtered = fallbackProtocols.filter(function(p){
+            return !q || p.name.toLowerCase().includes(q.toLowerCase());
+          });
+          renderGrid(filtered);
+        });
+    }
+
+    function renderGrid(items) {
+      var container = document.getElementById('registryGrid');
+      if(!items || items.length === 0) {
+        container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94A3B8;">No clinical protocols matching your query.</div>';
+        return;
+      }
+      container.innerHTML = items.map(function(item){
+        var demo = item.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
+        return '<div class="card">' +
+          '<div>' +
+            '<span class="badge">' + item.category + ' (' + item.severity + ')</span>' + demo +
+            '<h3 class="card-title">' + item.name + '</h3>' +
+            '<div class="dos"><div class="section-h">✅ 4 Crucial DOs</div><ul>' +
+              item.dos.map(function(d){ return '<li>' + d + '</li>'; }).join('') +
+            '</ul></div>' +
+            '<div class="donts"><div class="section-h">❌ 4 Strict DON\'Ts</div><ul>' +
+              item.donts.map(function(d){ return '<li>' + d + '</li>'; }).join('') +
+            '</ul></div>' +
+          '</div>' +
+          '<a href="/index.html?trigger_sos=' + encodeURIComponent(item.name) + '" class="btn-sos">🚨 1-CLICK EMERGENCY SOS FOR THIS CONDITION</a>' +
+        '</div>';
+      }).join('');
+    }
+
+    function onSearchInput() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(function(){ loadConditions(1); }, 300);
+    }
+
+    loadConditions(1);
+  </script>
+</body>
+</html>
