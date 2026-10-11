@@ -1,3 +1,4 @@
+import db_service
 ﻿
 
 import os
@@ -995,6 +996,40 @@ def get_kanpur_bloodbanks():
         'status': 'success',
         'bloodbanks': [{"name": "GSVM Medical College Central Blood Bank", "area": "Swaroop Nagar", "o_neg": 14, "a_pos": 45, "b_pos": 60, "ab_pos": 22, "platelets": 35, "rare_hh": "2 Units"}, {"name": "Ursula Horsman Memorial (UHM) Blood Centre", "area": "Civil Lines", "o_neg": 8, "a_pos": 30, "b_pos": 42, "ab_pos": 15, "platelets": 20, "rare_hh": "0 Units"}, {"name": "Regency Hospital Blood & Component Bank", "area": "Sarvodaya Nagar", "o_neg": 12, "a_pos": 55, "b_pos": 75, "ab_pos": 30, "platelets": 50, "rare_hh": "1 Unit"}, {"name": "Red Cross Blood Bank Kanpur", "area": "Parade / Mall Road", "o_neg": 18, "a_pos": 80, "b_pos": 95, "ab_pos": 40, "platelets": 45, "rare_hh": "3 Units"}, {"name": "SPM Emergency Trauma Blood Storage Unit", "area": "Rooma (NH-19)", "o_neg": 6, "a_pos": 20, "b_pos": 25, "ab_pos": 10, "platelets": 12, "rare_hh": "0 Units"}, {"name": "Rama Medical Blood Centre", "area": "Mandhana GT Road", "o_neg": 9, "a_pos": 28, "b_pos": 35, "ab_pos": 14, "platelets": 18, "rare_hh": "0 Units"}]
     })
+
+
+# ===================================================
+# DYNAMIC DATABASE & SYNTHETIC DATA REST ENDPOINTS
+# ===================================================
+
+@app.route('/api/stats/dashboard', methods=['GET'])
+def api_dashboard_stats():
+    stats = db_service.get_dashboard_stats()
+    return jsonify({'status': 'success', 'data': stats})
+
+@app.route('/api/v2/hospitals', methods=['GET'])
+def api_v2_hospitals():
+    q = request.args.get('q', '').strip()
+    tier = request.args.get('tier', '').strip()
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 25))
+    data = db_service.get_hospitals_data(q=q if q else None, tier=tier if tier else None, page=page, limit=limit)
+    return jsonify({'status': 'success', 'data': data})
+
+@app.route('/api/v2/bloodbanks', methods=['GET'])
+def api_v2_bloodbanks():
+    q = request.args.get('q', '').strip()
+    data = db_service.get_blood_banks_data(q=q if q else None)
+    return jsonify({'status': 'success', 'data': data})
+
+@app.route('/api/v2/conditions', methods=['GET'])
+def api_v2_conditions():
+    q = request.args.get('q', '').strip()
+    cat = request.args.get('category', '').strip()
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 30))
+    data = db_service.get_conditions_data(q=q if q else None, category=cat if cat else None, page=page, limit=limit)
+    return jsonify({'status': 'success', 'data': data})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
