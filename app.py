@@ -1029,5 +1029,39 @@ def api_v2_conditions():
     data = db_service.get_conditions_data(q=q if q else None, category=cat if cat else None, page=page, limit=limit)
     return jsonify({'status': 'success', 'data': data})
 
+
+# ==========================================
+# STEP B: SYNTHETIC DATA REST APIS
+# ==========================================
+
+@app.route('/api/stats/dashboard', methods=['GET'])
+def get_dashboard_telemetry():
+    return jsonify({"status": "success", "data": db_service.get_dashboard_summary()})
+
+@app.route('/api/v2/hospitals', methods=['GET'])
+def list_v2_hospitals():
+    q = request.args.get('q', '').strip()
+    tier = request.args.get('tier', '').strip()
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 15))
+    demo_only = request.args.get('demo', '').lower() == 'true'
+    data = db_service.fetch_hospitals(search_query=q if q else None, tier_filter=tier if tier else None, page=page, limit=limit, demo_only=demo_only)
+    return jsonify({"status": "success", "data": data})
+
+@app.route('/api/v2/bloodbanks', methods=['GET'])
+def list_v2_bloodbanks():
+    q = request.args.get('q', '').strip()
+    data = db_service.fetch_blood_banks(search_query=q if q else None)
+    return jsonify({"status": "success", "data": data})
+
+@app.route('/api/v2/conditions', methods=['GET'])
+def list_v2_conditions():
+    q = request.args.get('q', '').strip()
+    cat = request.args.get('category', '').strip()
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 24))
+    data = db_service.fetch_conditions(search_query=q if q else None, category=cat if cat else None, page=page, limit=limit)
+    return jsonify({"status": "success", "data": data})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

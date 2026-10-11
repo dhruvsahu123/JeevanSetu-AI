@@ -500,6 +500,30 @@ function openDosDonts() {
           });
         </script>
         
+
+    <script>
+      function dismissPass() {
+        var modal = document.getElementById('passModal') || document.querySelector('.modal, [style*="position: fixed"], [style*="position:fixed"]');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+        var overlays = document.querySelectorAll('div');
+        overlays.forEach(function(el) {
+          if (el.innerText.includes('ABDM EMERGENCY PASS') && el.style.position === 'fixed') {
+            el.style.display = 'none';
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('button').forEach(function(btn) {
+          if (btn.innerText.trim().toLowerCase() === 'close') {
+            btn.onclick = dismissPass;
+            btn.style.cursor = 'pointer';
+          }
+        });
+      });
+    </script>
+    
 </body>
 
 </html>

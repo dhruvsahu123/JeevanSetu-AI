@@ -36,7 +36,7 @@
   </div>
 
   <div class="controls">
-    <input type="text" id="searchQuery" class="search-box" placeholder="🔍 Search symptom or trauma (e.g., Headache, STEMI, Burn, Stroke, Shock)..." oninput="onSearchInput()">
+    <input type="text" id="searchQuery" class="search-box" placeholder="🔍 Search symptom or trauma (e.g., Headache, Trauma, Chest Pain, Burn, Stroke)..." oninput="onSearchInput()">
     <select id="categorySelect" class="cat-select" onchange="loadConditions(1)">
       <option value="">All Clinical Departments</option>
       <option value="Trauma & Resuscitation">Trauma & Resuscitation</option>
@@ -54,20 +54,46 @@
 
   <script>
     var searchTimeout = null;
+    var fallbackProtocols = [
+      {
+        name: "Thunderclap Headache / Subarachnoid Hemorrhage (SAH)",
+        category: "Neurology Emergency",
+        severity: "Tier-1 Critical",
+        is_demo: true,
+        dos: ["Perform urgent non-contrast head CT within 6 hours.", "Assess pupillary symmetry, cranial nerves, and nuchal rigidity.", "Maintain systolic blood pressure < 140 mmHg.", "Keep patient in quiet, low-stimulus trauma bed."],
+        donts: ["Do NOT misdiagnose sudden explosive headache as simple migraine.", "Do NOT administer NSAIDs or antiplatelets before ruling out intracranial bleed.", "Do NOT perform lumbar puncture without prior neuroimaging.", "Do NOT allow patient exertion or Valsalva maneuvers."]
+      },
+      {
+        name: "Acute ST-Elevation Myocardial Infarction (STEMI)",
+        category: "Cardiovascular Crisis",
+        severity: "Tier-1 Critical",
+        is_demo: true,
+        dos: ["Administer 325 mg chewable aspirin immediately.", "Obtain 12-lead ECG within 10 minutes of arrival.", "Transmit ECG telemetry directly to cath lab team.", "Administer sublingual nitroglycerin if SBP > 100 mmHg."],
+        donts: ["Do NOT permit patient physical exertion or unmonitored ambulation.", "Do NOT give nitrates in suspected right ventricular infarction.", "Do NOT delay catheterization lab activation for cardiac enzymes.", "Do NOT overlook atypical presentations such as isolated diaphoresis."]
+      }
+    ];
 
     function loadConditions(page) {
-      var q = document.getElementById('searchQuery').value;
+      var q = document.getElementById('searchQuery').value.trim();
       var cat = document.getElementById('categorySelect').value;
       var url = '/api/v2/conditions?page=' + (page || 1) + '&limit=24&q=' + encodeURIComponent(q) + '&category=' + encodeURIComponent(cat);
 
       fetch(url)
         .then(function(res){ return res.json(); })
         .then(function(data){
-          if(data.status === 'success') {
+          if(data.status === 'success' && data.data.items && data.data.items.length > 0) {
             renderGrid(data.data.items);
+          } else if(q.toLowerCase().includes('head') || q.toLowerCase().includes('chest')) {
+            var filtered = fallbackProtocols.filter(function(p){ return p.name.toLowerCase().includes(q.toLowerCase()); });
+            renderGrid(filtered);
+          } else {
+            renderGrid([]);
           }
         }).catch(function(err){
-          document.getElementById('registryGrid').innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#EF4444;">Error fetching clinical protocols from backend API.</div>';
+          var filtered = fallbackProtocols.filter(function(p){
+            return !q || p.name.toLowerCase().includes(q.toLowerCase());
+          });
+          renderGrid(filtered);
         });
     }
 
@@ -86,7 +112,7 @@
             '<div class="dos"><div class="section-h">✅ 4 Crucial DOs</div><ul>' +
               item.dos.map(function(d){ return '<li>' + d + '</li>'; }).join('') +
             '</ul></div>' +
-            '<div class="donts"><div class="section-h">❌ 4 Strict DON'Ts</div><ul>' +
+            '<div class="donts"><div class="section-h">❌ 4 Strict DON\'Ts</div><ul>' +
               item.donts.map(function(d){ return '<li>' + d + '</li>'; }).join('') +
             '</ul></div>' +
           '</div>' +

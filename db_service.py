@@ -1,87 +1,116 @@
-import sqlite3
+﻿import sqlite3
+import os
 import json
 
-DB_FILE = "database.db"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DB_FILE = os.path.join(BASE_DIR, "database.db")
 
-def query_db(query, args=(), one=False):
+def get_db():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    try:
-        cur.execute(query, args)
-        r = cur.fetchall()
-        return (r[0] if r else None) if one else r
-    except Exception as e:
-        print(f"[DB ERROR] {e}")
-        return [] if not one else None
-    finally:
-        conn.close()
+    return conn
 
-def get_hospitals_data(q=None, tier=None, page=1, limit=25):
+def get_dashboard_summary():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM hospitals")
+    hosp_cnt = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM hospital_beds WHERE bed_type LIKE '%ICU%' AND status = 'Available'")
+    icu_cnt = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM hospital_beds WHERE bed_type LIKE '%Oxygen%' AND status = 'Available'")
+    oxy_cnt = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM ambulances WHERE current_status != 'Maintenance'")
+    amb_cnt = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM clinical_conditions")
+    cond_cnt = c.fetchone()[0]
+    conn.close()
+    return {
+        "total_facilities": hosp_cnt,
+        "available_icu_beds": icu_cnt,
+        "available_oxygen_beds": oxy_cnt,
+        "active_ambulances": amb_cnt,
+        "indexed_protocols": cond_cnt,
+        "data_mode": "SYNTHETIC_HYBRID"
+    }
+
+get_dashboard_stats = get_dashboard_summary
+
+def fetch_hospitals(search_query=None, tier_filter=None, page=1, limit=15, demo_only=False, q=None, tier=None):
+    search_query = q if q is not None else search_query
+    tier_filter = tier if tier is not None else tier_filter
+    
     offset = (page - 1) * limit
+    conn = get_db()
+    c = conn.cursor()
+    where = ["1=1"]
     params = []
-    where_clauses = ["1=1"]
     
-    if q:
-        where_clauses.append("(h.name LIKE ? OR h.locality LIKE ? OR h.zone LIKE ?)")
-        term = f"%{q}%"
+    if demo_only:
+        where.append("h.is_demo = 1")
+    if search_query:
+        where.append("(h.name LIKE ? OR h.locality LIKE ? OR h.zone LIKE ?)")
+        term = f"%{search_query}%"
         params.extend([term, term, term])
-    if tier:
-        where_clauses.append("h.trauma_tier = ?")
-        params.append(tier)
+    if tier_filter:
+        where.append("h.trauma_tier = ?")
+        params.append(tier_filter)
         
-    where_sql = " AND ".join(where_clauses)
-    
-    count_sql = f"SELECT COUNT(*) as count FROM hospitals h WHERE {where_sql}"
-    total_row = query_db(count_sql, params, one=True)
-    total_count = total_row["count"] if total_row else 0
+    where_sql = " AND ".join(where)
+    c.execute(f"SELECT COUNT(*) FROM hospitals h WHERE {where_sql}", params)
+    total_count = c.fetchone()[0]
     
     sql = f"""
     SELECT h.hospital_uid, h.name, h.locality, h.zone, h.trauma_tier, h.contact_phone, h.is_demo, h.data_source,
-           COALESCE(SUM(CASE WHEN b.bed_type LIKE '%ICU%' AND b.status = 'Available' THEN 1 ELSE 0 END), 0) AS icu_available,
-           COALESCE(SUM(CASE WHEN b.bed_type LIKE '%Oxygen%' AND b.status = 'Available' THEN 1 ELSE 0 END), 0) AS oxy_available
+           COALESCE(SUM(CASE WHEN b.bed_type LIKE '%ICU%' AND b.status = 'Available' THEN 1 ELSE 0 END), 0) AS icu_count,
+           COALESCE(SUM(CASE WHEN b.bed_type LIKE '%Oxygen%' AND b.status = 'Available' THEN 1 ELSE 0 END), 0) AS oxy_count
     FROM hospitals h
     LEFT JOIN hospital_beds b ON h.hospital_uid = b.hospital_uid
     WHERE {where_sql}
     GROUP BY h.hospital_uid
+    ORDER BY h.id ASC
     LIMIT ? OFFSET ?
     """
     params.extend([limit, offset])
-    rows = query_db(sql, params)
+    c.execute(sql, params)
+    rows = c.fetchall()
     
-    results = []
+    items = []
     for r in rows:
-        results.append({
+        items.append({
             "uid": r["hospital_uid"],
             "name": r["name"],
             "area": f"{r['locality']} ({r['zone']})",
             "trauma_tier": r["trauma_tier"],
-            "icu": r["icu_available"],
-            "oxy": r["oxy_available"],
+            "icu": r["icu_count"],
+            "oxy": r["oxy_count"],
             "contact": r["contact_phone"],
             "is_demo": bool(r["is_demo"]),
             "data_source": r["data_source"]
         })
-    return {"total": total_count, "page": page, "limit": limit, "items": results}
+    conn.close()
+    return {"total": total_count, "page": page, "limit": limit, "items": items}
 
-def get_blood_banks_data(q=None):
-    where_clauses = ["1=1"]
+get_hospitals_data = fetch_hospitals
+
+def fetch_blood_banks(search_query=None, q=None):
+    search_query = q if q is not None else search_query
+    conn = get_db()
+    c = conn.cursor()
+    where = "1=1"
     params = []
-    if q:
-        where_clauses.append("(name LIKE ? OR locality LIKE ? OR zone LIKE ?)")
-        term = f"%{q}%"
-        params.extend([term, term, term])
+    if search_query:
+        where = "(name LIKE ? OR locality LIKE ? OR zone LIKE ?)"
+        term = f"%{search_query}%"
+        params = [term, term, term]
         
-    where_sql = " AND ".join(where_clauses)
-    sql = f"SELECT bank_uid, name, locality, zone, contact_phone, is_demo, data_source FROM blood_banks WHERE {where_sql} LIMIT 50"
-    banks = query_db(sql, params)
-    
+    c.execute(f"SELECT bank_uid, name, locality, zone, contact_phone, is_demo, data_source FROM blood_banks WHERE {where} LIMIT 50", params)
+    banks = c.fetchall()
     results = []
     for b in banks:
-        stock_rows = query_db("SELECT blood_group, component_type, units_available FROM blood_stock WHERE bank_uid = ?", [b["bank_uid"]])
-        o_neg = sum(s["units_available"] for s in stock_rows if s["blood_group"] == "O-")
-        platelets = sum(s["units_available"] for s in stock_rows if "Platelets" in s["component_type"] or "SDP" in s["component_type"])
-        
+        c.execute("SELECT blood_group, units_available FROM blood_stock WHERE bank_uid = ?", (b["bank_uid"],))
+        stocks = c.fetchall()
+        o_neg = sum(s["units_available"] for s in stocks if s["blood_group"] == "O-")
+        platelets = sum(s["units_available"] for s in stocks if s["blood_group"] in ["O+", "A+", "B+"]) // 2
         results.append({
             "uid": b["bank_uid"],
             "name": b["name"],
@@ -92,27 +121,40 @@ def get_blood_banks_data(q=None):
             "is_demo": bool(b["is_demo"]),
             "data_source": b["data_source"]
         })
+    conn.close()
     return results
 
-def get_conditions_data(q=None, category=None, page=1, limit=30):
+get_blood_banks_data = fetch_blood_banks
+
+def fetch_conditions(search_query=None, category=None, page=1, limit=24, q=None, cat=None):
+    search_query = q if q is not None else search_query
+    category = cat if cat is not None else category
+    
+    conn = get_db()
+    c = conn.cursor()
     offset = (page - 1) * limit
+    where = ["1=1"]
     params = []
-    where_clauses = ["1=1"]
-    if q:
-        where_clauses.append("(name LIKE ? OR category LIKE ?)")
-        term = f"%{q}%"
+    if search_query:
+        where.append("(name LIKE ? OR category LIKE ?)")
+        term = f"%{search_query}%"
         params.extend([term, term])
     if category:
-        where_clauses.append("category = ?")
+        where.append("category = ?")
         params.append(category)
         
-    where_sql = " AND ".join(where_clauses)
-    total_row = query_db(f"SELECT COUNT(*) as count FROM clinical_conditions WHERE {where_sql}", params, one=True)
-    total_count = total_row["count"] if total_row else 0
+    where_sql = " AND ".join(where)
+    c.execute(f"SELECT COUNT(*) FROM clinical_conditions WHERE {where_sql}", params)
+    total_count = c.fetchone()[0]
     
-    sql = f"SELECT condition_code, name, category, severity_grade, dos_json, donts_json, is_demo, data_source FROM clinical_conditions WHERE {where_sql} LIMIT ? OFFSET ?"
-    params.extend([limit, offset])
-    rows = query_db(sql, params)
+    c.execute(f"""
+        SELECT condition_code, name, category, severity_grade, dos_json, donts_json, is_demo, data_source
+        FROM clinical_conditions
+        WHERE {where_sql}
+        ORDER BY id ASC
+        LIMIT ? OFFSET ?
+    """, params + [limit, offset])
+    rows = c.fetchall()
     
     items = []
     for r in rows:
@@ -126,20 +168,26 @@ def get_conditions_data(q=None, category=None, page=1, limit=30):
             "is_demo": bool(r["is_demo"]),
             "data_source": r["data_source"]
         })
+    conn.close()
     return {"total": total_count, "page": page, "limit": limit, "items": items}
 
-def get_dashboard_stats():
-    hosp_cnt = query_db("SELECT COUNT(*) as cnt FROM hospitals", one=True)["cnt"]
-    bed_icu = query_db("SELECT COUNT(*) as cnt FROM hospital_beds WHERE bed_type LIKE '%ICU%' AND status = 'Available'", one=True)["cnt"]
-    bed_oxy = query_db("SELECT COUNT(*) as cnt FROM hospital_beds WHERE bed_type LIKE '%Oxygen%' AND status = 'Available'", one=True)["cnt"]
-    amb_cnt = query_db("SELECT COUNT(*) as cnt FROM ambulances WHERE current_status != 'Maintenance'", one=True)["cnt"]
-    cond_cnt = query_db("SELECT COUNT(*) as cnt FROM clinical_conditions", one=True)["cnt"]
-    
-    return {
-        "total_facilities": hosp_cnt,
-        "available_icu_beds": bed_icu,
-        "available_oxygen_beds": bed_oxy,
-        "active_ambulances": amb_cnt,
-        "indexed_protocols": cond_cnt,
-        "data_mode": "SYNTHETIC_HYBRID"
-    }
+get_conditions_data = fetch_conditions
+
+def fetch_treatment_pricing(search_query=None, dept=None):
+    conn = get_db()
+    c = conn.cursor()
+    where = ["1=1"]
+    params = []
+    if search_query:
+        where.append("(procedure_name LIKE ? OR pmjay_package_code LIKE ?)")
+        term = f"%{search_query}%"
+        params.extend([term, term])
+    if dept:
+        where.append("clinical_department = ?")
+        params.append(dept)
+    where_sql = " AND ".join(where)
+    c.execute(f"SELECT * FROM treatment_pricing WHERE {where_sql} LIMIT 100", params)
+    rows = c.fetchall()
+    items = [dict(r) for r in rows]
+    conn.close()
+    return items
