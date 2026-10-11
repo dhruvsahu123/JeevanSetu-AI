@@ -1,6 +1,4 @@
 import db_service
-﻿
-
 import os
 import time
 import sqlite3
