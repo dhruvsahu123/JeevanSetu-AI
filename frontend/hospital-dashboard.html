@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Admin Console | JeevanSetu AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0b0f19; color: #f8fafc; min-height: 100vh; padding: 30px 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #131b2e; border: 1px solid #1e293b; border-radius: 12px; padding: 28px; }
+    h2 { font-size: 22px; margin-bottom: 6px; color: #38bdf8; }
+    p { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; }
+    input { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 14px; outline: none; }
+    input:focus { border-color: #38bdf8; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .btn-submit { width: 100%; padding: 12px; background: #0284c7; border: none; border-radius: 6px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .btn-submit:hover { background: #0369a1; }
+    .msg { margin-top: 14px; font-size: 13px; text-align: center; }
+    .msg.success { color: #4ade80; }
+    .msg.error { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🏥 Hospital Inventory & Bed Management</h2>
+    <p>Logged in as: <span id="staffName" style="color: #fff; font-weight: 600;">Staff</span></p>
+
+    <form id="hospitalForm">
+      <div class="form-group">
+        <label for="hName">Hospital Name</label>
+        <input type="text" id="hName" placeholder="e.g., LLR Hospital (Hallet), Kanpur" required>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="icuBeds">Available ICU Beds</label>
+          <input type="number" id="icuBeds" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="oxyBeds">Available Oxygen Beds</label>
+          <input type="number" id="oxyBeds" min="0" placeholder="0" required>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="vents">Active Ventilators</label>
+          <input type="number" id="vents" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="contact">Emergency Contact No.</label>
+          <input type="text" id="contact" placeholder="+91 9876543210" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="address">Location / Address</label>
+        <input type="text" id="address" placeholder="e.g., Swaroop Nagar, Kanpur">
+      </div>
+
+      <button type="submit" id="saveBtn" class="btn-submit">Update Hospital Live Status</button>
+      <div id="statusMsg" class="msg"></div>
+    </form>
+  </div>
+
+  <script>
+    const userStr = localStorage.getItem('currentUser');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      document.getElementById('staffName').textContent = user.name + ` (${user.role})`;
+    }
+
+    document.getElementById('hospitalForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveBtn');
+      const statusMsg = document.getElementById('statusMsg');
+
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Updating...';
+
+      const payload = {
+        hospital_name: document.getElementById('hName').value.trim(),
+        icu_beds: parseInt(document.getElementById('icuBeds').value) || 0,
+        oxygen_beds: parseInt(document.getElementById('oxyBeds').value) || 0,
+        ventilators: parseInt(document.getElementById('vents').value) || 0,
+        contact: document.getElementById('contact').value.trim(),
+        address: document.getElementById('address').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/hospital/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          statusMsg.className = 'msg success';
+          statusMsg.innerText = '✅ ' + data.message;
+        } else {
+          statusMsg.className = 'msg error';
+          statusMsg.innerText = '❌ ' + (data.error || 'Failed to update');
+        }
+      } catch (err) {
+        statusMsg.className = 'msg error';
+        statusMsg.innerText = '❌ Network Error. Ensure app.py is running.';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Update Hospital Live Status';
+      }
+    });
+  </script>
+</body>
+</html>

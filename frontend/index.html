@@ -255,7 +255,7 @@
       <a href="customer-dashboard.html">Citizen Vault</a>
       <a href="blood-banks.html">Blood Hub</a>
       <a href="medical-knowledge.html">Clinical Registry</a> <a href="#" onclick="openDosDonts(); return false;" style="color:#38BDF8; font-weight:600;">Do's & Don'ts</a> 
-      <a href="login.html" class="btn-login">Sign In</a>
+     <a href="/frontend/login.html" id="navAuthBtn" class="...">Sign In</a>
     </nav>
   </header>
 
@@ -522,8 +522,50 @@ function openDosDonts() {
           }
         });
       });
+
     </script>
-    
+    <script>
+  (function() {
+    const userStr = localStorage.getItem('currentUser');
+    const authBtn = document.getElementById('navAuthBtn');
+    if (userStr && authBtn) {
+      try {
+        const user = JSON.parse(userStr);
+        authBtn.textContent = user.name + ' (Logout)';
+        authBtn.href = 'javascript:void(0)';
+        authBtn.onclick = function() {
+          localStorage.removeItem('currentUser');
+          window.location.reload();
+        };
+      } catch(e) {}
+    }
+  })();
+</script>
+<script>
+  (function updateAuthUI() {
+    const userStr = localStorage.getItem('currentUser');
+    if (!userStr) return;
+
+    try {
+      const user = JSON.parse(userStr);
+      // Pure page par jahan bhi 'Sign In' likha button/link ho, use pakad kar replace karega
+      const links = document.querySelectorAll('a, button');
+      links.forEach(el => {
+        if (el.textContent.trim().toLowerCase() === 'sign in') {
+          el.textContent = `${user.name || 'User'} (Logout)`;
+          el.href = 'javascript:void(0)';
+          el.onclick = function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+          };
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+</script>
 </body>
 
 </html>
