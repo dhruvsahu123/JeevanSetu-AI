@@ -23,6 +23,7 @@ def get_db():
 # --- FRONTEND ROUTING ---
 @app.route('/')
 def home():
+    return send_from_directory('frontend', 'index.html')
     if os.path.exists("frontend/index.html"):
         return send_from_directory('frontend', 'index.html')
     if os.path.exists("index.html"):
