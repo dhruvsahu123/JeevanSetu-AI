@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | JeevanSetu AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .logo { font-size: 22px; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 8px; }
+    .btn-outline { padding: 6px 16px; border: 1px solid #cbd5e1; border-radius: 8px; text-decoration: none; color: #334155; font-size: 14px; font-weight: 600; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; width: 100%; max-width: 440px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    h2 { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 20px; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+    input:focus, select:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+    .btn-primary { width: 100%; padding: 12px; background: #0284c7; border: none; border-radius: 8px; color: #ffffff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+    .footer-text { text-align: center; font-size: 13px; color: #64748b; margin-top: 20px; }
+    .footer-text a { color: #0284c7; text-decoration: none; font-weight: 600; }
+    .status-msg { margin-top: 12px; font-size: 13px; text-align: center; display: none; }
+    .status-msg.error { color: #dc2626; display: block; }
+    .status-msg.success { color: #16a34a; display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">
+      <span>+</span> JeevanSetu <span style="font-size: 12px; color: #64748b; font-weight: 500;">AI Grid</span>
+    </div>
+    <a href="/frontend/login.html" class="btn-outline">Sign In</a>
+  </div>
+
+  <div class="card">
+    <h2>Create Account</h2>
+    
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="role">Register As</label>
+        <select id="role" required>
+          <option value="patient">Citizen / Patient</option>
+          <option value="hospital">Hospital Staff / Admin</option>
+          <option value="ambulance">Ambulance Driver</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" placeholder="Enter your full name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="name@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required minlength="4">
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn-primary">Create Account</button>
+      <div id="statusMsg" class="status-msg"></div>
+    </form>
+
+    <div class="footer-text">
+      Already have an account? <a href="/frontend/login.html">Sign In here</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const role = document.getElementById('role').value;
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Creating Account...';
+      statusMsg.className = 'status-msg';
+      statusMsg.innerText = '';
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            password: password,
+            role: role
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          statusMsg.className = 'status-msg success';
+          statusMsg.innerText = 'Account successfully created! Redirecting to login...';
+          setTimeout(() => {
+            window.location.href = '/frontend/login.html';
+          }, 1500);
+        } else {
+          statusMsg.className = 'status-msg error';
+          statusMsg.innerText = data.error || data.message || 'Registration failed. Try again.';
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Create Account';
+        }
+      } catch (err) {
+        console.error(err);
+        statusMsg.className = 'status-msg error';
+        statusMsg.innerText = 'Server unreachable. Ensure Python app.py is running.';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>
