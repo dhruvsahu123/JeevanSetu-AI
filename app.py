@@ -1,4 +1,28 @@
 ﻿import os
+from flask import Flask, send_from_directory, jsonify, request
+
+app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
+
+@app.route('/')
+def index():
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    file_path = os.path.join(FRONTEND_DIR, filename)
+    if os.path.exists(file_path):
+        return send_from_directory(FRONTEND_DIR, filename)
+    
+    for root, dirs, files in os.walk(FRONTEND_DIR):
+        if filename.split('/')[-1] in files:
+            return send_from_directory(root, filename.split('/')[-1])
+            
+    return send_from_directory(FRONTEND_DIR, '404.html'), 404
+
+import os
 import time
 import sqlite3
 from flask import Flask, jsonify, request, send_from_directory
