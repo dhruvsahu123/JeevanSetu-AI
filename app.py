@@ -258,3 +258,7 @@ def trigger_sos():
 if __name__ == '__main__':
     print("[SERVER] Starting JeevanSetu AI Backend on http://127.0.0.1:5000 ...")
     app.run(host='0.0.0.0', port=5000, debug=True)
+    # app = Flask(__name__) already define hoga file me.
+# Aakhri lines me ye ensure karein:
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
