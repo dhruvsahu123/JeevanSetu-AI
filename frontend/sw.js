@@ -1,18 +1,14 @@
 const CACHE_NAME = 'jeevansetu-v1';
 const ASSETS_TO_CACHE = [
-  './index.html',
-  './login.html',
-  './emergency-card.html',
-  './hospital-dashboard.html',
-  './ambulance-tracking.html',
-  './css/style.css',
-  './js/script.js',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+  '/',
+  '/index.html',
+  '/frontend/medical-knowledge.html',
+  '/frontend/ai-triage.html',
+  '/manifest.json'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
+self.addEventListener('install', (event) => {
+  event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
@@ -20,12 +16,12 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+        keys.map((k) => {
+          if (k !== CACHE_NAME) return caches.delete(k);
         })
       );
     })
@@ -33,10 +29,15 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    fetch(e.request).catch(() => {
-      return caches.match(e.request);
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request).catch(() => {
+        if (event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('/index.html');
+        }
+      });
     })
   );
 });

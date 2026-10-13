@@ -49,12 +49,8 @@ def serve_frontend_files(filename):
                 return send_from_directory(root, base_name)
 
     return jsonify({"error": "Page not found", "path": filename}), 404
-    frontend_dir = os.path.join(app.root_path, 'frontend')
-    if os.path.exists(os.path.join(frontend_dir, filename)):
-        return send_from_directory(frontend_dir, filename)
-    if os.path.exists(os.path.join(app.root_path, filename)):
-        return send_from_directory(app.root_path, filename)
-    return jsonify({"error": "File not found"}), 404
+   
+   
 
 # --- AUTH APIS ---
 @app.route('/api/login', methods=['POST', 'OPTIONS'])
