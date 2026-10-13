@@ -1,8 +1,9 @@
 ﻿import os
-from flask import Flask, send_from_directory, jsonify, request
+from flask import Flask, send_from_directory, abort
 
 app = Flask(__name__)
 
+# Base path setup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 
@@ -10,18 +11,20 @@ FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 def index():
     return send_from_directory(FRONTEND_DIR, 'index.html')
 
-@app.route('/<path:filename>')
-def serve_static(filename):
-    file_path = os.path.join(FRONTEND_DIR, filename)
-    if os.path.exists(file_path):
-        return send_from_directory(FRONTEND_DIR, filename)
-    
-    for root, dirs, files in os.walk(FRONTEND_DIR):
-        if filename.split('/')[-1] in files:
-            return send_from_directory(root, filename.split('/')[-1])
-            
-    return send_from_directory(FRONTEND_DIR, '404.html'), 404
+@app.route('/<path:path>')
+def serve_files(path):
+    # 1. Direct frontend path check
+    direct_path = os.path.join(FRONTEND_DIR, path)
+    if os.path.exists(direct_path) and os.path.isfile(direct_path):
+        return send_from_directory(FRONTEND_DIR, path)
 
+    # 2. Subfolders (pages, css, js wagera) search
+    filename = os.path.basename(path)
+    for root, dirs, files in os.walk(FRONTEND_DIR):
+        if filename in files:
+            return send_from_directory(root, filename)
+
+    abort(404)
 import os
 import time
 import sqlite3
