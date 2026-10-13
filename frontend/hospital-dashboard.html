@@ -4,164 +4,300 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JeevanSetu AI | Trauma Bed Inventory Grid</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/frontend/css/style.css">
   <style>
-    body { background: #070D18; color: #F8FAFC; font-family: system-ui, sans-serif; margin: 0; padding: 25px; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 15px; margin-bottom: 25px; }
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .stat-card { background: #0D1626; border: 1px solid #1E293B; border-radius: 10px; padding: 18px; }
-    .stat-val { font-size: 28px; font-weight: 800; color: #14B8A6; margin-top: 8px; }
-    .controls-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .search-bar { flex: 1; min-width: 250px; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: #FFF; font-size: 15px; }
-    .tier-select { padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: #FFF; }
-    table { width: 100%; border-collapse: collapse; background: #0D1626; border-radius: 10px; overflow: hidden; }
-    th, td { padding: 13px 15px; text-align: left; border-bottom: 1px solid #1E293B; font-size: 14px; }
-    th { background: #0F1D33; color: #94A3B8; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-    .badge-demo { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B; margin-left: 6px; }
-    .badge-tier { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #1E293B; color: #38BDF8; }
-    .btn-lock { background: #0284C7; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 12px; }
-    .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; color: #94A3B8; font-size: 14px; }
-    .btn-page { background: #1E293B; color: #FFF; border: 1px solid #334155; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-    .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #060B13;
+      color: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 24px;
+      min-height: 100vh;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .title-area h1 {
+      font-size: 24px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-area p {
+      color: #94A3B8;
+      font-size: 14px;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-demo {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+      border: 1px solid #F59E0B;
+    }
+    .back-link {
+      color: #38BDF8;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 0.8; }
+
+    /* Top Metric Tiles */
+    .tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #0B132B;
+      border: 1px solid #1E293B;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .metric-card p {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94A3B8;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .metric-card h2 {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .card-teal h2 { color: #14B8A6; }
+    .card-cyan h2 { color: #38BDF8; }
+    .card-amber h2 { color: #F59E0B; }
+
+    /* Search & Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+    }
+    .search-input-wrapper input {
+      width: 100%;
+      background: #0B132B;
+      border: 1px solid #1E293B;
+      border-radius: 6px;
+      color: #FFF;
+      padding: 12px 14px 12px 38px;
+      font-size: 14px;
+      outline: none;
+    }
+    .search-input-wrapper input:focus {
+      border-color: #38BDF8;
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748B;
+      pointer-events: none;
+    }
+    .tier-select {
+      background: #0B132B;
+      border: 1px solid #1E293B;
+      border-radius: 6px;
+      color: #FFF;
+      padding: 12px 18px;
+      font-size: 14px;
+      outline: none;
+      min-width: 200px;
+      cursor: pointer;
+    }
+
+    /* Data Table */
+    .table-container {
+      background: #0B132B;
+      border: 1px solid #1E293B;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #081024;
+      color: #94A3B8;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 16px 18px;
+      border-bottom: 1px solid #1E293B;
+      text-transform: uppercase;
+    }
+    td {
+      padding: 16px 18px;
+      border-bottom: 1px solid #132238;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    tbody tr:hover {
+      background-color: #0E1A38;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-red {
+      background: rgba(239, 68, 68, 0.15);
+      color: #F87171;
+      border: 1px solid #EF4444;
+    }
+    .badge-blue {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+      border: 1px solid #38BDF8;
+    }
+    .btn-sos {
+      background: #EF4444;
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-sos:hover { background: #DC2626; }
+
+    /* Footer Pagination */
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      color: #94A3B8;
+      font-size: 14px;
+    }
+    .pagination-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-page {
+      background: #0B132B;
+      border: 1px solid #1E293B;
+      color: #F8FAFC;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn-page:hover {
+      border-color: #38BDF8;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1 style="margin:0; font-size:24px;">🏥 Kanpur Trauma Bed Inventory Grid</h1>
-      <p style="margin:5px 0 0 0; color:#94A3B8;">Real-time verified telemetry across emergency facilities <span class="badge-demo">SYNTHETIC DEMO HYBRID</span></p>
+
+  <!-- Top Header Bar -->
+  <div class="header-bar">
+    <div class="title-area">
+      <h1>🏥 Kanpur Trauma Bed Inventory Grid</h1>
+      <p>
+        Real-time verified telemetry across emergency facilities
+        <span class="badge-demo">SYNTHETIC DEMO HYBRID</span>
+      </p>
     </div>
-    <a href="/index.html" style="color:#38BDF8; text-decoration:none; font-weight:600;">&larr; Back to Home</a>
+    <a href="/index.html" class="back-link">&larr; Back to Home</a>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-card">
-      <div style="color:#94A3B8; font-size:12px; font-weight:bold;">TOTAL FACILITIES</div>
-      <div class="stat-val" id="statFacilities">--</div>
+  <!-- Telemetry Metrics Cards -->
+  <div class="tiles-grid">
+    <div class="metric-card card-teal">
+      <p>TOTAL FACILITIES</p>
+      <h2 data-stat="total-facilities">--</h2>
     </div>
-    <div class="stat-card">
-      <div style="color:#94A3B8; font-size:12px; font-weight:bold;">AVAILABLE ICU BEDS</div>
-      <div class="stat-val" id="statIcu" style="color:#10B981;">--</div>
+    <div class="metric-card card-teal">
+      <p>AVAILABLE ICU BEDS</p>
+      <h2 data-stat="available-icu">--</h2>
     </div>
-    <div class="stat-card">
-      <div style="color:#94A3B8; font-size:12px; font-weight:bold;">AVAILABLE OXYGEN BEDS</div>
-      <div class="stat-val" id="statOxy" style="color:#38BDF8;">--</div>
+    <div class="metric-card card-cyan">
+      <p>AVAILABLE OXYGEN BEDS</p>
+      <h2 data-stat="available-oxygen">--</h2>
     </div>
-    <div class="stat-card">
-      <div style="color:#94A3B8; font-size:12px; font-weight:bold;">ACTIVE AMBULANCES</div>
-      <div class="stat-val" id="statAmb" style="color:#F59E0B;">--</div>
+    <div class="metric-card card-amber">
+      <p>ACTIVE AMBULANCES</p>
+      <h2 data-stat="active-ambulances">--</h2>
     </div>
   </div>
 
-  <div class="controls-row">
-    <input type="text" id="hospSearch" class="search-bar" placeholder="🔍 Search hospital name, locality, or corridor..." oninput="onSearchChange()">
-    <select id="tierFilter" class="tier-select" onchange="fetchHospitals(1)">
-      <option value="">All Trauma Tiers</option>
-      <option value="Level-1 Apex Trauma">Level-1 Apex Trauma</option>
-      <option value="Level-2 Emergency Care">Level-2 Emergency Care</option>
-      <option value="Level-3 Rapid Transit">Level-3 Rapid Transit</option>
-      <option value="Super Specialty Grid">Super Specialty Grid</option>
+  <!-- Search & Filter Controls -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="hospitalSearch" placeholder="Search hospital name, locality, or corridor...">
+    </div>
+    <select id="traumaTierSelect" class="tier-select">
+      <option value="All Trauma Tiers">All Trauma Tiers</option>
+      <option value="Level-1">Level-1 Apex Trauma</option>
+      <option value="Super Specialty">Super Specialty Grid</option>
+      <option value="Level-2">Level-2 Emergency Care</option>
+      <option value="Level-3">Level-3 Rapid Transit</option>
     </select>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Facility Name</th>
-        <th>Locality / Corridor</th>
-        <th>Trauma Tier</th>
-        <th>Available ICU</th>
-        <th>Available Oxygen</th>
-        <th>Emergency Contact</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="hospBody">
-      <tr><td colspan="7" style="text-align:center; padding:30px; color:#94A3B8;">Loading hospital network data...</td></tr>
-    </tbody>
-  </table>
+  <!-- Main Records Grid -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Facility Name</th>
+          <th>Locality / Corridor</th>
+          <th>Trauma Tier</th>
+          <th>Available ICU</th>
+          <th>Available Oxygen</th>
+          <th>Emergency Contact</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="hospitalTableBody">
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 25px; color: #94A3B8;">
+            Connecting to emergency telemetry grid...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-  <div class="pagination">
-    <span id="pageInfo">Showing records</span>
-    <div>
-      <button class="btn-page" id="prevBtn" onclick="changePage(-1)">Previous</button>
-      <button class="btn-page" id="nextBtn" onclick="changePage(1)">Next</button>
+  <!-- Footer Pagination -->
+  <div class="table-footer">
+    <div class="showing-records" id="showingRecordsText">Showing records</div>
+    <div class="pagination-actions">
+      <button class="btn-page" id="prevBtn">Previous</button>
+      <button class="btn-page" id="nextBtn">Next</button>
     </div>
   </div>
 
-  <script>
-    var currentPage = 1;
-    var totalPages = 1;
-    var searchTimer = null;
-
-    function fetchStats() {
-      fetch('/api/stats/dashboard')
-        .then(function(r){ return r.json(); })
-        .then(function(res){
-          if(res.status === 'success') {
-            document.getElementById('statFacilities').innerText = res.data.total_facilities;
-            document.getElementById('statIcu').innerText = res.data.available_icu_beds;
-            document.getElementById('statOxy').innerText = res.data.available_oxygen_beds;
-            document.getElementById('statAmb').innerText = res.data.active_ambulances;
-          }
-        }).catch(function(e){ console.error('Stats fetch fallback', e); });
-    }
-
-    function fetchHospitals(page) {
-      currentPage = page;
-      var q = document.getElementById('hospSearch').value;
-      var tier = document.getElementById('tierFilter').value;
-      var url = '/api/v2/hospitals?page=' + page + '&limit=15&q=' + encodeURIComponent(q) + '&tier=' + encodeURIComponent(tier);
-
-      fetch(url)
-        .then(function(r){ return r.json(); })
-        .then(function(res){
-          if(res.status === 'success') {
-            renderTable(res.data.items);
-            totalPages = Math.ceil(res.data.total / res.data.limit) || 1;
-            document.getElementById('pageInfo').innerText = 'Page ' + currentPage + ' of ' + totalPages + ' (' + res.data.total + ' total facilities)';
-            document.getElementById('prevBtn').disabled = (currentPage <= 1);
-            document.getElementById('nextBtn').disabled = (currentPage >= totalPages);
-          }
-        }).catch(function(err){
-          document.getElementById('hospBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:#EF4444;">Error loading live data from backend server.</td></tr>';
-        });
-    }
-
-    function renderTable(items) {
-      var tbody = document.getElementById('hospBody');
-      if(!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94A3B8;">No matching facilities found.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = items.map(function(h){
-        var demoBadge = h.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
-        return '<tr>' +
-          '<td><strong>' + h.name + '</strong>' + demoBadge + '</td>' +
-          '<td>' + h.area + '</td>' +
-          '<td><span class="badge-tier">' + h.trauma_tier + '</span></td>' +
-          '<td style="color:#10B981; font-weight:bold;">' + h.icu + ' Free</td>' +
-          '<td style="color:#38BDF8; font-weight:bold;">' + h.oxy + ' Free</td>' +
-          '<td>' + h.contact + '</td>' +
-          '<td><a href="/frontend/trauma-referral.html?target=' + encodeURIComponent(h.name) + '" class="btn-lock">Lock Bed</a></td>' +
-        '</tr>';
-      }).join('');
-    }
-
-    function onSearchChange() {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(function(){ fetchHospitals(1); }, 300);
-    }
-
-    function changePage(delta) {
-      var target = currentPage + delta;
-      if(target >= 1 && target <= totalPages) {
-        fetchHospitals(target);
-      }
-    }
-
-    fetchStats();
-    fetchHospitals(1);
-  </script>
+  <!-- Frontend Logic Linking -->
+  <script src="js/script.js"></script>
 </body>
 </html>
