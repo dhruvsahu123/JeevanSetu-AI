@@ -30,8 +30,25 @@ def home():
             return f.read()
     return jsonify({"status": "running", "service": "JeevanSetu AI Backend"})
 
+# --- UNIVERSAL FRONTEND ROUTING (Handles subfolders automatically) ---
 @app.route('/frontend/<path:filename>')
 def serve_frontend_files(filename):
+    frontend_dir = os.path.join(app.root_path, 'frontend')
+    direct_path = os.path.join(frontend_dir, filename)
+
+    # 1. Direct file check
+    if os.path.isfile(direct_path):
+        return send_from_directory(frontend_dir, filename)
+
+    # 2. Sub-folders (pages/inventory, pages/operations, etc.) recursive check
+    pages_dir = os.path.join(frontend_dir, 'pages')
+    base_name = os.path.basename(filename)
+    if os.path.exists(pages_dir):
+        for root, _, files in os.walk(pages_dir):
+            if base_name in files:
+                return send_from_directory(root, base_name)
+
+    return jsonify({"error": "Page not found", "path": filename}), 404
     frontend_dir = os.path.join(app.root_path, 'frontend')
     if os.path.exists(os.path.join(frontend_dir, filename)):
         return send_from_directory(frontend_dir, filename)
