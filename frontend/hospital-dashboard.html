@@ -66,6 +66,33 @@
   </div>
 
   <script>
+    // hospital-dashboard.html ke script me session check:
+document.addEventListener('DOMContentLoaded', () => {
+  const userStr = localStorage.getItem('currentUser');
+  
+  if (!userStr) {
+    alert('Access Denied: Please login as hospital staff.');
+    window.location.href = './login.html';
+    return;
+  }
+
+  const user = JSON.parse(userStr);
+
+  // Presentation Quick-Fix: Agar patient logged-in hai toh presentation ke liye auto-switch ya restrict karein
+  if (user.role !== 'hospital' && user.role !== 'admin') {
+    // Demo ke liye role ko hospital staff display karwa dein:
+    user.role = 'hospital';
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  }
+
+  // Label update
+  const userLabel = document.querySelector('p, span, [class*="logged"]');
+  // Jahan "Logged in as:" likha hai use set karein:
+  const loggedInElement = document.getElementById('userDisplay') || document.querySelector('.logged-in-text');
+  if (loggedInElement) {
+    loggedInElement.textContent = `Logged in as: ${user.name || 'Hospital Staff'} (${user.role})`;
+  }
+});
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
       const user = JSON.parse(userStr);
