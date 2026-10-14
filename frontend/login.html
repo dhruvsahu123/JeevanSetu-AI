@@ -1,141 +1,288 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign In | JeevanSetu AI</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .logo { font-size: 22px; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 8px; }
-    .btn-outline { padding: 6px 16px; border: 1px solid #cbd5e1; border-radius: 8px; text-decoration: none; color: #334155; font-size: 14px; font-weight: 600; }
-    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; width: 100%; max-width: 440px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-    h2 { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 6px; text-align: center; }
-    .subtitle { font-size: 13px; color: #64748b; margin-bottom: 24px; text-align: center; }
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-    input { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
-    input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
-    .btn-primary { width: 100%; padding: 12px; background: #0284c7; border: none; border-radius: 8px; color: #ffffff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-    .btn-primary:hover { background: #0369a1; }
-    .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
-    .footer-text { text-align: center; font-size: 13px; color: #64748b; margin-top: 20px; }
-    .footer-text a { color: #0284c7; text-decoration: none; font-weight: 600; }
-    .status-msg { margin-top: 12px; font-size: 13px; text-align: center; display: none; }
-    .status-msg.error { color: #dc2626; display: block; }
-    .status-msg.success { color: #16a34a; display: block; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 48px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0284c7;
+      text-decoration: none;
+    }
+
+    .brand span {
+      color: #64748b;
+      font-weight: 400;
+      font-size: 14px;
+      margin-left: 4px;
+    }
+
+    .register-btn {
+      padding: 8px 18px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #334155;
+      font-size: 14px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .register-btn:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* Centered Login Container */
+    .login-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 440px;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
+    }
+
+    .login-card h2 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .login-card p.subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #0284c7;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      background-color: #0369a1;
+    }
+
+    .submit-btn:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .footer-text a {
+      color: #0284c7;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="logo">
-      <span>+</span> JeevanSetu <span style="font-size: 12px; color: #64748b; font-weight: 500;">AI Grid</span>
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="/" class="brand">+ JeevanSetu <span>AI Grid</span></a>
+    <a href="./register.html" class="register-btn">Register</a>
+  </header>
+
+  <!-- Login Form Section -->
+  <main class="login-wrapper">
+    <div class="login-card">
+      <h2>Sign In to JeevanSetu</h2>
+      <p class="subtitle">Access your health profile or response console</p>
+
+      <div id="errorBox" class="error-msg"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            placeholder="name@example.com" 
+            required 
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password"
+          />
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn">Sign In</button>
+      </form>
+
+      <p class="footer-text">
+        Don't have an account? <a href="./register.html">Register here</a>
+      </p>
     </div>
-    <a href="/frontend/register.html" class="btn-outline">Register</a>
-  </div>
+  </main>
 
-  <div class="card">
-    <h2>Sign In to JeevanSetu</h2>
-    <div class="subtitle">Access your health profile or response console</div>
-    
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" placeholder="name@example.com" required>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="••••••••" required>
-      </div>
-
-      <button type="submit" id="submitBtn" class="btn-primary">Sign In</button>
-      <div id="statusMsg" class="status-msg"></div>
-    </form>
-
-    <div class="footer-text">
-      Don't have an account? <a href="/frontend/register.html">Register here</a>
-    </div>
-  </div>
-
+  <!-- Login Handling Script -->
   <script>
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('submitBtn');
-    const statusMsg = document.getElementById('statusMsg');
+    const errorBox = document.getElementById('errorBox');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      // UI state reset
+      errorBox.style.display = 'none';
+      errorBox.innerText = '';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Signing in...';
+
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      submitBtn.disabled = true;
-      submitBtn.innerText = 'Signing In...';
-      statusMsg.className = 'status-msg';
-      statusMsg.innerText = '';
-
       try {
+        // Backend login endpoint call
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            email: email,
-            password: password
-          })
+          body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
 
-        if (response.ok) {
-          statusMsg.className = 'status-msg success';
-          statusMsg.innerText = 'Login successful! Redirecting...';
-          
-          // Save user session in localStorage
-          if (data.user) {
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-          }
+        if (response.ok && data.user) {
+          // User session save in localStorage
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-          setTimeout(() => {
-            // Redirect based on role or fallback to index.html
-            if (data.user && data.user.role === 'hospital') {
-              window.location.href = '/hospital-dashboard';
-            } else if (data.user && data.user.role === 'ambulance') {
-              window.location.href = '/ambulance';
-            } else {
-              window.location.href = '/';
-            }
-          }, 1000);
+          // Role-based path redirection (relative to current host)
+          const role = data.user.role;
+          if (role === 'hospital' || role === 'admin') {
+            window.location.href = './hospital-dashboard.html';
+          } else if (role === 'ambulance') {
+            window.location.href = './ambulance.html';
+          } else {
+            window.location.href = './index.html';
+          }
         } else {
-          statusMsg.className = 'status-msg error';
-          statusMsg.innerText = data.error || 'Invalid email or password.';
+          // Authentication error display
+          errorBox.innerText = data.message || 'Invalid email or password.';
+          errorBox.style.display = 'block';
           submitBtn.disabled = false;
           submitBtn.innerText = 'Sign In';
         }
       } catch (err) {
-        console.error(err);
-        statusMsg.className = 'status-msg error';
-        statusMsg.innerText = 'Server unreachable. Ensure python app.py is running.';
+        console.error('Login error:', err);
+        errorBox.innerText = 'Unable to connect to the server. Please try again.';
+        errorBox.style.display = 'block';
         submitBtn.disabled = false;
         submitBtn.innerText = 'Sign In';
       }
     });
   </script>
-  // login.html ke script me login success hone par:
-if (response.ok) {
-  localStorage.setItem('currentUser', JSON.stringify(data.user));
-  
-  // Role check karke dashboard par bhejein
-  if (data.user.role === 'hospital' || data.user.role === 'admin') {
-    window.location.href = '/frontend/hospital-dashboard.html';
-  } else if (data.user.role === 'ambulance') {
-    window.location.href = '/frontend/ambulance.html';
-  } else {
-    window.location.href = '/';
-  }
-}
 </body>
 </html>
