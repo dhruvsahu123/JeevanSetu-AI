@@ -125,6 +125,7 @@ def login_user():
             conn.close()
 
 # Hospital Update API Route (Fixes locality, zone, and all NOT NULL constraints)
+# Hospital Update API Route (Auto-fills ALL SQLite NOT NULL columns)
 @app.route('/api/hospital/update', methods=['POST'])
 @app.route('/api/hospitals/update', methods=['POST'])
 @app.route('/api/hospitals', methods=['POST'])
@@ -146,12 +147,14 @@ def update_hospital_data():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check existing table columns
+        # Table columns and schema info
         cursor.execute("PRAGMA table_info(hospitals);")
         columns_info = cursor.fetchall()
-        existing_cols = [col['name'] for col in columns_info]
+        existing_cols = {col['name']: col for col in columns_info}
 
+        # Form data mapping
         fields_to_update = {}
+        if 'name' in existing_cols: fields_to_update['name'] = hospital_name
         if 'icu_beds' in existing_cols: fields_to_update['icu_beds'] = icu_available
         if 'oxygen_beds' in existing_cols: fields_to_update['oxygen_beds'] = oxygen_available
         if 'ventilators' in existing_cols: fields_to_update['ventilators'] = ventilators
@@ -161,21 +164,41 @@ def update_hospital_data():
         if 'address' in existing_cols: fields_to_update['address'] = address
         if 'location' in existing_cols: fields_to_update['location'] = address
         if 'locality' in existing_cols: fields_to_update['locality'] = address
-        
-        # Handle all potential NOT NULL constraints
-        if 'zone' in existing_cols: fields_to_update['zone'] = 'Central / Kanpur'
-        if 'city' in existing_cols: fields_to_update['city'] = 'Kanpur'
-        if 'type' in existing_cols: fields_to_update['type'] = 'Trauma / General'
-        if 'tier' in existing_cols: fields_to_update['tier'] = 'Tier-1'
 
+        # Universal NOT NULL Failsafe:
+        # Table me jitne bhi NOT NULL columns hain jinki value abhi tak assign nahi hui,
+        # unhe automatically unke data type ke hisaab se default value de dega.
+        for col_name, info in existing_cols.items():
+            is_not_null = info['notnull']
+            has_no_default = info['dflt_value'] is None
+            is_not_primary_key = not info['pk']
+
+            if is_not_null and has_no_default and is_not_primary_key:
+                if col_name not in fields_to_update:
+                    col_type = (info['type'] or '').upper()
+                    if 'INT' in col_type:
+                        fields_to_update[col_name] = 1
+                    elif 'REAL' in col_type or 'FLOA' in col_type or 'DOUB' in col_type:
+                        fields_to_update[col_name] = 0.0
+                    else:
+                        # For text fields like trauma_tier, zone, city, etc.
+                        if 'tier' in col_name:
+                            fields_to_update[col_name] = 'Tier-1'
+                        elif 'zone' in col_name:
+                            fields_to_update[col_name] = 'Central'
+                        else:
+                            fields_to_update[col_name] = 'Standard'
+
+        # Check existing hospital record
         row = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
         
         if row:
-            set_clause = ", ".join([f"{k} = ?" for k in fields_to_update.keys()])
-            values = list(fields_to_update.values()) + [hospital_name]
+            # Update fields excluding primary key / name if needed
+            update_data = {k: v for k, v in fields_to_update.items() if k != 'name'}
+            set_clause = ", ".join([f"{k} = ?" for k in update_data.keys()])
+            values = list(update_data.values()) + [hospital_name]
             cursor.execute(f"UPDATE hospitals SET {set_clause} WHERE name = ?", values)
         else:
-            fields_to_update['name'] = hospital_name
             cols_clause = ", ".join(fields_to_update.keys())
             placeholders = ", ".join(["?"] * len(fields_to_update))
             values = list(fields_to_update.values())
