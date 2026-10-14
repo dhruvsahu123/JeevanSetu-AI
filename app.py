@@ -6,7 +6,90 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+# Hospital Update API Route (Bulletproof column detection)
+@app.route('/api/hospital/update', methods=['POST'])
+@app.route('/api/hospitals/update', methods=['POST'])
+@app.route('/api/hospitals', methods=['POST'])
+def update_hospital_data():
+    data = request.get_json() or {}
+    hospital_name = data.get('hospital_name') or data.get('name')
+    
+    icu_available = data.get('icu_beds') or data.get('available_icu', 0)
+    oxygen_available = data.get('oxygen_beds') or data.get('available_oxygen', 0)
+    ventilators = data.get('ventilators') or data.get('active_ventilators', 0)
+    contact_number = data.get('contact') or data.get('emergency_contact') or data.get('emergency_contact_no', '')
+    address = data.get('address') or data.get('location', '') or 'Kanpur'
 
+    if not hospital_name:
+        return jsonify({"error": "Hospital name is required"}), 400
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # 1. Check existing columns in hospitals table
+        cursor.execute("PRAGMA table_info(hospitals);")
+        columns_info = cursor.fetchall()
+        existing_cols = [col['name'] for col in columns_info]
+
+        # 2. Agar table nahi hai toh create karein
+        if not existing_cols:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS hospitals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL,
+                    icu_beds INTEGER DEFAULT 0,
+                    oxygen_beds INTEGER DEFAULT 0,
+                    ventilators INTEGER DEFAULT 0,
+                    active_ventilators INTEGER DEFAULT 0,
+                    contact TEXT,
+                    emergency_contact TEXT,
+                    location TEXT,
+                    address TEXT,
+                    locality TEXT
+                )
+            ''')
+            cursor.execute("PRAGMA table_info(hospitals);")
+            columns_info = cursor.fetchall()
+            existing_cols = [col['name'] for col in columns_info]
+
+        # 3. Dynamic payload match (sirf wahi columns jo DB me hain)
+        fields_to_update = {}
+        if 'icu_beds' in existing_cols: fields_to_update['icu_beds'] = icu_available
+        if 'oxygen_beds' in existing_cols: fields_to_update['oxygen_beds'] = oxygen_available
+        if 'ventilators' in existing_cols: fields_to_update['ventilators'] = ventilators
+        if 'active_ventilators' in existing_cols: fields_to_update['active_ventilators'] = ventilators
+        if 'contact' in existing_cols: fields_to_update['contact'] = contact_number
+        if 'emergency_contact' in existing_cols: fields_to_update['emergency_contact'] = contact_number
+        if 'address' in existing_cols: fields_to_update['address'] = address
+        if 'location' in existing_cols: fields_to_update['location'] = address
+        if 'locality' in existing_cols: fields_to_update['locality'] = address
+
+        # 4. Check if hospital exists
+        row = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
+        
+        if row:
+            set_clause = ", ".join([f"{k} = ?" for k in fields_to_update.keys()])
+            values = list(fields_to_update.values()) + [hospital_name]
+            cursor.execute(f"UPDATE hospitals SET {set_clause} WHERE name = ?", values)
+        else:
+            fields_to_update['name'] = hospital_name
+            cols_clause = ", ".join(fields_to_update.keys())
+            placeholders = ", ".join(["?"] * len(fields_to_update))
+            values = list(fields_to_update.values())
+            cursor.execute(f"INSERT INTO hospitals ({cols_clause}) VALUES ({placeholders})", values)
+
+        conn.commit()
+        return jsonify({"message": f"{hospital_name} data updated successfully!", "status": "success"}), 200
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 # Base path setup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
