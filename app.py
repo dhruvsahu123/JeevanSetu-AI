@@ -11,7 +11,7 @@ CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 
-# Vercel Serverless Writable Storage Fix
+# Vercel Serverless Writable Storage Fix (/tmp)
 if os.environ.get("VERCEL") or os.path.exists("/tmp"):
     DB_PATH = "/tmp/jeevansetu.db"
     src_db = os.path.join(BASE_DIR, "database.db")
@@ -113,7 +113,7 @@ def login_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Hospital Update API Route
+# Hospital Update API Route (Fixes locality NOT NULL constraint & all columns)
 @app.route('/api/hospital/update', methods=['POST'])
 @app.route('/api/hospitals/update', methods=['POST'])
 @app.route('/api/hospitals', methods=['POST'])
@@ -125,7 +125,8 @@ def update_hospital_data():
     oxygen_available = data.get('oxygen_beds') or data.get('available_oxygen', 0)
     ventilators = data.get('ventilators') or data.get('active_ventilators', 0)
     contact_number = data.get('contact') or data.get('emergency_contact') or data.get('emergency_contact_no', '')
-    address = data.get('address') or data.get('location', '')
+    address = data.get('address') or data.get('location', '') or 'Kanpur'
+    locality = address  # Satisfies SQLite NOT NULL constraint for locality
 
     if not hospital_name:
         return jsonify({"error": "Hospital name is required"}), 400
@@ -134,44 +135,33 @@ def update_hospital_data():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # 1. Base table ensure karein
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS hospitals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE NOT NULL
-            )
-        ''')
-
-        # 2. Saare possible columns add karein agar missing hon
-        for col_def in [
-            "icu_beds INTEGER DEFAULT 0",
-            "oxygen_beds INTEGER DEFAULT 0",
-            "ventilators INTEGER DEFAULT 0",
-            "active_ventilators INTEGER DEFAULT 0",
-            "emergency_contact TEXT",
-            "contact TEXT",
-            "location TEXT",
-            "address TEXT"
-        ]:
-            try:
-                cursor.execute(f"ALTER TABLE hospitals ADD COLUMN {col_def};")
-            except Exception:
-                pass
-
-        # 3. Check existing hospital & Update or Insert
+        # Check existing hospital
         existing = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
         
         if existing:
-            cursor.execute('''
-                UPDATE hospitals 
-                SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?
-                WHERE name = ?
-            ''', (icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, hospital_name))
+            try:
+                cursor.execute('''
+                    UPDATE hospitals 
+                    SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?, locality = ?
+                    WHERE name = ?
+                ''', (icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, locality, hospital_name))
+            except Exception:
+                cursor.execute('''
+                    UPDATE hospitals 
+                    SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?
+                    WHERE name = ?
+                ''', (icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, hospital_name))
         else:
-            cursor.execute('''
-                INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
+            try:
+                cursor.execute('''
+                    INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address, locality)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, locality))
+            except Exception:
+                cursor.execute('''
+                    INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
 
         conn.commit()
         conn.close()
