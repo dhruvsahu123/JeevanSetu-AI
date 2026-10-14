@@ -113,69 +113,11 @@ def login_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Hospital Update API Route (Har column error ko auto-bypass aur handle karega)
+# Hospital Update API Route
 @app.route('/api/hospital/update', methods=['POST'])
 @app.route('/api/hospitals/update', methods=['POST'])
 @app.route('/api/hospitals', methods=['POST'])
 def update_hospital_data():
-    @app.route('/api/hospital/update', methods=['POST'])
-@app.route('/api/hospitals/update', methods=['POST'])
-@app.route('/api/hospitals', methods=['POST'])
-def update_hospital_data():
-    data = request.get_json() or {}
-    hospital_name = data.get('hospital_name') or data.get('name')
-    
-    icu_available = data.get('icu_beds') or data.get('available_icu', 0)
-    oxygen_available = data.get('oxygen_beds') or data.get('available_oxygen', 0)
-    ventilators = data.get('ventilators') or data.get('active_ventilators', 0)
-    contact_number = data.get('contact') or data.get('emergency_contact') or data.get('emergency_contact_no', '')
-    address = data.get('address') or data.get('location', '')
-
-    if not hospital_name:
-        return jsonify({"error": "Hospital name is required"}), 400
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Failsafe: Ensure minimal table exists
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS hospitals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE NOT NULL
-            )
-        ''')
-
-        # Add columns dynamically if not exist
-        for col in ["icu_beds INTEGER DEFAULT 0", "oxygen_beds INTEGER DEFAULT 0", 
-                    "ventilators INTEGER DEFAULT 0", "active_ventilators INTEGER DEFAULT 0", 
-                    "emergency_contact TEXT", "contact TEXT", "location TEXT", "address TEXT"]:
-            try:
-                cursor.execute(f"ALTER TABLE hospitals ADD COLUMN {col};")
-            except Exception:
-                pass
-
-        # Check existing
-        existing = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
-        
-        if existing:
-            cursor.execute('''
-                UPDATE hospitals 
-                SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?
-                WHERE name = ?
-            ''', (icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, hospital_name))
-        else:
-            cursor.execute('''
-                INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
-
-        conn.commit()
-        conn.close()
-        return jsonify({"message": f"{hospital_name} data updated successfully!", "status": "success"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
     data = request.get_json() or {}
     hospital_name = data.get('hospital_name') or data.get('name')
     
@@ -200,38 +142,35 @@ def update_hospital_data():
             )
         ''')
 
-        # 2. Saare columns dynamically add karein agar nahi hain
-        needed_columns = [
-            ("icu_beds", "INTEGER DEFAULT 0"),
-            ("oxygen_beds", "INTEGER DEFAULT 0"),
-            ("ventilators", "INTEGER DEFAULT 0"),
-            ("active_ventilators", "INTEGER DEFAULT 0"),
-            ("emergency_contact", "TEXT"),
-            ("contact", "TEXT"),
-            ("location", "TEXT"),
-            ("address", "TEXT"),
-            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-        ]
-
-        for col, col_type in needed_columns:
+        # 2. Saare possible columns add karein agar missing hon
+        for col_def in [
+            "icu_beds INTEGER DEFAULT 0",
+            "oxygen_beds INTEGER DEFAULT 0",
+            "ventilators INTEGER DEFAULT 0",
+            "active_ventilators INTEGER DEFAULT 0",
+            "emergency_contact TEXT",
+            "contact TEXT",
+            "location TEXT",
+            "address TEXT"
+        ]:
             try:
-                cursor.execute(f"ALTER TABLE hospitals ADD COLUMN {col} {col_type};")
+                cursor.execute(f"ALTER TABLE hospitals ADD COLUMN {col_def};")
             except Exception:
-                pass  # Already present hai toh silently continue karega
+                pass
 
-        # 3. Insert ya Update bina kisi column error ke
+        # 3. Check existing hospital & Update or Insert
         existing = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
         
         if existing:
             cursor.execute('''
                 UPDATE hospitals 
-                SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?, updated_at = CURRENT_TIMESTAMP
+                SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?
                 WHERE name = ?
             ''', (icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, hospital_name))
         else:
             cursor.execute('''
-                INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
 
         conn.commit()
