@@ -25,63 +25,6 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Database initialize & schema auto-migrate
-def init_db():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # 1. Users Table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT DEFAULT 'patient',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # 2. Hospitals Table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS hospitals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            icu_beds INTEGER DEFAULT 0,
-            oxygen_beds INTEGER DEFAULT 0,
-            ventilators INTEGER DEFAULT 0,
-            active_ventilators INTEGER DEFAULT 0,
-            emergency_contact TEXT,
-            contact TEXT,
-            location TEXT,
-            address TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Auto-add missing columns to avoid SQLite OperationalErrors
-    cols = [
-        ("icu_beds", "INTEGER DEFAULT 0"),
-        ("oxygen_beds", "INTEGER DEFAULT 0"),
-        ("ventilators", "INTEGER DEFAULT 0"),
-        ("active_ventilators", "INTEGER DEFAULT 0"),
-        ("emergency_contact", "TEXT"),
-        ("contact", "TEXT"),
-        ("location", "TEXT"),
-        ("address", "TEXT")
-    ]
-    for col_name, col_type in cols:
-        try:
-            cursor.execute(f"ALTER TABLE hospitals ADD COLUMN {col_name} {col_type};")
-        except sqlite3.OperationalError:
-            pass
-
-    conn.commit()
-    conn.close()
-
-# Start hone par DB setup chalega
-init_db()
-
 # Health Check API
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -102,6 +45,18 @@ def register_user():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT DEFAULT 'patient',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         cursor.execute(
             'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
             (name, email, password, role)
@@ -128,6 +83,18 @@ def login_user():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT DEFAULT 'patient',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
         user = cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password)).fetchone()
         conn.close()
 
@@ -146,7 +113,7 @@ def login_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Hospital Update API Route (Handles both endpoint paths & form keys)
+# Hospital Update API Route (Har column error ko auto-bypass aur handle karega)
 @app.route('/api/hospital/update', methods=['POST'])
 @app.route('/api/hospitals/update', methods=['POST'])
 @app.route('/api/hospitals', methods=['POST'])
@@ -156,11 +123,7 @@ def update_hospital_data():
     
     icu_available = data.get('icu_beds') or data.get('available_icu', 0)
     oxygen_available = data.get('oxygen_beds') or data.get('available_oxygen', 0)
-    
-    # Ventilators handles both naming conventions
     ventilators = data.get('ventilators') or data.get('active_ventilators', 0)
-    
-    # Contact and Location handles both naming conventions
     contact_number = data.get('contact') or data.get('emergency_contact') or data.get('emergency_contact_no', '')
     address = data.get('address') or data.get('location', '')
 
@@ -171,20 +134,47 @@ def update_hospital_data():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # 1. Base table ensure karein
         cursor.execute('''
-            INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(name) DO UPDATE SET
-                icu_beds = excluded.icu_beds,
-                oxygen_beds = excluded.oxygen_beds,
-                ventilators = excluded.ventilators,
-                active_ventilators = excluded.active_ventilators,
-                contact = excluded.contact,
-                emergency_contact = excluded.emergency_contact,
-                location = excluded.location,
-                address = excluded.address,
-                updated_at = CURRENT_TIMESTAMP
-        ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
+            CREATE TABLE IF NOT EXISTS hospitals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL
+            )
+        ''')
+
+        # 2. Saare columns dynamically add karein agar nahi hain
+        needed_columns = [
+            ("icu_beds", "INTEGER DEFAULT 0"),
+            ("oxygen_beds", "INTEGER DEFAULT 0"),
+            ("ventilators", "INTEGER DEFAULT 0"),
+            ("active_ventilators", "INTEGER DEFAULT 0"),
+            ("emergency_contact", "TEXT"),
+            ("contact", "TEXT"),
+            ("location", "TEXT"),
+            ("address", "TEXT"),
+            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        ]
+
+        for col, col_type in needed_columns:
+            try:
+                cursor.execute(f"ALTER TABLE hospitals ADD COLUMN {col} {col_type};")
+            except Exception:
+                pass  # Already present hai toh silently continue karega
+
+        # 3. Insert ya Update bina kisi column error ke
+        existing = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
+        
+        if existing:
+            cursor.execute('''
+                UPDATE hospitals 
+                SET icu_beds = ?, oxygen_beds = ?, ventilators = ?, active_ventilators = ?, contact = ?, emergency_contact = ?, location = ?, address = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE name = ?
+            ''', (icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address, hospital_name))
+        else:
+            cursor.execute('''
+                INSERT INTO hospitals (name, icu_beds, oxygen_beds, ventilators, active_ventilators, contact, emergency_contact, location, address, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
 
         conn.commit()
         conn.close()
@@ -201,25 +191,21 @@ def index():
 # Universal Dynamic Route Handler for frontend pages, subfolders, CSS and JS
 @app.route('/<path:path>')
 def serve_files(path):
-    # 1. Exact path match in frontend
     direct_path = os.path.join(FRONTEND_DIR, path)
     if os.path.exists(direct_path) and os.path.isfile(direct_path):
         return send_from_directory(FRONTEND_DIR, path)
 
-    # 2. Match direct filename inside frontend subdirectories
     target_filename = os.path.basename(path)
     for root, dirs, files in os.walk(FRONTEND_DIR):
         if target_filename in files:
             return send_from_directory(root, target_filename)
 
-    # 3. Match filename without .html extension
     if not target_filename.endswith('.html'):
         target_html = target_filename + '.html'
         for root, dirs, files in os.walk(FRONTEND_DIR):
             if target_html in files:
                 return send_from_directory(root, target_html)
 
-    # 4. Fallback if 404 page exists
     fallback_404 = os.path.join(FRONTEND_DIR, '404.html')
     if os.path.exists(fallback_404):
         return send_from_directory(FRONTEND_DIR, '404.html'), 404
