@@ -17,6 +17,7 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .btn-submit { width: 100%; padding: 12px; background: #0284c7; border: none; border-radius: 6px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; }
     .btn-submit:hover { background: #0369a1; }
+    .btn-submit:disabled { background: #475569; cursor: not-allowed; }
     .msg { margin-top: 14px; font-size: 13px; text-align: center; }
     .msg.success { color: #4ade80; }
     .msg.error { color: #f87171; }
@@ -25,7 +26,7 @@
 <body>
   <div class="container">
     <h2>🏥 Hospital Inventory & Bed Management</h2>
-    <p>Logged in as: <span id="staffName" style="color: #fff; font-weight: 600;">Staff</span></p>
+    <p>Logged in as: <span id="staffName" style="color: #38bdf8; font-weight: 600;">Staff</span></p>
 
     <form id="hospitalForm">
       <div class="form-group">
@@ -66,44 +67,41 @@
   </div>
 
   <script>
-    // hospital-dashboard.html ke script me session check:
-document.addEventListener('DOMContentLoaded', () => {
-  const userStr = localStorage.getItem('currentUser');
-  
-  if (!userStr) {
-    alert('Access Denied: Please login as hospital staff.');
-    window.location.href = './login.html';
-    return;
-  }
+    document.addEventListener('DOMContentLoaded', () => {
+      const userStr = localStorage.getItem('currentUser');
+      const staffNameEl = document.getElementById('staffName');
 
-  const user = JSON.parse(userStr);
+      if (!userStr) {
+        alert('Access Denied: Please login first.');
+        window.location.href = './login.html';
+        return;
+      }
 
-  // Presentation Quick-Fix: Agar patient logged-in hai toh presentation ke liye auto-switch ya restrict karein
-  if (user.role !== 'hospital' && user.role !== 'admin') {
-    // Demo ke liye role ko hospital staff display karwa dein:
-    user.role = 'hospital';
-    localStorage.setItem('currentUser', JSON.stringify(user));
-  }
+      try {
+        const user = JSON.parse(userStr);
 
-  // Label update
-  const userLabel = document.querySelector('p, span, [class*="logged"]');
-  // Jahan "Logged in as:" likha hai use set karein:
-  const loggedInElement = document.getElementById('userDisplay') || document.querySelector('.logged-in-text');
-  if (loggedInElement) {
-    loggedInElement.textContent = `Logged in as: ${user.name || 'Hospital Staff'} (${user.role})`;
-  }
-});
-    const userStr = localStorage.getItem('currentUser');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      document.getElementById('staffName').textContent = user.name + ` (${user.role})`;
-    }
+        // Presentation Demo Auto-Switch: Patient ko Hospital Staff role me upgrade karein
+        if (user.role !== 'hospital' && user.role !== 'admin') {
+          user.role = 'hospital';
+          localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        // Header label update
+        if (staffNameEl) {
+          staffNameEl.textContent = `${user.name || 'Staff'} (Hospital Staff)`;
+        }
+      } catch (err) {
+        console.error('Session parse error:', err);
+      }
+    });
 
     document.getElementById('hospitalForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById('saveBtn');
       const statusMsg = document.getElementById('statusMsg');
 
+      statusMsg.className = 'msg';
+      statusMsg.innerText = '';
       saveBtn.disabled = true;
       saveBtn.innerText = 'Updating...';
 
@@ -122,17 +120,20 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+
         const data = await res.json();
+
         if (res.ok) {
           statusMsg.className = 'msg success';
-          statusMsg.innerText = '✅ ' + data.message;
+          statusMsg.innerText = '✅ ' + (data.message || 'Status updated successfully!');
         } else {
           statusMsg.className = 'msg error';
           statusMsg.innerText = '❌ ' + (data.error || 'Failed to update');
         }
       } catch (err) {
+        console.error('Submit error:', err);
         statusMsg.className = 'msg error';
-        statusMsg.innerText = '❌ Network Error. Ensure app.py is running.';
+        statusMsg.innerText = '❌ Network Error: Could not connect to API server.';
       } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = 'Update Hospital Live Status';
