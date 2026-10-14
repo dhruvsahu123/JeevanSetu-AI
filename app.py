@@ -124,7 +124,7 @@ def login_user():
         if conn:
             conn.close()
 
-# Hospital Update API Route (Dynamic Columns & Locality Handled)
+# Hospital Update API Route (Fixes locality, zone, and all NOT NULL constraints)
 @app.route('/api/hospital/update', methods=['POST'])
 @app.route('/api/hospitals/update', methods=['POST'])
 @app.route('/api/hospitals', methods=['POST'])
@@ -151,26 +151,6 @@ def update_hospital_data():
         columns_info = cursor.fetchall()
         existing_cols = [col['name'] for col in columns_info]
 
-        if not existing_cols:
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS hospitals (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    icu_beds INTEGER DEFAULT 0,
-                    oxygen_beds INTEGER DEFAULT 0,
-                    ventilators INTEGER DEFAULT 0,
-                    active_ventilators INTEGER DEFAULT 0,
-                    contact TEXT,
-                    emergency_contact TEXT,
-                    location TEXT,
-                    address TEXT,
-                    locality TEXT
-                )
-            ''')
-            cursor.execute("PRAGMA table_info(hospitals);")
-            columns_info = cursor.fetchall()
-            existing_cols = [col['name'] for col in columns_info]
-
         fields_to_update = {}
         if 'icu_beds' in existing_cols: fields_to_update['icu_beds'] = icu_available
         if 'oxygen_beds' in existing_cols: fields_to_update['oxygen_beds'] = oxygen_available
@@ -181,6 +161,12 @@ def update_hospital_data():
         if 'address' in existing_cols: fields_to_update['address'] = address
         if 'location' in existing_cols: fields_to_update['location'] = address
         if 'locality' in existing_cols: fields_to_update['locality'] = address
+        
+        # Handle all potential NOT NULL constraints
+        if 'zone' in existing_cols: fields_to_update['zone'] = 'Central / Kanpur'
+        if 'city' in existing_cols: fields_to_update['city'] = 'Kanpur'
+        if 'type' in existing_cols: fields_to_update['type'] = 'Trauma / General'
+        if 'tier' in existing_cols: fields_to_update['tier'] = 'Tier-1'
 
         row = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
         
@@ -205,7 +191,6 @@ def update_hospital_data():
     finally:
         if conn:
             conn.close()
-
 # Root Route: Serves index.html
 @app.route('/')
 def index():
