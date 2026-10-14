@@ -16,13 +16,22 @@ if os.environ.get("VERCEL") or os.path.exists("/tmp"):
     DB_PATH = "/tmp/jeevansetu.db"
     src_db = os.path.join(BASE_DIR, "database.db")
     if not os.path.exists(DB_PATH) and os.path.exists(src_db):
-        shutil.copyfile(src_db, DB_PATH)
+        try:
+            shutil.copyfile(src_db, DB_PATH)
+        except Exception:
+            pass
 else:
     DB_PATH = os.path.join(BASE_DIR, 'database.db')
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+    # 30-second timeout to resolve "database is locked" errors
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout = 30000;")
+    except Exception:
+        pass
     return conn
 
 # Health Check API
@@ -42,6 +51,7 @@ def register_user():
     if not email or not password or not name:
         return jsonify({"error": "Missing required fields"}), 400
 
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -62,13 +72,17 @@ def register_user():
             (name, email, password, role)
         )
         conn.commit()
-        conn.close()
         return jsonify({"message": "User registered successfully", "status": "success"}), 201
 
     except sqlite3.IntegrityError:
         return jsonify({"error": "Email already exists"}), 409
     except Exception as e:
+        if conn:
+            conn.rollback()
         return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 # Login API Route
 @app.route('/api/login', methods=['POST'])
@@ -80,6 +94,7 @@ def login_user():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -96,7 +111,6 @@ def login_user():
         ''')
         
         user = cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password)).fetchone()
-        conn.close()
 
         if user:
             return jsonify({
@@ -112,8 +126,11 @@ def login_user():
             return jsonify({"error": "Invalid email or password"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
-# Hospital Update API Route (Fixes locality NOT NULL constraint & all columns)
+# Hospital Update API Route (Robust Lock-Free & Column-Safe)
 @app.route('/api/hospital/update', methods=['POST'])
 @app.route('/api/hospitals/update', methods=['POST'])
 @app.route('/api/hospitals', methods=['POST'])
@@ -126,16 +143,17 @@ def update_hospital_data():
     ventilators = data.get('ventilators') or data.get('active_ventilators', 0)
     contact_number = data.get('contact') or data.get('emergency_contact') or data.get('emergency_contact_no', '')
     address = data.get('address') or data.get('location', '') or 'Kanpur'
-    locality = address  # Satisfies SQLite NOT NULL constraint for locality
+    locality = address  # Prevents NOT NULL constraint failure
 
     if not hospital_name:
         return jsonify({"error": "Hospital name is required"}), 400
 
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check existing hospital
+        # Check existing hospital record
         existing = cursor.execute("SELECT id FROM hospitals WHERE name = ?", (hospital_name,)).fetchone()
         
         if existing:
@@ -164,11 +182,15 @@ def update_hospital_data():
                 ''', (hospital_name, icu_available, oxygen_available, ventilators, ventilators, contact_number, contact_number, address, address))
 
         conn.commit()
-        conn.close()
         return jsonify({"message": f"{hospital_name} data updated successfully!", "status": "success"}), 200
 
     except Exception as e:
+        if conn:
+            conn.rollback()
         return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 # Root Route: Serves index.html
 @app.route('/')
