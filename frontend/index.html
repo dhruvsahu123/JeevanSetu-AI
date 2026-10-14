@@ -80,6 +80,7 @@
       padding: 0.45rem 1.1rem;
       border-radius: 6px;
       transition: all 0.2s;
+      cursor: pointer;
     }
     .btn-login:hover {
       background: var(--teal);
@@ -254,8 +255,9 @@
       <a href="ambulance-tracking.html">Ambulance GPS</a>
       <a href="customer-dashboard.html">Citizen Vault</a>
       <a href="blood-banks.html">Blood Hub</a>
-      <a href="medical-knowledge.html">Clinical Registry</a> <a href="#" onclick="openDosDonts(); return false;" style="color:#38BDF8; font-weight:600;">Do's & Don'ts</a> 
-     <a href="/frontend/login.html" id="navAuthBtn" class="...">Sign In</a>
+      <a href="medical-knowledge.html">Clinical Registry</a>
+      <a href="#" onclick="openDosDonts(); return false;" style="color:#38BDF8; font-weight:600;">Do's & Don'ts</a> 
+      <a href="login.html" id="navAuthBtn" class="btn-login">Sign In</a>
     </nav>
   </header>
 
@@ -329,7 +331,6 @@
     <p>© 2026 JeevanSetu AI. Designed for Kanpur Emergency Healthcare Network.</p>
   </footer>
 
-
   <!-- Instant SOS Modal with Scannable QR -->
   <div id="sosModal" style="display:none; position:fixed; inset:0; background:rgba(7,17,31,0.88); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
     <div style="background:#0D1B2A; border:2px solid #EF4444; border-radius:16px; padding:2rem; max-width:500px; width:100%; box-shadow:0 0 45px rgba(239,68,68,0.35); text-align:center;">
@@ -347,9 +348,8 @@
           <span style="color:#94A3B8; font-size:0.8rem;">TOKEN ID:</span>
           <strong id="passToken" style="color:#38BDF8; font-family:monospace; font-size:0.95rem;">JS-EM-KAN-0001</strong>
         </div>
-        <div style="margin-bottom:0.4rem;">
-          <span style="color:#94A3B8; font-size:0.8rem;">
-        <div style="background:#0F172A; border:1px solid #1E293B; border-radius:8px; padding:12px; margin-top:10px; font-size:12px; text-align:left;">
+
+        <div style="background:#0F172A; border:1px solid #1E293B; border-radius:8px; padding:12px; margin:10px 0; font-size:12px; text-align:left;">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
             <div><span style="color:#94A3B8;">PATIENT:</span> <strong>Dhruv Sahu (Age: 20)</strong></div>
             <div><span style="color:#94A3B8;">ABHA ID:</span> <strong>91-8201-9482-1092</strong></div>
@@ -358,10 +358,12 @@
             <div style="grid-column: span 2;"><span style="color:#94A3B8;">KNOWN ALLERGIES:</span> <strong style="color:#F59E0B;">None Known (NKDA)</strong></div>
           </div>
         </div>
-        
-ASSIGNED TRAUMA DESK:</span>
+
+        <div style="margin-bottom:0.4rem;">
+          <span style="color:#94A3B8; font-size:0.8rem;">ASSIGNED TRAUMA DESK:</span>
           <div id="passHosp" style="color:#F8FAFC; font-weight:700; font-size:0.9rem;">SPM Hospital Trauma Centre (Rooma)</div>
         </div>
+
         <div>
           <span style="color:#94A3B8; font-size:0.8rem;">DISPATCH UNIT:</span>
           <div id="passAmb" style="color:#14B8A6; font-weight:700; font-size:0.9rem;">UP-78-AG-1021 (ALS Mobile ICU)</div>
@@ -369,13 +371,51 @@ ASSIGNED TRAUMA DESK:</span>
       </div>
 
       <div style="display:flex; gap:0.75rem;">
-        <button onclick="window.location.href='frontend/ambulance-tracking.html'" style="flex:1; background:#14B8A6; color:#07111F; border:none; padding:0.75rem; border-radius:8px; font-weight:800; cursor:pointer;">Track Ambulance</button>
+        <button onclick="window.location.href='ambulance-tracking.html'" style="flex:1; background:#14B8A6; color:#07111F; border:none; padding:0.75rem; border-radius:8px; font-weight:800; cursor:pointer;">Track Ambulance</button>
         <button onclick="window.print()" style="background:#1E354F; color:#38BDF8; border:1px solid #38BDF8; padding:0.75rem 1rem; border-radius:8px; font-weight:700; cursor:pointer;">🖨️ Print</button>
         <button onclick="closeSOS()" style="background:#1E354F; color:#F8FAFC; border:none; padding:0.75rem 1rem; border-radius:8px; font-weight:700; cursor:pointer;">Close</button>
       </div>
     </div>
   </div>
 
+  <!-- AI TRAUMA DOs & DONTs MODAL -->
+  <div id="dosDontsModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(2,6,23,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+    <div style="background:#0B132B; border:1px solid #1E293B; border-radius:12px; width:90%; max-width:750px; max-height:85vh; overflow-y:auto; padding:24px; color:#F8FAFC; box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1E293B; padding-bottom:12px; margin-bottom:16px;">
+        <h2 style="margin:0; font-size:20px; color:#38BDF8;">🛡️ AI Trauma Guardrails: Do's & Don'ts</h2>
+        <button onclick="document.getElementById('dosDontsModal').style.display='none'" style="background:transparent; border:none; color:#94A3B8; font-size:24px; cursor:pointer;">&times;</button>
+      </div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <!-- Head & Spine -->
+        <div style="background:rgba(16,185,129,0.08); border:1px solid #059669; border-radius:8px; padding:12px;">
+          <h4 style="margin:0 0 8px 0; color:#34D399;">✅ DO (Immediate Action)</h4>
+          <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;">
+            <li><strong>C-Spine:</strong> Hold cervical spine neutral and inline.</li>
+            <li><strong>Airway:</strong> Use Jaw-Thrust maneuver only.</li>
+            <li><strong>Bleeding:</strong> Apply firm, direct pressure with sterile pads.</li>
+            <li><strong>Burns:</strong> Irrigate with room-temperature water for 15 mins.</li>
+          </ul>
+        </div>
+
+        <div style="background:rgba(239,68,68,0.08); border:1px solid #DC2626; border-radius:8px; padding:12px;">
+          <h4 style="margin:0 0 8px 0; color:#F87171;">❌ DON'T (Strictly Avoid)</h4>
+          <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;">
+            <li><strong>Spine:</strong> Do NOT remove helmet forcibly or tilt neck.</li>
+            <li><strong>Unconscious:</strong> Do NOT give oral water (prevents aspiration).</li>
+            <li><strong>Impaled Rod/Glass:</strong> Do NOT pull out impaled objects!</li>
+            <li><strong>Burns:</strong> Do NOT apply ice, toothpaste, or ghee.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; background:#0F172A; border:1px solid #334155; border-radius:8px; padding:12px; font-size:12px; color:#94A3B8;">
+        💡 <em>Integrated with ICMR / ATLS Level-1 protocols for bystander protection under Indian Good Samaritan Law.</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript Logic -->
   <script>
     var qrInstance = null;
 
@@ -402,7 +442,7 @@ ASSIGNED TRAUMA DESK:</span>
       })
       .then(function(res) { return res.json(); })
       .then(function(data) {
-        if(data.token) {
+        if(data && data.token) {
           document.getElementById('passToken').textContent = data.token;
           document.getElementById('passHosp').textContent = data.hospital_assigned;
           document.getElementById('passAmb').textContent = data.ambulance_assigned;
@@ -416,10 +456,42 @@ ASSIGNED TRAUMA DESK:</span>
     }
 
     function closeSOS() {
-      document.getElementById('sosModal').style.display = 'one';
+      var modal = document.getElementById('sosModal');
+      if (modal) modal.style.display = 'none';
     }
-  </script>
-  <script>
+
+    function openDosDonts() {
+      var m = document.getElementById('dosDontsModal');
+      if (m) m.style.display = 'flex';
+    }
+
+    // Unified Authentication UI Handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const authBtn = document.getElementById('navAuthBtn');
+      const userStr = localStorage.getItem('currentUser');
+
+      if (userStr && authBtn) {
+        try {
+          const user = JSON.parse(userStr);
+          const displayName = user.name || user.email || 'User';
+          
+          authBtn.textContent = displayName + ' (Logout)';
+          authBtn.href = '#';
+          authBtn.style.borderColor = '#EF4444';
+          authBtn.style.color = '#EF4444';
+
+          authBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+          });
+        } catch (e) {
+          console.error('Session error:', e);
+        }
+      }
+    });
+
+    // PWA Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -428,144 +500,5 @@ ASSIGNED TRAUMA DESK:</span>
       });
     }
   </script>
-
-<!-- AI TRAUMA DOs & DONTs MODAL -->
-<div id="dosDontsModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(2,6,23,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
-  <div style="background:#0B132B; border:1px solid #1E293B; border-radius:12px; width:90%; max-width:750px; max-height:85vh; overflow-y:auto; padding:24px; color:#F8FAFC; box-shadow:0 20px 40px rgba(0,0,0,0.6);">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1E293B; padding-bottom:12px; margin-bottom:16px;">
-      <h2 style="margin:0; font-size:20px; color:#38BDF8;">🛡️ AI Trauma Guardrails: Do's & Don'ts</h2>
-      <button onclick="document.getElementById('dosDontsModal').style.display='none'" style="background:transparent; border:none; color:#94A3B8; font-size:24px; cursor:pointer;">&times;</button>
-    </div>
-    
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-      <!-- Head & Spine -->
-      <div style="background:rgba(16,185,129,0.08); border:1px solid #059669; border-radius:8px; padding:12px;">
-        <h4 style="margin:0 0 8px 0; color:#34D399;">✅ DO (Immediate Action)</h4>
-        <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;">
-          <li><strong>C-Spine:</strong> Hold cervical spine neutral and inline.</li>
-          <li><strong>Airway:</strong> Use Jaw-Thrust maneuver only.</li>
-          <li><strong>Bleeding:</strong> Apply firm, direct pressure with sterile pads.</li>
-          <li><strong>Burns:</strong> Irrigate with room-temperature water for 15 mins.</li>
-        </ul>
-      </div>
-
-      <div style="background:rgba(239,68,68,0.08); border:1px solid #DC2626; border-radius:8px; padding:12px;">
-        <h4 style="margin:0 0 8px 0; color:#F87171;">❌ DON'T (Strictly Avoid)</h4>
-        <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;">
-          <li><strong>Spine:</strong> Do NOT remove helmet forcibly or tilt neck.</li>
-          <li><strong>Unconscious:</strong> Do NOT give oral water (prevents aspiration).</li>
-          <li><strong>Impaled Rod/Glass:</strong> Do NOT pull out impaled objects!</li>
-          <li><strong>Burns:</strong> Do NOT apply ice, toothpaste, or ghee.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div style="margin-top:16px; background:#0F172A; border:1px solid #334155; border-radius:8px; padding:12px; font-size:12px; color:#94A3B8;">
-      💡 <em>Integrated with ICMR / ATLS Level-1 protocols for bystander protection under Indian Good Samaritan Law.</em>
-    </div>
-  </div>
-</div>
-
-<script>
-function openDosDonts() {
-  var m = document.getElementById('dosDontsModal');
-  if(m) m.style.display = 'flex';
-}
-</script>
-
-
-        <!-- WORKING QR MODAL SCRIPT -->
-        <script>
-          function closeEmergencyPass() {
-            var m = document.querySelector('.modal, [id*="modal"], [id*="pass"], [class*="modal"]');
-            var overlay = document.querySelectorAll('div');
-            overlay.forEach(function(el) {
-              if (el.innerHTML.includes('ABDM EMERGENCY PASS') || el.innerHTML.includes('GOLDEN HOUR TIER-1')) {
-                el.style.display = 'none';
-              }
-            });
-            var allModals = document.querySelectorAll('[style*="position: fixed"], [style*="position:fixed"]');
-            allModals.forEach(function(mod) {
-              if (mod.innerText.includes('ABDM EMERGENCY PASS')) mod.style.display = 'none';
-            });
-          }
-          document.addEventListener('DOMContentLoaded', function() {
-            var closeBtns = document.querySelectorAll('button');
-            closeBtns.forEach(function(b) {
-              if (b.innerText.trim().toLowerCase() === 'close') {
-                b.setAttribute('onclick', 'closeEmergencyPass()');
-                b.style.cursor = 'pointer';
-              }
-            });
-          });
-        </script>
-        
-
-    <script>
-      function dismissPass() {
-        var modal = document.getElementById('passModal') || document.querySelector('.modal, [style*="position: fixed"], [style*="position:fixed"]');
-        if (modal) {
-          modal.style.display = 'none';
-        }
-        var overlays = document.querySelectorAll('div');
-        overlays.forEach(function(el) {
-          if (el.innerText.includes('ABDM EMERGENCY PASS') && el.style.position === 'fixed') {
-            el.style.display = 'none';
-          }
-        });
-      }
-      document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('button').forEach(function(btn) {
-          if (btn.innerText.trim().toLowerCase() === 'close') {
-            btn.onclick = dismissPass;
-            btn.style.cursor = 'pointer';
-          }
-        });
-      });
-
-    </script>
-    <script>
-  (function() {
-    const userStr = localStorage.getItem('currentUser');
-    const authBtn = document.getElementById('navAuthBtn');
-    if (userStr && authBtn) {
-      try {
-        const user = JSON.parse(userStr);
-        authBtn.textContent = user.name + ' (Logout)';
-        authBtn.href = 'javascript:void(0)';
-        authBtn.onclick = function() {
-          localStorage.removeItem('currentUser');
-          window.location.reload();
-        };
-      } catch(e) {}
-    }
-  })();
-</script>
-<script>
-  (function updateAuthUI() {
-    const userStr = localStorage.getItem('currentUser');
-    if (!userStr) return;
-
-    try {
-      const user = JSON.parse(userStr);
-      // Pure page par jahan bhi 'Sign In' likha button/link ho, use pakad kar replace karega
-      const links = document.querySelectorAll('a, button');
-      links.forEach(el => {
-        if (el.textContent.trim().toLowerCase() === 'sign in') {
-          el.textContent = `${user.name || 'User'} (Logout)`;
-          el.href = 'javascript:void(0)';
-          el.onclick = function(e) {
-            e.preventDefault();
-            localStorage.removeItem('currentUser');
-            window.location.reload();
-          };
-        }
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  })();
-</script>
 </body>
-
 </html>
