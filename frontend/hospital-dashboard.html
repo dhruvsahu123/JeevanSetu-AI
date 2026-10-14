@@ -140,5 +140,36 @@
       }
     });
   </script>
+  document.addEventListener('DOMContentLoaded', () => {
+  const userStr = localStorage.getItem('currentUser');
+  const staffNameEl = document.getElementById('staffName');
+
+  // 1. Agar login hi nahi hai
+  if (!userStr) {
+    alert('Access Denied: Please sign in first.');
+    window.location.href = './login.html';
+    return;
+  }
+
+  try {
+    const user = JSON.parse(userStr);
+
+    // 2. Strict Role Protection: Sirf hospital ya admin allow honge
+    if (user.role !== 'hospital' && user.role !== 'admin') {
+      alert(`Access Denied: You are signed in as a ${user.role || 'patient'}. Only verified Hospital Staff can modify bed and ventilator inventory.`);
+      // Patient ko unke patient/citizen dashboard ya home page par redirect karein
+      window.location.href = './customer-dashboard.html';
+      return;
+    }
+
+    // 3. Agar verified hospital staff hai, tabhi naam aur role display karein
+    if (staffNameEl) {
+      staffNameEl.textContent = `${user.name} (${user.role === 'admin' ? 'System Admin' : 'Hospital Staff'})`;
+    }
+  } catch (err) {
+    console.error('Session error:', err);
+    window.location.href = './login.html';
+  }
+});
 </body>
 </html>
